@@ -11,6 +11,7 @@
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/model/OrderStatus.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/repository/EmployeeRepository.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/service/impl/OrderServiceImpl.java
+/home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/controller/AuthController.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/service/OrderService.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/config/DataLoader.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/model/Transaction.java
@@ -21,9 +22,12 @@
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/service/impl/TransactionServiceImpl.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/service/IngredientService.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/controller/TransactionController.java
+/home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/dto/LoginRequest.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/model/Ingredient.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/repository/MenuRepository.java
+/home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/config/SecurityConfig.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/repository/TransactionRepository.java
+/home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/security/CustomUserDetailsService.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/CoffeeshopApplication.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/service/impl/EmployeeServiceImpl.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/repository/OrderRepository.java
