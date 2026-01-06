@@ -89,11 +89,16 @@ public class DataLoader implements CommandLineRunner {
     }
 
     private void seedEmployees() {
+        // Clear existing employees to ensure we have fresh data with passwords
+        employeeRepository.deleteAll();
+
         if (employeeRepository.count() == 0) {
             Employee e1 = new Employee();
             e1.setName("John Doe");
             e1.setUsername("manager");
-            e1.setPassword(passwordEncoder.encode("password"));
+            String encodedPassword = passwordEncoder.encode("password");
+            System.out.println("DEBUG: Encoded password for manager: " + encodedPassword);
+            e1.setPassword(encodedPassword);
             e1.setRole("Manager");
             e1.setSalary(new BigDecimal("8000000"));
             List<Employee.Attendance> att1 = new ArrayList<>();
