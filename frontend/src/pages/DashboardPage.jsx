@@ -49,11 +49,11 @@ export default function DashboardPage({ user }) {
             // Fetch Shifts & Today's Attendance
             const [shiftRes, attRes] = await Promise.all([
                 axios.get('/api/shifts'),
-                axios.get('/api/attendance/today')
+                axios.get('/api/attendance') // FETCH ALL HISTORY
             ]);
 
             const allShifts = shiftRes.data;
-            const todayAttendance = attRes.data;
+            const allAttendance = attRes.data;
 
             // Group by Employee
             const grouped = {};
@@ -63,17 +63,24 @@ export default function DashboardPage({ user }) {
                         id: s.employeeId,
                         name: s.employeeName,
                         position: s.position,
-                        schedule: {}
+                        schedule: {},
+                        attendance: {}
                     };
                 }
                 grouped[s.employeeId].schedule[s.dayOfWeek] = s.shiftType;
             });
 
-            // Add presence data for today to the grouped object
+            // Attach Attendance History to Employee
             Object.values(grouped).forEach(emp => {
-                const att = todayAttendance.find(a => a.employeeId === emp.id);
-                emp.todayStatus = att ? att.status : null;
-                emp.clockIn = att ? att.clockInTime : null;
+                emp.attendanceHistory = {};
+                allAttendance.filter(a => a.employeeId === emp.id).forEach(a => {
+                    emp.attendanceHistory[a.date] = a;
+                });
+
+                // Set Today Status
+                const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
+                const todayAtt = emp.attendanceHistory[todayStr];
+                emp.todayStatus = todayAtt ? todayAtt.status : null;
             });
 
             setWeeklyShifts(Object.values(grouped));
@@ -544,44 +551,90 @@ export default function DashboardPage({ user }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {weeklyShifts.map((emp, idx) => (
-                                <tr key={emp.id} style={{ borderBottom: '2px solid black', background: idx % 2 === 0 ? 'white' : '#f9fafb' }}>
-                                    <td style={{
-                                        padding: '10px', borderRight: '2px solid black', fontWeight: 'bold',
-                                        position: 'sticky', left: 0, background: idx % 2 === 0 ? 'white' : '#f9fafb', zIndex: 10
-                                    }}>
-                                        {emp.name}
-                                        <div style={{ fontSize: '0.7rem', opacity: 0.6 }}>{emp.position}</div>
-                                    </td>
-                                    {['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'].map(day => {
-                                        const type = emp.schedule[day] || 'OFF';
-                                        const isToday = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase() === day;
+                            {weeklyShifts.map((emp, idx) => {
+                                // Calculate Week Dates
+                                const days = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
+                                const d = new Date();
+                                const dayIdx = d.getDay(); // 0=Sun
+                                // Adjust to Monday base (If Sun(0) -> -6. If Tue(2) -> diff = 1)
+                                // Current date - (dayIdx - 1)
+                                const currentDayIdx = dayIdx === 0 ? 6 : dayIdx - 1;
+                                const diff = d.getDate() - currentDayIdx;
+                                const monday = new Date(d.setDate(diff));
+                                const weekDates = {};
+                                days.forEach((day, i) => {
+                                    const nd = new Date(monday);
+                                    nd.setDate(monday.getDate() + i);
+                                    weekDates[day] = nd.toLocaleDateString('en-CA');
+                                });
 
-                                        // Mock color coding
-                                        let bg = '#e5e7eb'; // OFF
-                                        if (type === 'MORNING') bg = '#bae6fd'; // Light Blue
-                                        if (type === 'AFTERNOON') bg = '#fde047'; // Yellow
-                                        if (type === 'EVENING') bg = '#fda4af'; // Pink
-                                        if (type === 'OFF') bg = '#eee';
+                                return (
+                                    <tr key={emp.id} style={{ borderBottom: '2px solid black', background: idx % 2 === 0 ? 'white' : '#f9fafb' }}>
+                                        <td style={{
+                                            padding: '10px', borderRight: '2px solid black', fontWeight: 'bold',
+                                            position: 'sticky', left: 0, background: idx % 2 === 0 ? 'white' : '#f9fafb', zIndex: 10
+                                        }}>
+                                            {emp.name}
+                                            <div style={{ fontSize: '0.7rem', opacity: 0.6 }}>{emp.position}</div>
+                                        </td>
+                                        {days.map(day => {
+                                            const dateStr = weekDates[day];
+                                            const att = emp.attendanceHistory ? emp.attendanceHistory[dateStr] : null;
+                                            const shiftType = emp.schedule[day] || 'OFF';
+                                            const isTodayHeader = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase() === day;
 
-                                        return (
-                                            <td key={day} style={{ padding: '10px', textAlign: 'center', borderRight: '1px solid #ddd', background: isToday ? '#fffbeb' : 'inherit' }}>
-                                                <div style={{
-                                                    background: bg, padding: '5px', borderRadius: '4px',
-                                                    fontSize: '0.8rem', fontWeight: 'bold', border: '2px solid black',
-                                                    boxShadow: '2px 2px 0 0 black'
-                                                }}>
-                                                    {type.substring(0, 4)}
-                                                </div>
-                                                {/* Show realtime check for today */}
-                                                {isToday && emp.todayStatus === 'WORKING' && (
-                                                    <div style={{ fontSize: '0.7rem', color: '#16a34a', fontWeight: 'bold', marginTop: '2px' }}>● ON DUTY</div>
-                                                )}
-                                            </td>
-                                        );
-                                    })}
-                                </tr>
-                            ))}
+                                            // LOGIC VISUALISASI
+                                            let icon = null;
+                                            let bg = isTodayHeader ? '#fffbeb' : 'inherit';
+                                            let border = '1px solid #ddd';
+
+                                            if (shiftType !== 'OFF') {
+                                                const now = new Date();
+                                                const cellDate = new Date(dateStr);
+                                                let startH = 7;
+                                                if (shiftType === 'AFTERNOON') startH = 15;
+                                                if (shiftType === 'EVENING') startH = 23;
+
+                                                const shiftStart = new Date(cellDate);
+                                                shiftStart.setHours(startH, 0, 0, 0);
+                                                const shiftEnd = new Date(shiftStart);
+                                                shiftEnd.setHours(shiftStart.getHours() + 8);
+                                                const graceLimit = new Date(shiftStart);
+                                                graceLimit.setMinutes(graceLimit.getMinutes() + 15);
+
+                                                if (att && att.status === 'COMPLETED') {
+                                                    // 1. COMPLETED
+                                                    if (att.checkInStatus === 'LATE') { icon = '⏰'; bg = '#fde047'; }
+                                                    else { icon = '✅'; bg = '#86efac'; }
+                                                } else if (att && att.status === 'WORKING') {
+                                                    // 2. WORKING
+                                                    if (now > shiftEnd) { icon = '🚪'; bg = '#fde047'; }
+                                                    else if (att.checkInStatus === 'LATE') { icon = '⏳'; bg = '#fde047'; }
+                                                    else { icon = '🚀'; bg = '#86efac'; }
+                                                } else {
+                                                    // 3. NO RECORD (Future or Absent)
+                                                    if (now > graceLimit) { icon = '❌'; bg = '#fca5a5'; } // Absent
+                                                    else if (now < shiftStart) { icon = null; } // Future
+                                                    else { icon = null; } // In Grace Period / Just pre-shift
+                                                }
+                                            } else {
+                                                bg = '#f3f4f6'; // OFF Color
+                                            }
+
+                                            return (
+                                                <td key={day} style={{ padding: '10px', textAlign: 'center', borderRight: border, background: bg, position: 'relative' }}>
+                                                    {shiftType !== 'OFF' && (
+                                                        <div style={{ fontSize: '0.75rem', fontWeight: 'bold', marginBottom: '4px' }}>
+                                                            {shiftType.substring(0, 4)}
+                                                        </div>
+                                                    )}
+                                                    {icon && <div style={{ fontSize: '1.5rem', lineHeight: 1 }}>{icon}</div>}
+                                                </td>
+                                            );
+                                        })}
+                                    </tr>
+                                )
+                            })}
                             {weeklyShifts.length === 0 && (
                                 <tr>
                                     <td colSpan="8" style={{ padding: '30px', textAlign: 'center', opacity: 0.5 }}>LOADING WEEKLY SCHEDULE...</td>

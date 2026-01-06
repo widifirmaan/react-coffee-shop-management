@@ -182,4 +182,9 @@ public class AttendanceServiceImpl implements AttendanceService {
         return attendanceRepository.findByDate(LocalDate.now());
     }
 
+    @Override
+    public List<Attendance> getAllAttendance() {
+        return attendanceRepository.findAll();
+    }
+
 }

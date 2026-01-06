@@ -11,4 +11,6 @@ public interface AttendanceService {
     Attendance getTodayAttendance(String employeeId);
 
     List<Attendance> getAllAttendanceToday();
+
+    List<Attendance> getAllAttendance();
 }
