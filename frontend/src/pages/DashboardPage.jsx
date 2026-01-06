@@ -24,6 +24,7 @@ export default function DashboardPage({ user }) {
     const [confirmation, setConfirmation] = useState(null);
     const [weeklyShifts, setWeeklyShifts] = useState([]);
     const [lateModal, setLateModal] = useState(null); // { type: 'late', message: '', details: '' }
+    const [isNoteHover, setIsNoteHover] = useState(false);
 
     // Helper for case-insensitive role check
     const isManager = user && (user.role === 'MANAGER' || user.role === 'manager');
@@ -378,7 +379,18 @@ export default function DashboardPage({ user }) {
                 </div>
 
                 {/* Sticky Note Widget */}
-                <div className="card" style={{ background: '#fef08a', color: 'black', border: '4px solid black', position: 'relative', transform: 'rotate(-1deg)', boxShadow: '8px 8px 0 0 rgba(0,0,0,0.8)', overflow: 'hidden' }}>
+                <div
+                    className="card"
+                    onMouseEnter={() => setIsNoteHover(true)}
+                    onMouseLeave={() => setIsNoteHover(false)}
+                    style={{
+                        background: '#fef08a', color: 'black', border: '4px solid black', position: 'relative',
+                        transform: isNoteHover ? 'translate(-4px, -4px)' : 'none',
+                        boxShadow: isNoteHover ? '12px 12px 0 0 black' : '8px 8px 0 0 black',
+                        overflow: 'hidden',
+                        transition: 'all 0.2s ease'
+                    }}
+                >
                     <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '40px', background: 'rgba(0,0,0,0.05)', borderBottom: '2px solid black' }}></div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', position: 'relative', zIndex: 1 }}>
                         <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1rem', opacity: 0.8 }}>

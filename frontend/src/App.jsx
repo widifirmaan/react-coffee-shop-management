@@ -76,10 +76,8 @@ function AppContent() {
         if (storedUser) {
             try {
                 const parsedUser = JSON.parse(storedUser);
-                if (parsedUser && parsedUser.token) {
+                if (parsedUser) {
                     setUser(parsedUser);
-                    // Set default auth header
-                    axios.defaults.headers.common['Authorization'] = `Bearer ${parsedUser.token}`;
                 } else {
                     localStorage.removeItem('user');
                 }
@@ -93,13 +91,11 @@ function AppContent() {
     const handleLogin = (userData) => {
         setUser(userData);
         localStorage.setItem('user', JSON.stringify(userData));
-        axios.defaults.headers.common['Authorization'] = `Bearer ${userData.token}`;
     };
 
     const handleLogout = () => {
         setUser(null);
         localStorage.removeItem('user');
-        delete axios.defaults.headers.common['Authorization'];
     };
 
     // Axios Interceptor for 401/403 (Session Expired)
