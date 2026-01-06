@@ -56,12 +56,19 @@ public class AttendanceServiceImpl implements AttendanceService {
         Optional<com.americano.coffeeshop.model.Employee> empRes = employeeRepository.findById(employeeId);
         if (empRes.isPresent()) {
             targetShiftId = empRes.get().getEmployeeId(); // Switch to EMPxxx
-            sb.append("DEBUG: Resolved ").append(employeeId).append(" -> ").append(targetShiftId).append(". ");
-        } else {
-            sb.append("DEBUG: RawID=").append(employeeId).append(". ");
         }
 
-        sb.append("Day=").append(today.getDayOfWeek()).append(" | Now=").append(now.toLocalTime());
+        // ZOMBIE CHECK: Block if previous shift not closed
+        List<Attendance> activeSessions = attendanceRepository.findByEmployeeIdAndStatus(employeeId, "WORKING");
+        for (Attendance s : activeSessions) {
+            if (!s.getDate().equals(today)) {
+                Attendance blocked = new Attendance();
+                blocked.setCheckInStatus("BLOCKED");
+                blocked.setDebugInfo(
+                        "LOCKED! PREVIOUS SHIFT FROM " + s.getDate() + " IS STILL ACTIVE. CONTACT MANAGER.");
+                return blocked;
+            }
+        }
 
         // Filter using resolved targetShiftId
         final String searchId = targetShiftId;
@@ -115,20 +122,53 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     public Attendance clockOut(String employeeId) {
-        LocalDate today = LocalDate.now();
-        Optional<Attendance> existing = attendanceRepository.findByEmployeeIdAndDate(employeeId, today);
+        // Find Active Session
+        List<Attendance> activeSessions = attendanceRepository.findByEmployeeIdAndStatus(employeeId, "WORKING");
+        if (activeSessions.isEmpty()) {
+            // If no active session found, try finding today's completed one or return empty
+            return null;
+        }
+        Attendance attendance = activeSessions.get(0);
 
-        if (existing.isPresent()) {
-            Attendance attendance = existing.get();
-            if (attendance.getClockOutTime() == null) {
-                attendance.setClockOutTime(LocalDateTime.now());
-                attendance.setStatus("COMPLETED");
-                return attendanceRepository.save(attendance);
+        // Resolve EMP Code
+        String targetShiftId = employeeId;
+        Optional<com.americano.coffeeshop.model.Employee> empRes = employeeRepository.findById(employeeId);
+        if (empRes.isPresent())
+            targetShiftId = empRes.get().getEmployeeId();
+
+        // Fetch Shift Logic
+        final String searchId = targetShiftId;
+        Optional<ShiftSchedule> shiftOpt = shiftScheduleRepository.findAll().stream()
+                .filter(s -> s.getEmployeeId() != null && s.getEmployeeId().equals(searchId)
+                        && s.getDayOfWeek() == attendance.getDate().getDayOfWeek())
+                .findFirst();
+
+        if (shiftOpt.isPresent()) {
+            ShiftSchedule shift = shiftOpt.get();
+            if (shift.getShiftType() != ShiftSchedule.ShiftType.OFF) {
+                LocalTime startTime = LocalTime.of(7, 0);
+                if (shift.getShiftType() == ShiftSchedule.ShiftType.AFTERNOON)
+                    startTime = LocalTime.of(15, 0);
+                else if (shift.getShiftType() == ShiftSchedule.ShiftType.EVENING)
+                    startTime = LocalTime.of(23, 0);
+
+                LocalDateTime shiftStart = LocalDateTime.of(attendance.getDate(), startTime);
+                LocalDateTime shiftEnd = shiftStart.plusHours(8);
+
+                // EARLY CHECK
+                if (LocalDateTime.now().isBefore(shiftEnd)) {
+                    Attendance reject = new Attendance();
+                    reject.setCheckInStatus("TOO_EARLY");
+                    long mins = ChronoUnit.MINUTES.between(LocalDateTime.now(), shiftEnd);
+                    reject.setDebugInfo("SHIFT ENDS AT " + shiftEnd.toLocalTime() + ". WAIT " + mins + " MINS.");
+                    return reject;
+                }
             }
-            return attendance;
         }
 
-        throw new RuntimeException("No clock-in record found for today");
+        attendance.setClockOutTime(LocalDateTime.now());
+        attendance.setStatus("COMPLETED");
+        return attendanceRepository.save(attendance);
     }
 
     @Override

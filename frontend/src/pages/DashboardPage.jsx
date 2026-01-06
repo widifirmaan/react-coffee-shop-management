@@ -130,17 +130,29 @@ export default function DashboardPage({ user }) {
                         employeeName: user.name || user.username
                     };
                     const res = await axios.post('/api/attendance/clock-in', payload);
-                    setAttendance(res.data);
-
-                    if (res.data.checkInStatus === 'LATE') {
+                    if (res.data.checkInStatus === 'BLOCKED') {
                         setLateModal({
-                            type: 'late',
-                            message: 'LATE ARRIVAL DETECTED!',
-                            details: `YOU ARE ${res.data.minutesLate} MINUTES LATE. PLEASE EXPLAIN TO MANAGER.`
+                            type: 'blocked',
+                            message: 'LOCKED OUT!',
+                            details: res.data.debugInfo
                         });
-                        setAlertMsg({ type: 'error', message: 'LATE RECORDED!' });
+                        setAlertMsg({ type: 'error', message: 'ACCOUNT LOCKED!' });
                     } else {
-                        setAlertMsg({ type: 'success', message: 'CLOCKED IN SUCCESSFULLY!' });
+                        setAttendance(res.data);
+
+                        // Check status
+                        if (res.data.checkInStatus === 'LATE') {
+                            setLateModal({
+                                type: 'late',
+                                message: 'LATE ARRIVAL DETECTED!',
+                                details: `YOU ARE ${res.data.minutesLate} MINUTES LATE. PLEASE EXPLAIN TO MANAGER.`
+                            });
+                            setAlertMsg({ type: 'error', message: 'LATE RECORDED!' });
+                        } else {
+                            setAlertMsg({ type: 'success', message: 'CLOCKED IN SUCCESSFULLY!' });
+                        }
+
+                        fetchShiftData();
                     }
                 } catch (error) {
                     setAlertMsg({ type: 'error', message: 'CLOCK IN FAILED!' });
@@ -157,8 +169,19 @@ export default function DashboardPage({ user }) {
                 try {
                     const id = user.id || user.employeeId;
                     const res = await axios.post('/api/attendance/clock-out', { employeeId: id });
-                    setAttendance(res.data);
-                    setAlertMsg({ type: 'success', message: 'CLOCKED OUT SUCCESSFULLY!' });
+
+                    if (res.data && res.data.checkInStatus === 'TOO_EARLY') {
+                        setLateModal({
+                            type: 'early',
+                            message: 'TOO EARLY!',
+                            details: res.data.debugInfo
+                        });
+                        setAlertMsg({ type: 'error', message: 'SHIFT INCOMPLETE!' });
+                    } else {
+                        setAttendance(res.data);
+                        setAlertMsg({ type: 'success', message: 'CLOCKED OUT SUCCESSFULLY!' });
+                        fetchShiftData();
+                    }
                 } catch (error) {
                     setAlertMsg({ type: 'error', message: 'CLOCK OUT FAILED!' });
                 }

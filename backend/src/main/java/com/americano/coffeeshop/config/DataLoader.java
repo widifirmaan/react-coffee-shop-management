@@ -42,7 +42,17 @@ public class DataLoader implements CommandLineRunner {
                 employeeRepository.deleteAll();
                 orderRepository.deleteAll();
                 shiftScheduleRepository.deleteAll();
-                attendanceRepository.deleteAll(); // <--- Clear Attendance History
+                attendanceRepository.deleteAll();
+
+                // CLEANUP DANGLING REFS in Employees to prevent 500 Errors
+                List<Employee> allEmployees = employeeRepository.findAll();
+                if (!allEmployees.isEmpty()) {
+                        for (Employee e : allEmployees) {
+                                e.setAttendanceRecord(null);
+                        }
+                        employeeRepository.saveAll(allEmployees);
+                        System.out.println("✓ Cleared stale attendance references from employees");
+                }
 
                 seedCategories();
                 seedMenu();
