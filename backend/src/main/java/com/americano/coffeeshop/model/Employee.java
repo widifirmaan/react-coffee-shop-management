@@ -12,10 +12,15 @@ import java.util.List;
 public class Employee {
     @Id
     private String id;
+    private String employeeId;
     private String name;
     private String username;
     private String password;
     private String role; // Barista, Cashier, Manager
+    private String position;
+    private String email;
+    private String phone;
+    private boolean active = true;
     private BigDecimal salary;
     private List<Attendance> attendanceRecord;
 

@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 import DashboardPage from './pages/DashboardPage';
 import MenuPage from './pages/MenuPage';
 import KitchenPage from './pages/KitchenPage';
@@ -73,7 +74,18 @@ function AppContent() {
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
-            setUser(JSON.parse(storedUser));
+            try {
+                const parsedUser = JSON.parse(storedUser);
+                if (parsedUser && parsedUser.token) {
+                    setUser(parsedUser);
+                    // Set default auth header
+                    axios.defaults.headers.common['Authorization'] = `Bearer ${parsedUser.token}`;
+                } else {
+                    localStorage.removeItem('user');
+                }
+            } catch (e) {
+                localStorage.removeItem('user');
+            }
         }
         setIsAuthenticating(false);
     }, []);
@@ -81,12 +93,29 @@ function AppContent() {
     const handleLogin = (userData) => {
         setUser(userData);
         localStorage.setItem('user', JSON.stringify(userData));
+        axios.defaults.headers.common['Authorization'] = `Bearer ${userData.token}`;
     };
 
     const handleLogout = () => {
         setUser(null);
         localStorage.removeItem('user');
+        delete axios.defaults.headers.common['Authorization'];
     };
+
+    // Axios Interceptor for 401/403 (Session Expired)
+    useEffect(() => {
+        const interceptor = axios.interceptors.response.use(
+            (response) => response,
+            (error) => {
+                if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+                    handleLogout();
+                }
+                return Promise.reject(error);
+            }
+        );
+
+        return () => axios.interceptors.response.eject(interceptor);
+    }, []);
 
     if (isAuthenticating) return null;
 

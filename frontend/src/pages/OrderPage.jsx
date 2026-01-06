@@ -146,48 +146,7 @@ export default function OrderPage() {
                     </p>
 
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '40px', alignItems: 'stretch', marginBottom: '40px' }}>
-                        {/* Featured Menu Section */}
-                        {(() => {
-                            const featuredItems = menus.filter(m => m.category === 'Featured');
 
-                            return featuredItems.length > 0 && (
-                                <div style={{ flex: '1 1 300px', display: 'flex', flexDirection: 'column' }}>
-                                    <h2 style={{ fontSize: '1.5rem', borderBottom: '4px solid black', display: 'inline-block', marginBottom: '20px' }}>🔥 FEATURED TODAY</h2>
-                                    <div
-                                        className="card menu-card"
-                                        style={{ flex: 1, cursor: 'pointer', border: '4px solid black', boxShadow: '8px 8px 0 0 black' }}
-                                        onClick={() => setSelectedMenu(featuredItems[0])}
-                                    >
-                                        <div style={{ position: 'relative', height: '250px', overflow: 'hidden', borderBottom: '4px solid black' }}>
-                                            <img
-                                                src={featuredItems[0].imageUrl || "https://placehold.co/600x400/e0e0e0/000000?text=No+Image"}
-                                                alt={featuredItems[0].name}
-                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                            />
-                                            <div style={{ position: 'absolute', top: 10, left: 10, background: '#FCD34D', padding: '5px 10px', fontWeight: 900, border: '2px solid black' }}>
-                                                FEATURED
-                                            </div>
-                                        </div>
-                                        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'space-between' }}>
-                                            <div>
-                                                <h3 style={{ fontSize: '1.8rem' }}>{featuredItems[0].name}</h3>
-                                                <p style={{ opacity: 0.8, fontSize: '1rem', lineHeight: 1.5 }}>{featuredItems[0].description}</p>
-                                            </div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px' }}>
-                                                <span className="badge" style={{ fontSize: '1.2rem' }}>Rp {featuredItems[0].price.toLocaleString()}</span>
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); addToCart(featuredItems[0]); }}
-                                                    className="success"
-                                                    style={{ padding: '10px 20px', fontSize: '1rem' }}
-                                                >
-                                                    ADD +
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })()}
 
 
                         {/* Category Swiper Section */}
@@ -206,8 +165,8 @@ export default function OrderPage() {
                                     modifier: 1,
                                     slideShadows: false,
                                 }}
-                                pagination={true}
-                                modules={[EffectCoverflow, Pagination]}
+                                pagination={false}
+                                modules={[EffectCoverflow]}
                                 className="mySwiper"
                                 style={{ flex: 1, width: '100%' }}
                                 onSlideChange={(swiper) => setActiveCategory(categories[swiper.activeIndex])}
@@ -239,7 +198,7 @@ export default function OrderPage() {
                                     onClick={() => setSelectedMenu(menu)}
                                     style={{ cursor: 'pointer', transition: 'transform 0.1s' }}
                                 >
-                                    {menu.imageUrl && <img src={menu.imageUrl} alt={menu.name} className="menu-image" onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }} />}
+                                    {menu.imageUrl && <img src={menu.imageUrl} alt={menu.name} className="menu-image" loading="lazy" onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }} />}
                                     <div style={{ padding: '15px' }}>
                                         <h3>{menu.name}</h3>
                                         <p style={{ opacity: 0.7, fontSize: '0.9rem', minHeight: '40px' }}>{menu.description}</p>
