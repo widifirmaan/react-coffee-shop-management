@@ -18,6 +18,7 @@ export default function MenuPage({ user }) {
     const [editingCategory, setEditingCategory] = useState(null); // The original category name being edited
     const [editingCategoryName, setEditingCategoryName] = useState(''); // The input value for rename
     const [alertMsg, setAlertMsg] = useState(null);
+    const [confirmDialog, setConfirmDialog] = useState(null); // { message, onConfirm }
 
     const isManager = user?.role?.toLowerCase() === 'manager';
 
@@ -108,48 +109,85 @@ export default function MenuPage({ user }) {
 
     const handleMenuSubmit = async (e) => {
         e.preventDefault();
-        try {
-            if (editingMenu) {
-                await axios.put(`/api/menus/${editingMenu.id}`, menuForm);
-            } else {
-                await axios.post('/api/menus', menuForm);
+
+        setConfirmDialog({
+            message: 'SAVE THIS ITEM?',
+            buttonText: 'SAVE',
+            buttonColor: '#8B5CF6',
+            onConfirm: async () => {
+                try {
+                    if (editingMenu) {
+                        await axios.put(`/api/menus/${editingMenu.id}`, menuForm);
+                    } else {
+                        await axios.post('/api/menus', menuForm);
+                    }
+                    setIsMenuModalOpen(false);
+                    fetchData();
+                    setAlertMsg({ type: 'success', message: 'ITEM SAVED!' });
+                } catch (error) {
+                    setAlertMsg({ type: 'error', message: 'FAILED TO SAVE MENU' });
+                }
+                setConfirmDialog(null);
             }
-            setIsMenuModalOpen(false);
-            fetchData();
-        } catch (error) {
-            setAlertMsg({ type: 'error', message: 'FAILED TO SAVE MENU' });
-        }
+        });
     };
 
     const handleDetailSave = async () => {
         if (!viewingMenu) return;
-        try {
-            await axios.put(`/api/menus/${viewingMenu.id}`, menuForm);
-            setViewingMenu(null);
-            setAlertMsg({ type: 'success', message: 'SAVED!' });
-            fetchData();
-        } catch (error) {
-            setAlertMsg({ type: 'error', message: 'SAVE FAILED' });
-        }
+
+        setConfirmDialog({
+            message: 'SAVE CHANGES?',
+            buttonText: 'SAVE',
+            buttonColor: '#8B5CF6',
+            onConfirm: async () => {
+                try {
+                    await axios.put(`/api/menus/${viewingMenu.id}`, menuForm);
+                    setViewingMenu(null);
+                    setAlertMsg({ type: 'success', message: 'CHANGES SAVED!' });
+                    fetchData();
+                } catch (error) {
+                    setAlertMsg({ type: 'error', message: 'SAVE FAILED' });
+                }
+                setConfirmDialog(null);
+            }
+        });
     };
 
     const handleDeleteMenu = async (id) => {
-        if (!window.confirm("DELETE THIS ITEM?")) return;
-        try {
-            await axios.delete(`/api/menus/${id}`);
-            fetchData();
-        } catch (error) {
-            setAlertMsg({ type: 'error', message: 'FAILED TO DELETE' });
-        }
+        setConfirmDialog({
+            message: 'DELETE THIS ITEM?',
+            onConfirm: async () => {
+                try {
+                    await axios.delete(`/api/menus/${id}`);
+                    fetchData();
+                    setAlertMsg({ type: 'success', message: 'ITEM DELETED!' });
+                } catch (error) {
+                    setAlertMsg({ type: 'error', message: 'FAILED TO DELETE' });
+                }
+                setConfirmDialog(null);
+            }
+        });
     };
 
     const toggleAvailability = async (menu) => {
-        try {
-            await axios.put(`/api/menus/${menu.id}`, { ...menu, available: !menu.available });
-            fetchData();
-        } catch (error) {
-            setAlertMsg({ type: 'error', message: 'UPDATE FAILED' });
-        }
+        const action = menu.available ? 'DISABLE' : 'ENABLE';
+        const buttonColor = menu.available ? '#ff4444' : '#44ff44';
+
+        setConfirmDialog({
+            message: `${action} "${menu.name}"?`,
+            buttonText: action,
+            buttonColor: buttonColor,
+            onConfirm: async () => {
+                try {
+                    await axios.put(`/api/menus/${menu.id}`, { ...menu, available: !menu.available });
+                    fetchData();
+                    setAlertMsg({ type: 'success', message: `ITEM ${action}D!` });
+                } catch (error) {
+                    setAlertMsg({ type: 'error', message: 'UPDATE FAILED' });
+                }
+                setConfirmDialog(null);
+            }
+        });
     };
 
     const handleCategorySubmit = async (e) => {
@@ -359,37 +397,138 @@ export default function MenuPage({ user }) {
             {/* Menu Modal */}
             {isMenuModalOpen && createPortal(
                 <div className="modal-overlay">
-                    <div className="modal-content">
-                        <h2>ADD NEW ITEM</h2>
-                        <form onSubmit={handleMenuSubmit}>
-                            <label>NAME</label>
-                            <input value={menuForm.name} onChange={e => setMenuForm({ ...menuForm, name: e.target.value })} required />
+                    <div className="modal-content" style={{ width: '95%', height: '95vh', overflowY: 'auto', maxWidth: 'none', padding: '40px', display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', paddingBottom: '20px', borderBottom: '4px solid black' }}>
+                            <h2 style={{ fontSize: '2.5rem', margin: 0 }}>ADD NEW ITEM</h2>
+                            <button onClick={() => setIsMenuModalOpen(false)} style={{ background: 'black', color: 'white', border: 'none', fontSize: '1.5rem', cursor: 'pointer', padding: '0 10px' }}>X</button>
+                        </div>
 
-                            <label>CATEGORY</label>
-                            <select value={menuForm.category} onChange={e => setMenuForm({ ...menuForm, category: e.target.value })}>
-                                <option value="Featured">Featured</option>
-                                {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-                                <option value="Uncategorized">Uncategorized</option>
-                            </select>
+                        <form onSubmit={handleMenuSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', flex: 1 }}>
+                            {/* Gallery Section */}
+                            <div>
+                                <style>{`
+                                    .gallery-slot:hover .slot-overlay { opacity: 1 !important; }
+                                `}</style>
+                                {(() => {
+                                    const displayImages = [...(menuForm.gallery || ['', '', '', ''])];
+                                    while (displayImages.length < 4) displayImages.push('');
 
-                            <label>PRICE (Rp)</label>
-                            <input type="number" value={menuForm.price} onChange={e => setMenuForm({ ...menuForm, price: e.target.value })} required />
+                                    const renderSlot = (idx, isMain) => {
+                                        const url = displayImages[idx];
+                                        return (
+                                            <div
+                                                key={idx}
+                                                className="gallery-slot"
+                                                style={{
+                                                    border: '4px solid black',
+                                                    background: '#e0e0e0',
+                                                    height: isMain ? '500px' : '150px',
+                                                    position: 'relative',
+                                                    marginBottom: isMain ? '20px' : 0,
+                                                    boxShadow: isMain ? '8px 8px 0 0 black' : '4px 4px 0 0 black'
+                                                }}
+                                            >
+                                                {url ? (
+                                                    <img src={url} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }} />
+                                                ) : (
+                                                    <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', opacity: 0.3, fontWeight: 'bold' }}>
+                                                        UPLOAD
+                                                    </div>
+                                                )}
 
-                            <label>DESCRIPTION</label>
-                            <textarea value={menuForm.description} onChange={e => setMenuForm({ ...menuForm, description: e.target.value })} rows="3" style={{ width: '100%', marginBottom: '15px', border: '4px solid black' }} />
+                                                <div className="slot-overlay" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', gap: '10px', justifyContent: 'center', alignItems: 'center', opacity: 0, transition: 'opacity 0.2s' }}>
+                                                    <label style={{ background: 'white', color: 'black', padding: '10px 20px', cursor: 'pointer', border: '3px solid black', fontWeight: 'bold' }}>
+                                                        <Upload size={20} /> UPLOAD
+                                                        <input type="file" style={{ display: 'none' }} onChange={(e) => handleGalleryUpload(idx, e.target.files[0])} />
+                                                    </label>
+                                                    {url && (
+                                                        <button type="button" onClick={() => handleGalleryDelete(idx)} style={{ background: '#ff4444', color: 'white', padding: '10px 20px', border: '3px solid black', fontWeight: 'bold' }}>
+                                                            <Trash2 size={20} /> DELETE
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    };
 
-                            <label>IMAGE URL or UPLOAD</label>
-                            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                                <input value={menuForm.imageUrl} onChange={e => setMenuForm({ ...menuForm, imageUrl: e.target.value })} placeholder="URL..." style={{ marginBottom: 0 }} />
-                                <label className="brutalist-btn" style={{ padding: '8px 15px', cursor: 'pointer', background: 'var(--accent-color)' }}>
-                                    <Upload size={20} />
-                                    <input type="file" style={{ display: 'none' }} onChange={handleFileUpload} />
-                                </label>
+                                    return (
+                                        <>
+                                            {renderSlot(0, true)}
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+                                                {renderSlot(1, false)}
+                                                {renderSlot(2, false)}
+                                                {renderSlot(3, false)}
+                                            </div>
+                                        </>
+                                    );
+                                })()}
                             </div>
 
-                            <div style={{ display: 'flex', gap: '10px' }}>
-                                <button type="button" onClick={() => setIsMenuModalOpen(false)} style={{ flex: 1 }}>CANCEL</button>
-                                <button type="submit" className="primary" style={{ flex: 1 }}>SAVE ITEM</button>
+                            {/* Details Section */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>NAME</label>
+                                    <input
+                                        value={menuForm.name}
+                                        onChange={e => setMenuForm({ ...menuForm, name: e.target.value })}
+                                        required
+                                        style={{ width: '100%', fontSize: '1.5rem', padding: '15px', border: '4px solid black' }}
+                                        placeholder="Item name..."
+                                    />
+                                </div>
+
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>CATEGORY</label>
+                                    <select
+                                        value={menuForm.category}
+                                        onChange={e => setMenuForm({ ...menuForm, category: e.target.value })}
+                                        style={{ width: '100%', fontSize: '1.2rem', padding: '15px', border: '4px solid black' }}
+                                    >
+                                        <option value="Featured">Featured</option>
+                                        {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                                        <option value="Uncategorized">Uncategorized</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>DESCRIPTION</label>
+                                    <textarea
+                                        value={menuForm.description}
+                                        onChange={e => setMenuForm({ ...menuForm, description: e.target.value })}
+                                        rows="5"
+                                        style={{ width: '100%', fontSize: '1rem', padding: '15px', border: '4px solid black', resize: 'vertical' }}
+                                        placeholder="Item description..."
+                                    />
+                                </div>
+
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>PRICE (Rp)</label>
+                                    <input
+                                        type="number"
+                                        value={menuForm.price}
+                                        onChange={e => setMenuForm({ ...menuForm, price: e.target.value })}
+                                        required
+                                        style={{ width: '100%', fontSize: '1.5rem', padding: '15px', border: '4px solid black' }}
+                                        placeholder="0"
+                                    />
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '15px', marginTop: 'auto' }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsMenuModalOpen(false)}
+                                        style={{ flex: 1, background: '#fff', fontSize: '1.2rem', padding: '15px', border: '2px solid black', cursor: 'pointer' }}
+                                    >
+                                        CANCEL
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="primary"
+                                        style={{ flex: 1, fontSize: '1.2rem', padding: '15px' }}
+                                    >
+                                        SAVE ITEM
+                                    </button>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -581,9 +720,70 @@ export default function MenuPage({ user }) {
                 </div>,
                 document.body
             )}
+            {confirmDialog && createPortal(
+                <div className="modal-overlay" onClick={() => setConfirmDialog(null)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px', padding: '40px' }}>
+                        <h2 style={{ fontSize: '2rem', marginBottom: '30px', textTransform: 'uppercase' }}>
+                            {confirmDialog.message}
+                        </h2>
+                        <div style={{ display: 'flex', gap: '15px' }}>
+                            <button
+                                style={{
+                                    flex: 1,
+                                    background: '#fff',
+                                    fontSize: '1.2rem',
+                                    padding: '15px',
+                                    border: '3px solid black',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold'
+                                }}
+                                onClick={() => setConfirmDialog(null)}
+                            >
+                                CANCEL
+                            </button>
+                            <button
+                                style={{
+                                    flex: 1,
+                                    background: confirmDialog.buttonColor || '#ff4444',
+                                    color: 'white',
+                                    fontSize: '1.2rem',
+                                    padding: '15px',
+                                    border: '3px solid black',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold'
+                                }}
+                                onClick={confirmDialog.onConfirm}
+                            >
+                                {confirmDialog.buttonText || 'DELETE'}
+                            </button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
             {alertMsg && createPortal(
-                <div className={`brutalist-alert ${alertMsg.type}`} onClick={() => setAlertMsg(null)}>
+                <div className={`brutalist-alert ${alertMsg.type}`} style={{ paddingRight: '60px', paddingTop: '50px' }}>
                     {alertMsg.message}
+                    <button
+                        onClick={() => setAlertMsg(null)}
+                        style={{
+                            position: 'absolute',
+                            right: '15px',
+                            top: '15px',
+                            background: 'transparent',
+                            border: 'none',
+                            fontSize: '2rem',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            padding: '0',
+                            color: 'inherit',
+                            lineHeight: 1,
+                            width: '30px',
+                            height: '30px'
+                        }}
+                    >
+                        ×
+                    </button>
                 </div>,
                 document.body
             )}

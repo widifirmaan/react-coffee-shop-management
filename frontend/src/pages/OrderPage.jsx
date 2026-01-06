@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ShoppingCart, Plus, Minus, Send, Menu as MenuIcon, Bell, MapPin, Phone, Instagram, Facebook, CreditCard, HelpCircle } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { EffectCoverflow, Pagination, Navigation } from 'swiper/modules';
+import { EffectCoverflow, Pagination, Navigation, Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/effect-coverflow';
 import 'swiper/css/pagination';
@@ -18,6 +18,7 @@ export default function OrderPage() {
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [selectedMenu, setSelectedMenu] = useState(null);
     const [alertMsg, setAlertMsg] = useState(null); // { type: 'success' | 'error', message: '' }
+    const [enlargedImage, setEnlargedImage] = useState(null);
 
     useEffect(() => {
         fetchMenus();
@@ -33,7 +34,7 @@ export default function OrderPage() {
         }
     };
 
-    const categories = ['All', ...new Set(menus.map(m => m.category))];
+    const categories = ['All', ...new Set(menus.map(m => m.category).filter(cat => cat !== 'Featured'))];
 
     const filteredMenus = activeCategory === 'All'
         ? menus
@@ -145,43 +146,48 @@ export default function OrderPage() {
 
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '40px', alignItems: 'stretch', marginBottom: '40px' }}>
                         {/* Featured Menu Section */}
-                        {menus.length > 0 && (
-                            <div style={{ flex: '1 1 300px', display: 'flex', flexDirection: 'column' }}>
-                                <h2 style={{ fontSize: '1.5rem', borderBottom: '4px solid black', display: 'inline-block', marginBottom: '20px' }}>🔥 FEATURED TODAY</h2>
-                                <div
-                                    className="card menu-card"
-                                    style={{ flex: 1, cursor: 'pointer', border: '4px solid black', boxShadow: '8px 8px 0 0 black' }}
-                                    onClick={() => setSelectedMenu(menus[0])}
-                                >
-                                    <div style={{ position: 'relative', height: '250px', overflow: 'hidden', borderBottom: '4px solid black' }}>
-                                        <img
-                                            src={menus[0].imageUrl || "https://placehold.co/600x400/e0e0e0/000000?text=No+Image"}
-                                            alt={menus[0].name}
-                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                        />
-                                        <div style={{ position: 'absolute', top: 10, left: 10, background: '#FCD34D', padding: '5px 10px', fontWeight: 900, border: '2px solid black' }}>
-                                            BEST SELLER
+                        {(() => {
+                            const featuredItems = menus.filter(m => m.category === 'Featured');
+
+                            return featuredItems.length > 0 && (
+                                <div style={{ flex: '1 1 300px', display: 'flex', flexDirection: 'column' }}>
+                                    <h2 style={{ fontSize: '1.5rem', borderBottom: '4px solid black', display: 'inline-block', marginBottom: '20px' }}>🔥 FEATURED TODAY</h2>
+                                    <div
+                                        className="card menu-card"
+                                        style={{ flex: 1, cursor: 'pointer', border: '4px solid black', boxShadow: '8px 8px 0 0 black' }}
+                                        onClick={() => setSelectedMenu(featuredItems[0])}
+                                    >
+                                        <div style={{ position: 'relative', height: '250px', overflow: 'hidden', borderBottom: '4px solid black' }}>
+                                            <img
+                                                src={featuredItems[0].imageUrl || "https://placehold.co/600x400/e0e0e0/000000?text=No+Image"}
+                                                alt={featuredItems[0].name}
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                            />
+                                            <div style={{ position: 'absolute', top: 10, left: 10, background: '#FCD34D', padding: '5px 10px', fontWeight: 900, border: '2px solid black' }}>
+                                                FEATURED
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'space-between' }}>
-                                        <div>
-                                            <h3 style={{ fontSize: '1.8rem' }}>{menus[0].name}</h3>
-                                            <p style={{ opacity: 0.8, fontSize: '1rem', lineHeight: 1.5 }}>{menus[0].description}</p>
-                                        </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px' }}>
-                                            <span className="badge" style={{ fontSize: '1.2rem' }}>Rp {menus[0].price.toLocaleString()}</span>
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); addToCart(menus[0]); }}
-                                                className="success"
-                                                style={{ padding: '10px 20px', fontSize: '1rem' }}
-                                            >
-                                                ADD +
-                                            </button>
+                                        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'space-between' }}>
+                                            <div>
+                                                <h3 style={{ fontSize: '1.8rem' }}>{featuredItems[0].name}</h3>
+                                                <p style={{ opacity: 0.8, fontSize: '1rem', lineHeight: 1.5 }}>{featuredItems[0].description}</p>
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px' }}>
+                                                <span className="badge" style={{ fontSize: '1.2rem' }}>Rp {featuredItems[0].price.toLocaleString()}</span>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); addToCart(featuredItems[0]); }}
+                                                    className="success"
+                                                    style={{ padding: '10px 20px', fontSize: '1rem' }}
+                                                >
+                                                    ADD +
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        )}
+                            );
+                        })()}
+
 
                         {/* Category Swiper Section */}
                         <div style={{ flex: '1 1 300px', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
@@ -410,42 +416,57 @@ export default function OrderPage() {
                 {selectedMenu && (
                     <div className="modal-overlay" onClick={() => setSelectedMenu(null)} style={{ alignItems: 'flex-start', paddingTop: '30px' }}>
                         <div className="modal-content animated-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '1200px', width: '95%', maxHeight: '90vh', overflowY: 'auto' }}>
-                            <div style={{ position: 'relative' }}>
+                            <div style={{ position: 'relative', marginBottom: '20px' }}>
                                 {(() => {
-                                    const images = selectedMenu.imageUrls && selectedMenu.imageUrls.length > 0
-                                        ? selectedMenu.imageUrls
-                                        : (selectedMenu.imageUrl ? [selectedMenu.imageUrl] : []);
+                                    const gallery = selectedMenu.gallery && selectedMenu.gallery.length > 0
+                                        ? selectedMenu.gallery
+                                        : (selectedMenu.imageUrl ? [selectedMenu.imageUrl, '', '', ''] : ['', '', '', '']);
 
-                                    if (images.length > 1) {
-                                        return (
-                                            <Swiper
-                                                modules={[Navigation, Pagination]}
-                                                navigation={true}
-                                                pagination={{ clickable: true }}
-                                                loop={true}
-                                                className="detail-swiper"
+                                    const displayImages = [...gallery];
+                                    while (displayImages.length < 4) displayImages.push('');
+
+                                    return (
+                                        <div style={{ display: 'flex', gap: '15px' }}>
+                                            {/* Main Image */}
+                                            <div
+                                                style={{ flex: 2, border: '4px solid black', background: '#e0e0e0', height: '400px', cursor: 'pointer', position: 'relative' }}
+                                                onClick={() => displayImages[0] && setEnlargedImage(displayImages[0])}
                                             >
-                                                {images.map((img, idx) => (
-                                                    <SwiperSlide key={idx}>
-                                                        <img
-                                                            src={img}
-                                                            alt={`${selectedMenu.name} ${idx + 1}`}
-                                                            onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }}
-                                                        />
-                                                    </SwiperSlide>
+                                                {displayImages[0] ? (
+                                                    <img
+                                                        src={displayImages[0]}
+                                                        alt={selectedMenu.name}
+                                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                        onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }}
+                                                    />
+                                                ) : (
+                                                    <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', opacity: 0.3, fontWeight: 'bold' }}>NO IMAGE</div>
+                                                )}
+                                            </div>
+
+                                            {/* Thumbnail Column */}
+                                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                                {[1, 2, 3].map(idx => (
+                                                    <div
+                                                        key={idx}
+                                                        style={{ border: '4px solid black', background: '#e0e0e0', height: 'calc((400px - 30px) / 3)', cursor: displayImages[idx] ? 'pointer' : 'default', position: 'relative' }}
+                                                        onClick={() => displayImages[idx] && setEnlargedImage(displayImages[idx])}
+                                                    >
+                                                        {displayImages[idx] ? (
+                                                            <img
+                                                                src={displayImages[idx]}
+                                                                alt={`${selectedMenu.name} ${idx + 1}`}
+                                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                                onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }}
+                                                            />
+                                                        ) : (
+                                                            <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', opacity: 0.2, fontSize: '0.8rem', fontWeight: 'bold' }}>EMPTY</div>
+                                                        )}
+                                                    </div>
                                                 ))}
-                                            </Swiper>
-                                        );
-                                    } else {
-                                        return (
-                                            <img
-                                                src={images[0] || "https://placehold.co/600x400/e0e0e0/000000?text=No+Image"}
-                                                alt={selectedMenu.name}
-                                                style={{ width: '100%', height: '60vh', objectFit: 'cover', border: '4px solid black', marginBottom: '20px' }}
-                                                onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }}
-                                            />
-                                        );
-                                    }
+                                            </div>
+                                        </div>
+                                    );
                                 })()}
 
                                 <button
@@ -531,6 +552,42 @@ export default function OrderPage() {
                     opacity: 0.15,
                     pointerEvents: 'none'
                 }}></div>
+
+                {/* Enlarged Image Modal */}
+                {enlargedImage && (
+                    <div
+                        className="modal-overlay"
+                        onClick={() => setEnlargedImage(null)}
+                        style={{ zIndex: 4000, background: 'rgba(0,0,0,0.9)' }}
+                    >
+                        <div style={{ position: 'relative', maxWidth: '90vw', maxHeight: '90vh' }} onClick={(e) => e.stopPropagation()}>
+                            <img
+                                src={enlargedImage}
+                                alt="Enlarged"
+                                style={{ maxWidth: '100%', maxHeight: '90vh', objectFit: 'contain', border: '4px solid black' }}
+                                onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }}
+                            />
+                            <button
+                                onClick={() => setEnlargedImage(null)}
+                                style={{
+                                    position: 'absolute',
+                                    top: -20,
+                                    right: -20,
+                                    background: '#EF4444',
+                                    color: 'white',
+                                    border: '4px solid black',
+                                    width: '50px',
+                                    height: '50px',
+                                    fontSize: '1.5rem',
+                                    cursor: 'pointer',
+                                    boxShadow: '4px 4px 0 0 black'
+                                }}
+                            >
+                                X
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

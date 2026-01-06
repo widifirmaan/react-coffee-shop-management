@@ -39,8 +39,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/menus/**", "/api/categories/**", "/uploads/**")
-                        .permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/menus/**", "/api/categories/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/menus").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/menus/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/menus/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/uploads").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/orders").permitAll() // Customers place orders
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated())
