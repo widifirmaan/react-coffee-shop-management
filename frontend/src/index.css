@@ -1,0 +1,329 @@
+:root {
+    --bg-color: #E0E7FF;
+    /* Light Periwinkle */
+    --text-color: #000000;
+
+    /* Neo Brutalist Palette */
+    --primary-color: #8B5CF6;
+    /* Violet */
+    --secondary-color: #F472B6;
+    /* Pink */
+    --accent-color: #FCD34D;
+    /* Yellow */
+    --success-color: #4ADE80;
+    /* Green */
+    --danger-color: #EF4444;
+    /* Red */
+
+    --border-width: 3px;
+    --shadow-offset: 5px;
+    --radius: 5px;
+}
+
+body.dark-mode {
+    --bg-color: #1a1a1a;
+    --text-color: #ffffff;
+    --primary-color: #a78bfa;
+    --secondary-color: #f472b6;
+    --accent-color: #fbbf24;
+    --success-color: #34d399;
+    --danger-color: #f87171;
+}
+
+body.dark-mode .navbar,
+body.dark-mode .card,
+body.dark-mode table,
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode .badge {
+    background-color: #2d2d2d;
+    color: #ffffff;
+}
+
+body.dark-mode .navbar-brand {
+    color: #000;
+    /* Keep brand text black on yellow accent */
+}
+
+body.dark-mode .nav-link {
+    color: #fff;
+}
+
+body.dark-mode .nav-link:hover {
+    color: #000;
+    background-color: var(--primary-color);
+}
+
+body.dark-mode th {
+    color: black;
+}
+
+body {
+    font-family: 'Space Grotesk', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(#000 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+code,
+pre {
+    font-family: 'JetBrains Mono', monospace;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    text-transform: uppercase;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    margin-top: 0;
+}
+
+button {
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 800;
+    text-transform: uppercase;
+    background: white;
+    color: black;
+    border: var(--border-width) solid black;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0px 0px black;
+    transition: all 0.15s ease-in-out;
+    padding: 12px 24px;
+}
+
+button:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: calc(var(--shadow-offset) + 2px) calc(var(--shadow-offset) + 2px) 0px 0px black;
+}
+
+button:active {
+    transform: translate(0px, 0px);
+    box-shadow: 0px 0px 0px 0px black;
+}
+
+button.primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+button.danger {
+    background: var(--danger-color);
+    color: white;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.card {
+    border: var(--border-width) solid black;
+    border-radius: var(--radius);
+    background: white;
+    padding: 25px;
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0px 0px black;
+    margin-bottom: 25px;
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 8px 8px 0px 0px black;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+}
+
+.navbar {
+    border-bottom: var(--border-width) solid black;
+    padding: 20px 40px;
+    background: #FFFFFF;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    box-shadow: 0px 4px 0px 0px black;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.navbar-brand {
+    font-size: 1.8rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    background: var(--accent-color);
+    color: black;
+    padding: 8px 12px;
+    border: 3px solid black;
+    box-shadow: 4px 4px 0px 0px black;
+    transform: rotate(-2deg);
+}
+
+.nav-links {
+    display: flex;
+    gap: 15px;
+}
+
+.nav-link {
+    color: black;
+    text-decoration: none;
+    font-weight: 800;
+    padding: 8px 16px;
+    border: 3px solid transparent;
+    transition: all 0.2s;
+}
+
+.nav-link:hover {
+    background: var(--primary-color);
+    border: 3px solid black;
+    color: white;
+    box-shadow: 4px 4px 0px 0px black;
+    transform: rotate(2deg);
+}
+
+.nav-link.active {
+    background: black;
+    color: white;
+    border: 3px solid black;
+    box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 0.2);
+}
+
+input,
+select {
+    width: 100%;
+    padding: 12px;
+    border: var(--border-width) solid black;
+    border-radius: var(--radius);
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: bold;
+    margin-bottom: 15px;
+    background: white;
+    outline: none;
+    box-shadow: 3px 3px 0px 0px black;
+    transition: all 0.2s;
+}
+
+input:focus,
+select:focus {
+    background: #fff;
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px 0px black;
+}
+
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: var(--border-width) solid black;
+    border-radius: var(--radius);
+    background: white;
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0px 0px black;
+    overflow: hidden;
+}
+
+th,
+td {
+    border-bottom: 2px solid black;
+    border-right: 2px solid black;
+    padding: 15px;
+    text-align: left;
+}
+
+th {
+    background: var(--primary-color);
+    color: white;
+    text-transform: uppercase;
+    font-weight: 900;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+th:last-child,
+td:last-child {
+    border-right: none;
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border: 2px solid black;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    background: white;
+    box-shadow: 2px 2px 0px 0px black;
+}
+
+/* Kitchen Order Status Styles */
+.status-pending {
+    background-color: white;
+}
+
+.status-preparing {
+    background-color: #ffffcc;
+}
+
+.status-ready-to-serve {
+    background-color: #ccffcc;
+}
+
+.status-completed {
+    background-color: #e0e0e0;
+}
+
+body.dark-mode .status-pending {
+    background-color: #2d2d2d;
+    color: white;
+}
+
+body.dark-mode .status-preparing {
+    background-color: #4d4d00;
+    color: white;
+}
+
+body.dark-mode .status-ready-to-serve {
+    background-color: #004d00;
+    color: white;
+}
+
+body.dark-mode .status-completed {
+    background-color: #404040;
+    color: white;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-color);
+}
+
+::-webkit-scrollbar-thumb {
+    background: black;
+    border: 2px solid var(--bg-color);
+    border-radius: 10px;
+}
