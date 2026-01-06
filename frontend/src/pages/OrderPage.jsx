@@ -9,7 +9,8 @@ import 'swiper/css/effect-cards';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 import './OrderPage.css'; // Create this for custom swiper styles if needed
-export default function OrderPage() {
+export default function OrderPage({ shopConfig }) {
+
     const [menus, setMenus] = useState([]);
     const [cart, setCart] = useState([]);
     const [customerInfo, setCustomerInfo] = useState({ name: '', tableNumber: '' });
@@ -496,6 +497,52 @@ export default function OrderPage() {
                         </div>
                     </div>
                 )}
+
+                {/* FOOTER */}
+                <footer style={{ marginTop: 'auto', background: 'black', color: 'white', padding: '40px 20px', borderTop: '4px solid black' }}>
+                    <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '40px' }}>
+
+                        {/* Address */}
+                        <div>
+                            <h3 style={{ borderBottom: '2px solid white', paddingBottom: '10px', marginBottom: '15px', color: '#fef08a' }}>VISIT US</h3>
+                            <p style={{ whiteSpace: 'pre-line', lineHeight: '1.6', opacity: 0.8 }}>
+                                {shopConfig?.address || 'Jl. Kopi No. 123\nJakarta, Indonesia'}
+                            </p>
+                        </div>
+
+                        {/* Contact */}
+                        <div>
+                            <h3 style={{ borderBottom: '2px solid white', paddingBottom: '10px', marginBottom: '15px', color: '#fef08a' }}>CONTACT</h3>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                                <Phone size={20} />
+                                <span>{shopConfig?.phoneNumber || '0812-3456-7890'}</span>
+                            </div>
+                        </div>
+
+                        {/* Social */}
+                        <div>
+                            <h3 style={{ borderBottom: '2px solid white', paddingBottom: '10px', marginBottom: '15px', color: '#fef08a' }}>FOLLOW US</h3>
+                            <div style={{ display: 'flex', gap: '20px' }}>
+                                {shopConfig?.instagramUrl && (
+                                    <a href={shopConfig.instagramUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'white' }}><Instagram size={30} /></a>
+                                )}
+                                {shopConfig?.facebookUrl && (
+                                    <a href={shopConfig.facebookUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'white' }}><Facebook size={30} /></a>
+                                )}
+                                {shopConfig?.twitterUrl && (
+                                    <a href={shopConfig.twitterUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'white' }}><Globe size={30} /></a>
+                                )}
+                                {!shopConfig?.instagramUrl && !shopConfig?.facebookUrl && !shopConfig?.twitterUrl && (
+                                    <span style={{ opacity: 0.5 }}>No social media links.</span>
+                                )}
+                            </div>
+                        </div>
+
+                    </div>
+                    <div style={{ textAlign: 'center', marginTop: '40px', borderTop: '1px solid #333', paddingTop: '20px', fontSize: '0.8rem', opacity: 0.5 }}>
+                        &copy; {new Date().getFullYear()} {shopConfig?.shopName || 'SIAP NYAFE'}. All Rights Reserved.
+                    </div>
+                </footer>
 
                 {/* Background Image Style Body similar to Dashboard */}
                 <div style={{

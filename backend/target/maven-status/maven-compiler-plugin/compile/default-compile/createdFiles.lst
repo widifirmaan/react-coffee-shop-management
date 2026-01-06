@@ -17,6 +17,7 @@ com/americano/coffeeshop/service/EmployeeService.class
 com/americano/coffeeshop/model/Ingredient.class
 com/americano/coffeeshop/controller/TransactionController.class
 com/americano/coffeeshop/service/TransactionService.class
+com/americano/coffeeshop/model/ShopConfig.class
 com/americano/coffeeshop/model/Menu.class
 com/americano/coffeeshop/config/SecurityConfig.class
 com/americano/coffeeshop/service/impl/AttendanceServiceImpl.class

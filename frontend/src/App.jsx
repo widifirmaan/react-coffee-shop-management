@@ -10,8 +10,9 @@ import FinancePage from './pages/FinancePage';
 import LoginPage from './pages/LoginPage';
 import OrderPage from './pages/OrderPage';
 import CMSPage from './pages/CMSPage';
+import SettingsPage from './pages/SettingsPage';
 
-function Navbar({ user, onLogout }) {
+function Navbar({ user, onLogout, shopConfig }) {
     const location = useLocation();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -22,7 +23,7 @@ function Navbar({ user, onLogout }) {
 
     return (
         <nav className="navbar">
-            <div className="navbar-brand">SIAP NYAFE</div>
+            <div className="navbar-brand">{shopConfig?.shopName || 'SIAP NYAFE'}</div>
 
             <div className={`nav-links ${isMenuOpen ? 'open' : ''}`}>
                 <Link to="/dashboard" className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>DASHBOARD</Link>
@@ -31,6 +32,7 @@ function Navbar({ user, onLogout }) {
                 <Link to="/inventory" className={`nav-link ${location.pathname === '/inventory' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>INVENTORY</Link>
                 <Link to="/employees" className={`nav-link ${location.pathname === '/employees' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>STAFF</Link>
                 <Link to="/finance" className={`nav-link ${location.pathname === '/finance' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>FINANCE</Link>
+                <Link to="/settings" className={`nav-link ${location.pathname === '/settings' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>SETTINGS</Link>
 
                 <button onClick={onLogout} className="danger" style={{ padding: '8px 16px', fontSize: '0.8rem', marginTop: isMenuOpen ? '10px' : '0' }}>
                     LOGOUT
@@ -70,8 +72,26 @@ function AppContent() {
     const location = useLocation();
     const [user, setUser] = useState(null);
     const [isAuthenticating, setIsAuthenticating] = useState(true);
+    const [shopConfig, setShopConfig] = useState(null);
 
     useEffect(() => {
+        // Fetch Shop Config
+        axios.get('/api/config').then(res => {
+            if (res.data) {
+                setShopConfig(res.data);
+                if (res.data.websiteTitle) document.title = res.data.websiteTitle;
+                if (res.data.faviconUrl) {
+                    let link = document.querySelector("link[rel~='icon']");
+                    if (!link) {
+                        link = document.createElement('link');
+                        link.rel = 'icon';
+                        document.getElementsByTagName('head')[0].appendChild(link);
+                    }
+                    link.href = res.data.faviconUrl;
+                }
+            }
+        }).catch(e => console.error("Config load error", e));
+
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
             try {
@@ -117,7 +137,7 @@ function AppContent() {
 
     // Public Routes
     if (location.pathname === '/order') {
-        return <OrderPage />;
+        return <OrderPage shopConfig={shopConfig} />;
     }
     if (location.pathname === '/') {
         return <CMSPage />;
@@ -147,7 +167,7 @@ function AppContent() {
 
     return (
         <div className="app">
-            <Navbar user={user} onLogout={handleLogout} />
+            <Navbar user={user} onLogout={handleLogout} shopConfig={shopConfig} />
             <div className="container" style={{ position: 'relative', zIndex: 1 }}>
                 <Routes>
                     <Route path="/dashboard" element={<DashboardPage user={user} />} />
@@ -156,6 +176,7 @@ function AppContent() {
                     <Route path="/inventory" element={<InventoryPage user={user} />} />
                     <Route path="/employees" element={<EmployeePage user={user} />} />
                     <Route path="/finance" element={<FinancePage user={user} />} />
+                    <Route path="/settings" element={<SettingsPage />} />
                     {/* Fallback route */}
                     <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Routes>

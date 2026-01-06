@@ -6,6 +6,7 @@
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/model/Menu.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/model/Attendance.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/controller/AuthController.java
+/home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/controller/ShopConfigController.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/service/MenuService.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/repository/AttendanceRepository.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/controller/OrderController.java
@@ -32,10 +33,13 @@
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/service/impl/AttendanceServiceImpl.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/service/impl/OrderServiceImpl.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/service/OrderService.java
+/home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/repository/ShopConfigRepository.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/model/Category.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/config/DataLoader.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/model/ShiftSchedule.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/model/Transaction.java
+/home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/service/ShopConfigService.java
+/home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/model/ShopConfig.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/controller/AttendanceController.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/service/IngredientService.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/dto/LoginRequest.java
@@ -46,4 +50,5 @@
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/controller/UploadController.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/security/CustomUserDetailsService.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/service/impl/EmployeeServiceImpl.java
+/home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/service/impl/ShopConfigServiceImpl.java
 /home/widifirmaan/Springboot-React-Americano/backend/src/main/java/com/americano/coffeeshop/repository/OrderRepository.java
