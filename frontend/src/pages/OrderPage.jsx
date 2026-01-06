@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ShoppingCart, Plus, Minus, Send, Menu as MenuIcon, Bell, MapPin, Phone, Instagram, Facebook, CreditCard, HelpCircle } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { EffectCoverflow, Pagination, Navigation, Autoplay } from 'swiper/modules';
+import { EffectCoverflow, EffectCards, Pagination, Navigation, Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/effect-coverflow';
+import 'swiper/css/effect-cards';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 import './OrderPage.css'; // Create this for custom swiper styles if needed

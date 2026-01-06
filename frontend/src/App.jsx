@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import DashboardPage from './pages/DashboardPage';
 import MenuPage from './pages/MenuPage';
 import KitchenPage from './pages/KitchenPage';
 import InventoryPage from './pages/InventoryPage';
@@ -23,7 +24,8 @@ function Navbar({ user, onLogout }) {
             <div className="navbar-brand">SIAP NYAFE</div>
 
             <div className={`nav-links ${isMenuOpen ? 'open' : ''}`}>
-                <Link to="/dashboard" className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>MENU / POS</Link>
+                <Link to="/dashboard" className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>DASHBOARD</Link>
+                <Link to="/menu" className={`nav-link ${location.pathname === '/menu' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>MENU</Link>
                 <Link to="/kitchen" className={`nav-link ${location.pathname === '/kitchen' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>KITCHEN</Link>
                 <Link to="/inventory" className={`nav-link ${location.pathname === '/inventory' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>INVENTORY</Link>
                 <Link to="/employees" className={`nav-link ${location.pathname === '/employees' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>STAFF</Link>
@@ -107,6 +109,7 @@ function AppContent() {
     const getBgImage = () => {
         switch (location.pathname) {
             case '/dashboard': return '/person-coffee.png';
+            case '/menu': return '/person-coffee.png';
             case '/finance': return '/person-laptop.png';
             case '/kitchen': return '/people-chatting.png';
             case '/inventory': return '/inventory-bg.png';
@@ -122,7 +125,8 @@ function AppContent() {
             <Navbar user={user} onLogout={handleLogout} />
             <div className="container" style={{ position: 'relative', zIndex: 1 }}>
                 <Routes>
-                    <Route path="/dashboard" element={<MenuPage user={user} />} />
+                    <Route path="/dashboard" element={<DashboardPage user={user} />} />
+                    <Route path="/menu" element={<MenuPage user={user} />} />
                     <Route path="/kitchen" element={<KitchenPage user={user} />} />
                     <Route path="/inventory" element={<InventoryPage user={user} />} />
                     <Route path="/employees" element={<EmployeePage user={user} />} />
