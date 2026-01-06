@@ -27,7 +27,7 @@ export default function MenuPage({ user }) {
 
     useEffect(() => {
         if (viewingMenu && isManager) {
-            let initialImages = viewingMenu.imageUrls || [];
+            let initialImages = viewingMenu.gallery || [];
             if (initialImages.length === 0 && viewingMenu.imageUrl) {
                 initialImages = [viewingMenu.imageUrl];
             }
@@ -40,7 +40,7 @@ export default function MenuPage({ user }) {
                 price: viewingMenu.price,
                 description: viewingMenu.description || '',
                 imageUrl: viewingMenu.imageUrl || '',
-                imageUrls: paddedImages,
+                gallery: paddedImages,
                 available: viewingMenu.available
             });
         }
@@ -83,27 +83,27 @@ export default function MenuPage({ user }) {
             });
             const url = res.data;
 
-            const newImages = [...(menuForm.imageUrls || ['', '', '', ''])];
+            const newImages = [...(menuForm.gallery || ['', '', '', ''])];
             newImages[index] = url;
 
             // Sync main image
             let mainUrl = menuForm.imageUrl;
             if (index === 0) mainUrl = url;
 
-            setMenuForm({ ...menuForm, imageUrls: newImages, imageUrl: mainUrl });
+            setMenuForm({ ...menuForm, gallery: newImages, imageUrl: mainUrl });
         } catch (error) {
             setAlertMsg({ type: 'error', message: 'UPLOAD FAILED' });
         }
     };
 
     const handleGalleryDelete = (index) => {
-        const newImages = [...(menuForm.imageUrls || ['', '', '', ''])];
+        const newImages = [...(menuForm.gallery || ['', '', '', ''])];
         newImages[index] = '';
 
         let mainUrl = menuForm.imageUrl;
         if (index === 0) mainUrl = '';
 
-        setMenuForm({ ...menuForm, imageUrls: newImages, imageUrl: mainUrl });
+        setMenuForm({ ...menuForm, gallery: newImages, imageUrl: mainUrl });
     };
 
     const handleMenuSubmit = async (e) => {
@@ -440,7 +440,7 @@ export default function MenuPage({ user }) {
                                     .gallery-slot:hover .slot-overlay { opacity: 1 !important; }
                                 `}</style>
                                 {(() => {
-                                    const sourceImages = isManager ? (menuForm.imageUrls || []) : (viewingMenu.imageUrls || []);
+                                    const sourceImages = isManager ? (menuForm.gallery || []) : (viewingMenu.gallery || []);
                                     const displayImages = [...sourceImages];
                                     if (displayImages.length === 0 && (isManager ? menuForm.imageUrl : viewingMenu.imageUrl)) {
                                         displayImages.push(isManager ? menuForm.imageUrl : viewingMenu.imageUrl);

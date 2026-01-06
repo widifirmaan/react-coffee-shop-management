@@ -38,6 +38,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/menus/**", "/api/categories/**", "/uploads/**")
                         .permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/orders").permitAll() // Customers place orders

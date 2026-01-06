@@ -17,6 +17,14 @@ public class Menu {
     private BigDecimal price;
     private String category; // e.g., Coffee, Non-Coffee, Snack
     private String imageUrl;
-    private List<String> imageUrls = new ArrayList<>();
+    private List<String> gallery = new ArrayList<>();
     private boolean available;
+
+    public List<String> getGallery() {
+        return gallery;
+    }
+
+    public void setGallery(List<String> gallery) {
+        this.gallery = gallery;
+    }
 }
