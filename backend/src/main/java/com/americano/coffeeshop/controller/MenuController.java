@@ -23,4 +23,14 @@ public class MenuController {
     public Menu addMenu(@RequestBody Menu menu) {
         return menuService.addMenu(menu);
     }
+
+    @PutMapping("/{id}")
+    public Menu updateMenu(@PathVariable String id, @RequestBody Menu menu) {
+        return menuService.updateMenu(id, menu);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteMenu(@PathVariable String id) {
+        menuService.deleteMenu(id);
+    }
 }

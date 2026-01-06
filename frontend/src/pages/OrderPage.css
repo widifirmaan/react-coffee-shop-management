@@ -1,0 +1,107 @@
+.mySwiper {
+    width: 100%;
+    /* Let flexbox handle the height */
+    margin: 0 auto;
+    background-image: repeating-linear-gradient(45deg, #000000 0, #000000 1px, transparent 0, transparent 50%);
+    background-size: 10px 10px;
+    background-color: #f0f0f0;
+    /* Fallback/Base */
+    border: 4px solid black;
+    box-shadow: 10px 10px 0 0 black;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.mySwiper .swiper-wrapper {
+    align-items: center;
+}
+
+.swiper-slide {
+    margin-top: auto;
+    margin-bottom: auto;
+    background-size: cover;
+    width: 300px;
+    height: 150px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 4px solid black;
+    box-shadow: 8px 8px 0 0 black;
+    background: white;
+    transition: all 0.3s;
+}
+
+.swiper-slide-active {
+    background: var(--accent-color, #FCD34D);
+    transform: scale(1.1);
+}
+
+.category-label {
+    font-size: 1.5rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+/* Modal Animation */
+@keyframes modalPopUp {
+    from {
+        opacity: 0;
+        transform: scale(0.8) translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.animated-modal {
+    animation: modalPopUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Detail Image Swiper */
+.detail-swiper {
+    width: 100%;
+    height: 60vh;
+    margin-bottom: 20px;
+    border: 4px solid black;
+}
+
+.detail-swiper .swiper-slide {
+    width: 100%;
+    height: 100%;
+    border: none;
+    box-shadow: none;
+}
+
+.detail-swiper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Social Media Icons */
+.social-icon {
+    color: black;
+    padding: 10px;
+    border: 2px solid black;
+    box-shadow: 4px 4px 0 0 black;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+}
+
+.social-icon:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 0 black;
+    background: var(--accent-color, #FCD34D);
+}
+
+.social-icon:active {
+    transform: translate(2px, 2px);
+    box-shadow: 0 0 0 0 black;
+}

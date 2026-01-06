@@ -5,6 +5,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.ArrayList;
 
 @Data
 @Document(collection = "menus")
@@ -16,5 +17,6 @@ public class Menu {
     private BigDecimal price;
     private String category; // e.g., Coffee, Non-Coffee, Snack
     private String imageUrl;
+    private List<String> imageUrls = new ArrayList<>();
     private boolean available;
 }

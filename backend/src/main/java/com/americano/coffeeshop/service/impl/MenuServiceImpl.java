@@ -30,11 +30,19 @@ public class MenuServiceImpl implements MenuService {
 
     @Override
     public Menu updateMenu(String id, Menu menu) {
-        if (menuRepository.existsById(id)) {
-            menu.setId(id);
-            return menuRepository.save(menu);
-        }
-        return null; // Or throw exception
+        System.out.println("DEBUG: Updating Menu: " + menu.getName());
+        System.out.println(
+                "DEBUG: ImageUrls received: " + (menu.getImageUrls() != null ? menu.getImageUrls().size() : "null"));
+        return menuRepository.findById(id).map(existing -> {
+            existing.setName(menu.getName());
+            existing.setDescription(menu.getDescription());
+            existing.setPrice(menu.getPrice());
+            existing.setCategory(menu.getCategory());
+            existing.setImageUrl(menu.getImageUrl());
+            existing.setImageUrls(menu.getImageUrls());
+            existing.setAvailable(menu.isAvailable());
+            return menuRepository.save(existing);
+        }).orElse(null);
     }
 
     @Override

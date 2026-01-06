@@ -13,6 +13,7 @@ public class Order {
     @Id
     private String id;
     private String tableNumber; // "Takeaway" or Table Number
+    private String customerName;
     private List<OrderItem> items;
     private BigDecimal totalAmount;
     private OrderStatus status;

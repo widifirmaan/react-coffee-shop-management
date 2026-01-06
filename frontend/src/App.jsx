@@ -1,68 +1,80 @@
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import MenuPage from './pages/MenuPage';
 import KitchenPage from './pages/KitchenPage';
 import InventoryPage from './pages/InventoryPage';
 import EmployeePage from './pages/EmployeePage';
 import FinancePage from './pages/FinancePage';
-
-import { useState, useEffect } from 'react';
-
 import LoginPage from './pages/LoginPage';
+import OrderPage from './pages/OrderPage';
+import CMSPage from './pages/CMSPage';
 
-function Navbar({ isDarkMode, toggleTheme, user, onLogout }) {
+function Navbar({ user, onLogout }) {
     const location = useLocation();
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
+    // Hide navbar if on customer order page, login page, or public CMS
+    if (location.pathname === '/order' || location.pathname === '/login' || location.pathname === '/') return null;
 
     return (
         <nav className="navbar">
             <div className="navbar-brand">SIAP NYAFE</div>
-            <div className="nav-links">
-                <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>MENU / POS</Link>
-                <Link to="/kitchen" className={`nav-link ${location.pathname === '/kitchen' ? 'active' : ''}`}>KITCHEN</Link>
-                <Link to="/inventory" className={`nav-link ${location.pathname === '/inventory' ? 'active' : ''}`}>INVENTORY</Link>
-                <Link to="/employees" className={`nav-link ${location.pathname === '/employees' ? 'active' : ''}`}>STAFF</Link>
-                <Link to="/finance" className={`nav-link ${location.pathname === '/finance' ? 'active' : ''}`}>FINANCE</Link>
-                <button
-                    onClick={toggleTheme}
-                    className="nav-link"
-                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}
-                    title="Toggle Theme"
-                >
-                    {isDarkMode ? '☀️' : '🌙'}
+
+            <div className={`nav-links ${isMenuOpen ? 'open' : ''}`}>
+                <Link to="/dashboard" className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>MENU / POS</Link>
+                <Link to="/kitchen" className={`nav-link ${location.pathname === '/kitchen' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>KITCHEN</Link>
+                <Link to="/inventory" className={`nav-link ${location.pathname === '/inventory' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>INVENTORY</Link>
+                <Link to="/employees" className={`nav-link ${location.pathname === '/employees' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>STAFF</Link>
+                <Link to="/finance" className={`nav-link ${location.pathname === '/finance' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>FINANCE</Link>
+
+                <button onClick={onLogout} className="danger" style={{ padding: '8px 16px', fontSize: '0.8rem', marginTop: isMenuOpen ? '10px' : '0' }}>
+                    LOGOUT
                 </button>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: '10px' }}>
-                    <span style={{ fontWeight: 'bold' }}>{user?.name || user?.username}</span>
-                    <button onClick={onLogout} className="danger" style={{ padding: '8px 16px', fontSize: '0.8rem' }}>
-                        LOGOUT
-                    </button>
-                </div>
             </div>
+
+            <div className="hamburger" onClick={toggleMenu}>
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            {/* Hanging User Greeting */}
+            {user && (
+                <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    background: 'black',
+                    color: 'white',
+                    padding: '5px 40px',
+                    fontWeight: '900',
+                    fontSize: '0.9rem',
+                    clipPath: 'polygon(0 0, 100% 0, 92% 100%, 8% 100%)',
+                    textTransform: 'uppercase',
+                    zIndex: -1
+                }}>
+                    Hi, {user.name || user.username}! 👋
+                </div>
+            )}
         </nav>
     );
 }
 
 function AppContent() {
     const location = useLocation();
-    const [isDarkMode, setIsDarkMode] = useState(false);
     const [user, setUser] = useState(null);
+    const [isAuthenticating, setIsAuthenticating] = useState(true);
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
             setUser(JSON.parse(storedUser));
         }
+        setIsAuthenticating(false);
     }, []);
-
-    useEffect(() => {
-        if (isDarkMode) {
-            document.body.classList.add('dark-mode');
-        } else {
-            document.body.classList.remove('dark-mode');
-        }
-    }, [isDarkMode]);
-
-    const toggleTheme = () => {
-        setIsDarkMode(!isDarkMode);
-    };
 
     const handleLogin = (userData) => {
         setUser(userData);
@@ -74,9 +86,27 @@ function AppContent() {
         localStorage.removeItem('user');
     };
 
+    if (isAuthenticating) return null;
+
+    // Public Routes
+    if (location.pathname === '/order') {
+        return <OrderPage />;
+    }
+    if (location.pathname === '/') {
+        return <CMSPage />;
+    }
+    if (location.pathname === '/login') {
+        return user ? <Navigate to="/dashboard" replace /> : <LoginPage onLogin={handleLogin} />;
+    }
+
+    // Protected Routes Check
+    if (!user) {
+        return <Navigate to="/login" replace />;
+    }
+
     const getBgImage = () => {
         switch (location.pathname) {
-            case '/': return '/person-coffee.png';
+            case '/dashboard': return '/person-coffee.png';
             case '/finance': return '/person-laptop.png';
             case '/kitchen': return '/people-chatting.png';
             case '/inventory': return '/inventory-bg.png';
@@ -87,23 +117,21 @@ function AppContent() {
 
     const bgImage = getBgImage();
 
-    // If not logged in, show Login Page
-    if (!user) {
-        return <LoginPage onLogin={handleLogin} />;
-    }
-
     return (
         <div className="app">
-            <Navbar isDarkMode={isDarkMode} toggleTheme={toggleTheme} user={user} onLogout={handleLogout} />
+            <Navbar user={user} onLogout={handleLogout} />
             <div className="container" style={{ position: 'relative', zIndex: 1 }}>
                 <Routes>
-                    <Route path="/" element={<MenuPage />} />
-                    <Route path="/kitchen" element={<KitchenPage />} />
-                    <Route path="/inventory" element={<InventoryPage />} />
-                    <Route path="/employees" element={<EmployeePage />} />
-                    <Route path="/finance" element={<FinancePage />} />
+                    <Route path="/dashboard" element={<MenuPage user={user} />} />
+                    <Route path="/kitchen" element={<KitchenPage user={user} />} />
+                    <Route path="/inventory" element={<InventoryPage user={user} />} />
+                    <Route path="/employees" element={<EmployeePage user={user} />} />
+                    <Route path="/finance" element={<FinancePage user={user} />} />
+                    {/* Fallback route */}
+                    <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Routes>
             </div>
+
             {bgImage && (
                 <div style={{
                     position: 'fixed',
