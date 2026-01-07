@@ -23,4 +23,27 @@ public class ShopConfig {
     private String instagramUrl;
     private String facebookUrl;
     private String twitterUrl;
+
+    // Latest Drop CMS Content
+    // Promo Card
+    private String latestDropPromoTitle;
+    private String latestDropPromoDesc;
+    private String latestDropPromoDate;
+
+    // News Card
+    private String latestDropNewsTitle;
+    private String latestDropNewsDesc;
+
+    // Event Card
+    private String latestDropEventTitle;
+    private String latestDropEventDesc;
+    // Tech Specs Header
+    private String techSpec1;
+    private String techSpec2;
+    private String techSpec3;
+
+    // Hero Section
+    private String heroImageUrl;
+    private String badgeText1; // e.g. EST 2024
+    private String badgeText2; // e.g. JAKARTA
 }

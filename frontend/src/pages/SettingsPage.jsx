@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Save, AlertTriangle, Image, Globe, Phone, MapPin, Instagram, Facebook, Hash } from 'lucide-react';
+import { Save, AlertTriangle, Image, Globe, Phone, MapPin, Instagram, Facebook, Hash, Upload } from 'lucide-react';
 
 export default function SettingsPage() {
     const [config, setConfig] = useState({
@@ -46,13 +46,36 @@ export default function SettingsPage() {
             setConfig(res.data);
             setAlertMsg({ type: 'success', message: 'SETTINGS SAVED!' });
 
-            // Reload page to apply global changes (Title, Favicon, Navbar Name)
-            // Or use a context. A reload is a simple, brutalist way to ensure everything updates.
-            setTimeout(() => window.location.reload(), 1500);
+            // Reload page after delay to show brutalist alert
+            setTimeout(() => window.location.reload(), 2000);
 
         } catch (e) {
             console.error("Failed to save", e);
             setAlertMsg({ type: 'error', message: 'SAVE FAILED' });
+        }
+    };
+
+    const handleFileUpload = async (e, fieldName) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const res = await axios.post('/api/uploads', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            setConfig(prev => ({ ...prev, [fieldName]: res.data }));
+            setAlertMsg({ type: 'success', message: 'IMAGE UPLOADED!' });
+
+            // Clear alert after 2 seconds
+            setTimeout(() => setAlertMsg(null), 2000);
+
+        } catch (e) {
+            console.error(e);
+            setAlertMsg({ type: 'error', message: 'UPLOAD FAILED' });
+            setTimeout(() => setAlertMsg(null), 2000);
         }
     };
 
@@ -71,15 +94,32 @@ export default function SettingsPage() {
                 <p style={{ margin: '10px 0 0 0', fontWeight: 'bold', opacity: 0.6 }}>CONFIGURE YOUR BRAND IDENTITY</p>
             </div>
 
-            {/* Alert */}
+            {/* Brutalist Alert Modal */}
             {alertMsg && (
                 <div style={{
-                    position: 'fixed', top: '20px', right: '20px', zIndex: 9999,
-                    background: alertMsg.type === 'error' ? '#fca5a5' : '#86efac',
-                    border: '4px solid black', padding: '20px',
-                    boxShadow: '8px 8px 0 0 black', fontWeight: 'bold'
+                    position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                    background: 'rgba(0,0,0,0.8)', zIndex: 9999,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
-                    {alertMsg.message}
+                    <div style={{
+                        background: alertMsg.type === 'error' ? '#ef4444' : '#FCD34D',
+                        border: '8px solid black',
+                        padding: '40px 60px',
+                        boxShadow: '20px 20px 0 0 black',
+                        textAlign: 'center',
+                        maxWidth: '90vw',
+                        transform: 'rotate(-2deg)'
+                    }}>
+                        <div style={{ fontSize: '4rem', fontWeight: '900', marginBottom: '20px', lineHeight: 1 }}>
+                            {alertMsg.type === 'error' ? 'ERROR!' : 'SUCCESS!'}
+                        </div>
+                        <div style={{ fontSize: '2rem', fontWeight: 'bold', fontFamily: 'monospace', textTransform: 'uppercase' }}>
+                            {alertMsg.message}
+                        </div>
+                        <div style={{ marginTop: '30px', fontSize: '1.2rem', fontWeight: 'bold' }}>
+                            {alertMsg.type === 'success' && 'RELOADING SYSTEM...'}
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -125,15 +165,68 @@ export default function SettingsPage() {
                                 placeholder="https://example.com/icon.png"
                                 style={{ flex: 1, padding: '15px', border: '3px solid black', fontSize: '1.2rem', fontWeight: 'bold', fontFamily: 'monospace' }}
                             />
-                            {previewFavicon && (
-                                <div style={{ width: '60px', height: '60px', border: '2px solid black', padding: '5px', background: 'white' }}>
-                                    <img src={previewFavicon} alt="icon" style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={(e) => e.target.style.display = 'none'} />
-                                </div>
                             )}
                         </div>
                     </div>
                 </div>
 
+                {/* Tech Specs */}
+                <div className="card" style={{ background: 'white', border: '4px solid black', padding: '30px', boxShadow: '8px 8px 0 0 black', marginBottom: '30px' }}>
+                    <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', textTransform: 'uppercase', borderBottom: '4px solid black', paddingBottom: '10px', marginBottom: '20px' }}>
+                        <Hash size={28} /> TECH SPECS (HEADER)
+                    </h2>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+                        <div>
+                            <label style={{ fontWeight: 'bold' }}>SPEC 1</label>
+                            <input type="text" name="techSpec1" value={config.techSpec1 || ''} onChange={handleChange} placeholder="// EST 2024" style={{ width: '100%', padding: '10px', border: '2px solid black' }} />
+                        </div>
+                        <div>
+                            <label style={{ fontWeight: 'bold' }}>SPEC 2</label>
+                            <input type="text" name="techSpec2" value={config.techSpec2 || ''} onChange={handleChange} placeholder="// JKT_ID" style={{ width: '100%', padding: '10px', border: '2px solid black' }} />
+                        </div>
+                        <div>
+                            <label style={{ fontWeight: 'bold' }}>SPEC 3</label>
+                            <input type="text" name="techSpec3" value={config.techSpec3 || ''} onChange={handleChange} placeholder="// V.1.0" style={{ width: '100%', padding: '10px', border: '2px solid black' }} />
+                        </div>
+                    </div>
+                </div>
+                {/* Hero Section */}
+                <div className="card" style={{ background: 'white', border: '4px solid black', padding: '30px', boxShadow: '8px 8px 0 0 black', marginBottom: '30px' }}>
+                    <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', textTransform: 'uppercase', borderBottom: '4px solid black', paddingBottom: '10px', marginBottom: '20px' }}>
+                        <Image size={28} /> HERO SECTION
+                    </h2>
+
+                    <div style={{ marginBottom: '20px' }}>
+                        <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>HERO IMAGE URL</label>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            <input
+                                type="text"
+                                name="heroImageUrl"
+                                value={config.heroImageUrl || ''}
+                                onChange={handleChange}
+                                placeholder="/illustration_hero.png"
+                                style={{ flex: 1, padding: '15px', border: '3px solid black', fontFamily: 'monospace' }}
+                            />
+                            <label style={{ background: 'black', color: 'white', padding: '15px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px', border: '4px solid black' }}>
+                                <Upload size={20} /> UPLOAD
+                                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleFileUpload(e, 'heroImageUrl')} />
+                            </label>
+                        </div>
+                        {config.heroImageUrl && <img src={config.heroImageUrl} style={{ marginTop: '10px', height: '100px', border: '2px solid black' }} />}
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                        <div>
+                            <label style={{ fontWeight: 'bold' }}>BADGE LINE 1</label>
+                            <input type="text" name="badgeText1" value={config.badgeText1 || ''} onChange={handleChange} placeholder="EST 2024" style={{ width: '100%', padding: '10px', border: '3px solid black' }} />
+                        </div>
+                        <div>
+                            <label style={{ fontWeight: 'bold' }}>BADGE LINE 2</label>
+                            <input type="text" name="badgeText2" value={config.badgeText2 || ''} onChange={handleChange} placeholder="JAKARTA" style={{ width: '100%', padding: '10px', border: '3px solid black' }} />
+                        </div>
+                    </div>
+                </div>
                 {/* Contact Info */}
                 <div className="card" style={{ background: 'white', border: '4px solid black', padding: '30px', boxShadow: '8px 8px 0 0 black', marginBottom: '30px' }}>
                     <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', textTransform: 'uppercase', borderBottom: '4px solid black', paddingBottom: '10px', marginBottom: '20px' }}>

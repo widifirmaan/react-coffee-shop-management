@@ -31,6 +31,7 @@ com/americano/coffeeshop/service/AttendanceService.class
 com/americano/coffeeshop/controller/AuthController.class
 com/americano/coffeeshop/CoffeeshopApplication.class
 com/americano/coffeeshop/model/TransactionType.class
+com/americano/coffeeshop/controller/PostController.class
 com/americano/coffeeshop/model/OrderStatus.class
 com/americano/coffeeshop/repository/EmployeeRepository.class
 com/americano/coffeeshop/model/Employee$Attendance.class

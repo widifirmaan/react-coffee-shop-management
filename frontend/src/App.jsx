@@ -11,6 +11,7 @@ import LoginPage from './pages/LoginPage';
 import OrderPage from './pages/OrderPage';
 import CMSPage from './pages/CMSPage';
 import SettingsPage from './pages/SettingsPage';
+import PostManagementPage from './pages/PostManagementPage';
 
 function Navbar({ user, onLogout, shopConfig }) {
     const location = useLocation();
@@ -32,6 +33,7 @@ function Navbar({ user, onLogout, shopConfig }) {
                 <Link to="/inventory" className={`nav-link ${location.pathname === '/inventory' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>INVENTORY</Link>
                 <Link to="/employees" className={`nav-link ${location.pathname === '/employees' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>STAFF</Link>
                 <Link to="/finance" className={`nav-link ${location.pathname === '/finance' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>FINANCE</Link>
+                <Link to="/posts" className={`nav-link ${location.pathname === '/posts' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>BLOG</Link>
                 <Link to="/settings" className={`nav-link ${location.pathname === '/settings' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>SETTINGS</Link>
 
                 <button onClick={onLogout} className="danger" style={{ padding: '8px 16px', fontSize: '0.8rem', marginTop: isMenuOpen ? '10px' : '0' }}>
@@ -197,6 +199,7 @@ function AppContent() {
                     <Route path="/employees" element={<EmployeePage user={user} />} />
                     <Route path="/finance" element={<FinancePage user={user} />} />
                     <Route path="/settings" element={<SettingsPage />} />
+                    <Route path="/posts" element={<PostManagementPage user={user} />} />
                     {/* Fallback route */}
                     <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Routes>

@@ -23,7 +23,7 @@
   - `PENDING` -> `PREPARING` -> `READY` -> `COMPLETED`.
 - **Detailed Cards**: Shows items, customer info, table number, notes (highlighted), and assigned shift staff.
 - **Edit Capability**: Staff can edit orders (add items, change table, update payment method) directly from the kitchen view.
-- **Order History**: Log of completed orders with Requeue functionality.
+- **Order History**: Log of completed orders with Requeue nctionality.
 
 ### 📊 Admin Dashboard & Management
 - **Dashboard**: Visual analytics of Revenue, Popular Items, and Order Traffic.
