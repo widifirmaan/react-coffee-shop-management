@@ -245,7 +245,7 @@ export default function DashboardPage({ user }) {
     }
 
     return (
-        <div style={{ padding: '20px', position: 'relative' }}>
+        <div style={{ padding: '40px', paddingTop: '40px', position: 'relative' }}>
             <style>{`
                 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
             `}</style>
@@ -306,9 +306,12 @@ export default function DashboardPage({ user }) {
                 </div>
             )}
 
-            <div style={{ marginBottom: '30px' }}>
-                <h1 style={{ fontSize: '3rem', marginBottom: '10px' }}>DASHBOARD</h1>
-                <p style={{ fontSize: '1.2rem', opacity: 0.7 }}>Welcome back, {user.name || user.username}!</p>
+            {/* Header */}
+            <div style={{ marginBottom: '40px', background: '#c7d2fe', border: '4px solid black', padding: '20px', boxShadow: '8px 8px 0 0 black' }}>
+                <h1 style={{ fontSize: '3rem', margin: 0, textTransform: 'uppercase', lineHeight: 1, display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <TrendingUp size={48} /> DASHBOARD
+                </h1>
+                <p style={{ margin: '10px 0 0 0', fontWeight: 'bold', opacity: 0.6 }}>SHOP OVERVIEW & PERFORMANCE</p>
             </div>
 
             {/* Stats Grid */}

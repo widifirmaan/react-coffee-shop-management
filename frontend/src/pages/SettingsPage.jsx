@@ -64,7 +64,7 @@ export default function SettingsPage() {
     if (loading) return <div style={{ padding: '50px', fontWeight: 'bold' }}>LOADING SETTINGS...</div>;
 
     return (
-        <div className="p-8" style={{ minHeight: '100vh', background: '#e5e7eb', padding: '40px' }}>
+        <div className="p-8" style={{ minHeight: '100vh', padding: '40px' }}>
             {/* Header */}
             <div style={{ marginBottom: '40px', background: '#fef08a', border: '4px solid black', padding: '20px', boxShadow: '8px 8px 0 0 black' }}>
                 <h1 style={{ fontSize: '3rem', margin: 0, textTransform: 'uppercase', lineHeight: 1 }}>STORE SETTINGS</h1>
@@ -221,6 +221,22 @@ export default function SettingsPage() {
                 </button>
 
             </form>
+
+            {/* Background Pattern */}
+            <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                backgroundImage: 'url(/settings-pattern.png)',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+                zIndex: -1,
+                opacity: 0.08,
+                pointerEvents: 'none'
+            }}></div>
         </div>
     );
 }

@@ -17,7 +17,21 @@ public class Order {
     private List<OrderItem> items;
     private BigDecimal totalAmount;
     private OrderStatus status;
+    private String notes; // Customer notes (e.g. less sugar)
+    private String paymentMethod; // e.g., CASH, QRIS, DEBIT
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    // Shift Staff Information (employees working during this order)
+    private ShiftStaff shiftStaff;
+
+    @Data
+    public static class ShiftStaff {
+        private String cashier;
+        private String barista;
+        private String kitchenStaff;
+        private String waiter;
+        private String cleaningService;
+    }
 
     @Data
     public static class OrderItem {

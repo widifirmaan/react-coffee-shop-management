@@ -311,9 +311,15 @@ export default function MenuPage({ user }) {
     }
 
     return (
-        <div style={{ padding: '20px', paddingBottom: '120px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
-                <h1 style={{ fontSize: '3rem' }}>MENU MANAGEMENT</h1>
+        <div style={{ padding: '40px', paddingTop: '40px', paddingBottom: '120px' }}>
+            {/* Header */}
+            <div style={{ marginBottom: '40px', background: '#fde68a', border: '4px solid black', padding: '20px', boxShadow: '8px 8px 0 0 black', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                    <h1 style={{ fontSize: '3rem', margin: 0, textTransform: 'uppercase', lineHeight: 1, display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <ShoppingCart size={48} /> MENU MANAGEMENT
+                    </h1>
+                    <p style={{ margin: '10px 0 0 0', fontWeight: 'bold', opacity: 0.6 }}>MANAGE PRODUCTS & CATEGORIES</p>
+                </div>
                 {isManager && (
                     <div style={{ display: 'flex', gap: '10px' }}>
                         <button className="accent" onClick={() => setIsCategoryModalOpen(true)}>+ CATEGORY</button>

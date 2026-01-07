@@ -13,7 +13,8 @@ export default function OrderPage({ shopConfig }) {
 
     const [menus, setMenus] = useState([]);
     const [cart, setCart] = useState([]);
-    const [customerInfo, setCustomerInfo] = useState({ name: '', tableNumber: '' });
+
+    const [customerInfo, setCustomerInfo] = useState({ name: '', tableNumber: '', notes: '', paymentMethod: 'CASH' });
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [activeCategory, setActiveCategory] = useState('All');
@@ -82,14 +83,16 @@ export default function OrderPage({ shopConfig }) {
                 items: cart.map(i => ({ menuId: i.id, menuName: i.name, quantity: i.quantity, price: i.price })),
                 totalAmount: total,
                 tableNumber: customerInfo.tableNumber,
-                customerName: customerInfo.name
+                customerName: customerInfo.name,
+                notes: customerInfo.notes,
+                paymentMethod: customerInfo.paymentMethod
             };
             await axios.post('/api/orders', orderPayload);
             setAlertMsg({ type: 'success', message: 'ORDER PLACED SUCCESSFULLY!' });
             // Manual dismiss required as per request
             setCart([]);
             setIsConfirmOpen(false);
-            setCustomerInfo({ name: '', tableNumber: '' });
+            setCustomerInfo({ name: '', tableNumber: '', notes: '', paymentMethod: 'CASH' });
         } catch (e) {
             setAlertMsg({ type: 'error', message: 'ORDER FAILED. PLEASE TRY AGAIN.' });
         }
@@ -124,7 +127,12 @@ export default function OrderPage({ shopConfig }) {
         <div style={{ padding: '0', display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative' }}>
             {/* Sticky Header */}
             <div style={{ backgroundColor: 'white', borderBottom: '4px solid black', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 40 }}>
-                <div className="navbar-brand">SIAP NYAFE</div>
+                <div className="navbar-brand" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    {shopConfig?.logoUrl && (
+                        <img src={shopConfig.logoUrl} alt="Logo" style={{ height: '40px', objectFit: 'contain' }} />
+                    )}
+                    <span>{shopConfig?.shopName || 'SIAP NYAFE'}</span>
+                </div>
                 <button onClick={handleCallWaiter} className="danger" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', padding: '10px 15px' }}>
                     <Bell size={18} /> CALL WAITER
                 </button>
@@ -223,12 +231,12 @@ export default function OrderPage({ shopConfig }) {
                 <div style={{ borderTop: '4px solid black', marginTop: '60px', padding: '40px 20px', backgroundColor: 'white', marginLeft: '-20px', marginRight: '-20px', marginBottom: '-20px' }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '40px', maxWidth: '1200px', margin: '0 auto', textAlign: 'left' }}>
                         <div style={{ flex: '1 1 300px' }}>
-                            <h3 style={{ fontSize: '1.5rem', marginBottom: '20px' }}>SIAP NYAFE</h3>
+                            <h3 style={{ fontSize: '1.5rem', marginBottom: '20px' }}>{shopConfig?.shopName || 'SIAP NYAFE'}</h3>
                             <p style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', fontWeight: 'bold' }}>
-                                <MapPin size={20} /> Jl. Kopi Nikmat No. 1, Jakarta Selatan
+                                <MapPin size={20} /> {shopConfig?.address || 'Jl. Kopi Nikmat No. 1, Jakarta Selatan'}
                             </p>
                             <p style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', fontWeight: 'bold' }}>
-                                <Phone size={20} /> +62 812-3456-7890
+                                <Phone size={20} /> {shopConfig?.phoneNumber || '+62 812-3456-7890'}
                             </p>
                         </div>
 
@@ -361,9 +369,52 @@ export default function OrderPage({ shopConfig }) {
                                         }}
                                     >
                                         <option value="" disabled>SELECT TABLE</option>
-                                        {Array.from({ length: 20 }, (_, i) => `T${i + 1}`).map(t => (
-                                            <option key={t} value={t}>{t}</option>
+                                        <option value="Take Away">Take Away</option>
+                                        {[...Array(30)].map((_, i) => (
+                                            <option key={i} value={`Table ${i + 1}`}>Table {i + 1}</option>
                                         ))}
+                                    </select>
+                                </div>
+                                <div style={{ marginBottom: '25px' }}>
+                                    <label style={{ fontWeight: 900 }}>ORDER NOTES (OPTIONAL)</label>
+                                    <textarea
+                                        value={customerInfo.notes}
+                                        onChange={e => setCustomerInfo({ ...customerInfo, notes: e.target.value })}
+                                        placeholder="E.g. Less sugar, extra spicy, no ice..."
+                                        style={{
+                                            width: '100%',
+                                            padding: '15px',
+                                            border: '4px solid black',
+                                            borderRadius: '0',
+                                            fontSize: '1rem',
+                                            fontWeight: 'bold',
+                                            background: 'white',
+                                            minHeight: '100px',
+                                            fontFamily: 'inherit'
+                                        }}
+                                    />
+                                </div>
+                                <div style={{ marginBottom: '25px' }}>
+                                    <label style={{ fontWeight: 900 }}>PAYMENT METHOD</label>
+                                    <select
+                                        value={customerInfo.paymentMethod}
+                                        onChange={e => setCustomerInfo({ ...customerInfo, paymentMethod: e.target.value })}
+                                        style={{
+                                            width: '100%',
+                                            padding: '15px',
+                                            border: '4px solid black',
+                                            borderRadius: '0',
+                                            fontSize: '1rem',
+                                            fontWeight: 'bold',
+                                            background: 'white',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        <option value="CASH">CASH / TUNAI</option>
+                                        <option value="QRIS">QRIS</option>
+                                        <option value="TRANSFER">BANK TRANSFER</option>
+                                        <option value="E-WALLET">E-WALLET (GoPay/OVO/Dana)</option>
+                                        <option value="DEBIT">DEBIT / CREDIT CARD</option>
                                     </select>
                                 </div>
                                 <div style={{ display: 'flex', gap: '10px' }}>
@@ -499,50 +550,7 @@ export default function OrderPage({ shopConfig }) {
                 )}
 
                 {/* FOOTER */}
-                <footer style={{ marginTop: 'auto', background: 'black', color: 'white', padding: '40px 20px', borderTop: '4px solid black' }}>
-                    <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '40px' }}>
 
-                        {/* Address */}
-                        <div>
-                            <h3 style={{ borderBottom: '2px solid white', paddingBottom: '10px', marginBottom: '15px', color: '#fef08a' }}>VISIT US</h3>
-                            <p style={{ whiteSpace: 'pre-line', lineHeight: '1.6', opacity: 0.8 }}>
-                                {shopConfig?.address || 'Jl. Kopi No. 123\nJakarta, Indonesia'}
-                            </p>
-                        </div>
-
-                        {/* Contact */}
-                        <div>
-                            <h3 style={{ borderBottom: '2px solid white', paddingBottom: '10px', marginBottom: '15px', color: '#fef08a' }}>CONTACT</h3>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                                <Phone size={20} />
-                                <span>{shopConfig?.phoneNumber || '0812-3456-7890'}</span>
-                            </div>
-                        </div>
-
-                        {/* Social */}
-                        <div>
-                            <h3 style={{ borderBottom: '2px solid white', paddingBottom: '10px', marginBottom: '15px', color: '#fef08a' }}>FOLLOW US</h3>
-                            <div style={{ display: 'flex', gap: '20px' }}>
-                                {shopConfig?.instagramUrl && (
-                                    <a href={shopConfig.instagramUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'white' }}><Instagram size={30} /></a>
-                                )}
-                                {shopConfig?.facebookUrl && (
-                                    <a href={shopConfig.facebookUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'white' }}><Facebook size={30} /></a>
-                                )}
-                                {shopConfig?.twitterUrl && (
-                                    <a href={shopConfig.twitterUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'white' }}><Globe size={30} /></a>
-                                )}
-                                {!shopConfig?.instagramUrl && !shopConfig?.facebookUrl && !shopConfig?.twitterUrl && (
-                                    <span style={{ opacity: 0.5 }}>No social media links.</span>
-                                )}
-                            </div>
-                        </div>
-
-                    </div>
-                    <div style={{ textAlign: 'center', marginTop: '40px', borderTop: '1px solid #333', paddingTop: '20px', fontSize: '0.8rem', opacity: 0.5 }}>
-                        &copy; {new Date().getFullYear()} {shopConfig?.shopName || 'SIAP NYAFE'}. All Rights Reserved.
-                    </div>
-                </footer>
 
                 {/* Background Image Style Body similar to Dashboard */}
                 <div style={{

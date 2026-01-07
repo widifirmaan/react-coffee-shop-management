@@ -34,6 +34,14 @@ public class AuthController {
         return "pong";
     }
 
+    @GetMapping("/check")
+    public ResponseEntity<?> checkSession(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+        return ResponseEntity.ok(authentication.getPrincipal());
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpServletRequest request,
             HttpServletResponse response) {

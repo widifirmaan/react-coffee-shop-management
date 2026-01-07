@@ -97,15 +97,30 @@ function AppContent() {
             try {
                 const parsedUser = JSON.parse(storedUser);
                 if (parsedUser) {
-                    setUser(parsedUser);
+                    // Verify session with backend
+                    axios.get('/api/auth/check')
+                        .then(() => {
+                            setUser(parsedUser);
+                        })
+                        .catch(() => {
+                            console.log("Session invalid or expired");
+                            localStorage.removeItem('user');
+                            setUser(null);
+                        })
+                        .finally(() => {
+                            setIsAuthenticating(false);
+                        });
                 } else {
                     localStorage.removeItem('user');
+                    setIsAuthenticating(false);
                 }
             } catch (e) {
                 localStorage.removeItem('user');
+                setIsAuthenticating(false);
             }
+        } else {
+            setIsAuthenticating(false);
         }
-        setIsAuthenticating(false);
     }, []);
 
     const handleLogin = (userData) => {
@@ -124,7 +139,12 @@ function AppContent() {
             (response) => response,
             (error) => {
                 if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-                    handleLogout();
+                    // Only redirect if not already on login page
+                    if (window.location.pathname !== '/login') {
+                        handleLogout();
+                        // Force redirect to login page
+                        window.location.href = '/login';
+                    }
                 }
                 return Promise.reject(error);
             }
@@ -153,7 +173,7 @@ function AppContent() {
 
     const getBgImage = () => {
         switch (location.pathname) {
-            case '/dashboard': return '/person-coffee.png';
+            case '/dashboard': return '/dashboard-pattern.png';
             case '/menu': return '/person-coffee.png';
             case '/finance': return '/person-laptop.png';
             case '/kitchen': return '/people-chatting.png';

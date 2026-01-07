@@ -2,6 +2,7 @@ package com.americano.coffeeshop.controller;
 
 import com.americano.coffeeshop.model.Order;
 import com.americano.coffeeshop.model.OrderStatus;
+import com.americano.coffeeshop.dto.UpdateOrderRequest;
 import com.americano.coffeeshop.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -28,5 +29,10 @@ public class OrderController {
     @PatchMapping("/{id}/status")
     public Order updateStatus(@PathVariable String id, @RequestParam OrderStatus status) {
         return orderService.updateOrderStatus(id, status);
+    }
+
+    @PutMapping("/{id}")
+    public Order updateOrder(@PathVariable String id, @RequestBody UpdateOrderRequest request) {
+        return orderService.updateOrder(id, request);
     }
 }

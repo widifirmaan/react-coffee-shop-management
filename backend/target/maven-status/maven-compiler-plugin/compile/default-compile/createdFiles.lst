@@ -27,7 +27,6 @@ com/americano/coffeeshop/model/Note.class
 com/americano/coffeeshop/controller/MenuController.class
 com/americano/coffeeshop/controller/CategoryController.class
 com/americano/coffeeshop/model/Order$OrderItem.class
-com/americano/coffeeshop/service/impl/OrderServiceImpl.class
 com/americano/coffeeshop/service/AttendanceService.class
 com/americano/coffeeshop/controller/AuthController.class
 com/americano/coffeeshop/CoffeeshopApplication.class
