@@ -1,9 +1,13 @@
 package com.americano.coffeeshop.service.impl;
 
+import com.americano.coffeeshop.dto.ShopConfigDTO;
+import com.americano.coffeeshop.mapper.ShopConfigMapper;
 import com.americano.coffeeshop.model.ShopConfig;
 import com.americano.coffeeshop.repository.ShopConfigRepository;
 import com.americano.coffeeshop.service.ShopConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,46 +18,48 @@ public class ShopConfigServiceImpl implements ShopConfigService {
     @Autowired
     private ShopConfigRepository shopConfigRepository;
 
+    @Autowired
+    private ShopConfigMapper shopConfigMapper;
+
     @Override
-    public ShopConfig getShopConfig() {
+    @Cacheable("shopConfig")
+    public ShopConfigDTO getShopConfig() {
         List<ShopConfig> configs = shopConfigRepository.findAll();
+        ShopConfig entity;
         if (configs.isEmpty()) {
             // Create Default
-            ShopConfig defaultBytes = new ShopConfig();
-            defaultBytes.setShopName("SIAP NYAFE");
-            defaultBytes.setWebsiteTitle("Siap Nyafe Dashboard");
-            defaultBytes.setAddress("Jl. Kopi No. 123, Jakarta");
-            defaultBytes.setPhoneNumber("0812-3456-7890");
-            return shopConfigRepository.save(defaultBytes);
+            entity = new ShopConfig();
+            entity.setShopName("SIAP NYAFE");
+            entity.setWebsiteTitle("Siap Nyafe Dashboard");
+            entity.setAddress("Jl. Kopi No. 123, Jakarta");
+            entity.setPhoneNumber("0812-3456-7890");
+            entity = shopConfigRepository.save(entity);
+        } else {
+            entity = configs.get(0);
         }
-        return configs.get(0);
+        return shopConfigMapper.toDTO(entity);
     }
 
     @Override
-    public ShopConfig updateShopConfig(ShopConfig config) {
-        ShopConfig current = getShopConfig();
-        current.setShopName(config.getShopName());
-        current.setWebsiteTitle(config.getWebsiteTitle());
-        current.setAddress(config.getAddress());
-        current.setPhoneNumber(config.getPhoneNumber());
-        current.setInstagramUrl(config.getInstagramUrl());
-        current.setFacebookUrl(config.getFacebookUrl());
-        current.setTwitterUrl(config.getTwitterUrl());
-
-        if (config.getFaviconUrl() != null && !config.getFaviconUrl().isEmpty()) {
-            current.setFaviconUrl(config.getFaviconUrl());
+    @CacheEvict(value = "shopConfig", allEntries = true)
+    public ShopConfigDTO updateShopConfig(ShopConfigDTO configDTO) {
+        // Get existing entity (bypass cache to be safe, but findAll is cheap for 1
+        // record)
+        List<ShopConfig> configs = shopConfigRepository.findAll();
+        ShopConfig current;
+        if (configs.isEmpty()) {
+            current = new ShopConfig();
+        } else {
+            current = configs.get(0);
         }
 
-        // Update Tech Specs
-        current.setTechSpec1(config.getTechSpec1());
-        current.setTechSpec2(config.getTechSpec2());
-        current.setTechSpec3(config.getTechSpec3());
+        // Map DTO to Entity
+        shopConfigMapper.updateEntityFromDTO(configDTO, current);
 
-        // Update Hero Section
-        current.setHeroImageUrl(config.getHeroImageUrl());
-        current.setBadgeText1(config.getBadgeText1());
-        current.setBadgeText2(config.getBadgeText2());
+        // Save Entity
+        ShopConfig saved = shopConfigRepository.save(current);
 
-        return shopConfigRepository.save(current);
+        // Return DTO
+        return shopConfigMapper.toDTO(saved);
     }
 }

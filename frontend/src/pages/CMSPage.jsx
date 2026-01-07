@@ -521,6 +521,7 @@ export default function CMSPage() {
                             <img
                                 src={menu.imageUrl || 'https://via.placeholder.com/300x300?text=COFFEE'}
                                 alt={menu.name}
+                                loading="lazy"
                                 style={{
                                     width: '100%',
                                     height: '300px',

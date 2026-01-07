@@ -1,9 +1,9 @@
 package com.americano.coffeeshop.service;
 
-import com.americano.coffeeshop.model.ShopConfig;
+import com.americano.coffeeshop.dto.ShopConfigDTO;
 
 public interface ShopConfigService {
-    ShopConfig getShopConfig();
+    ShopConfigDTO getShopConfig();
 
-    ShopConfig updateShopConfig(ShopConfig config);
+    ShopConfigDTO updateShopConfig(ShopConfigDTO configDTO);
 }
