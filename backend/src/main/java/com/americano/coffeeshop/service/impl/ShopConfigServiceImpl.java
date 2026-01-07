@@ -44,6 +44,16 @@ public class ShopConfigServiceImpl implements ShopConfigService {
             current.setFaviconUrl(config.getFaviconUrl());
         }
 
+        // Update Tech Specs
+        current.setTechSpec1(config.getTechSpec1());
+        current.setTechSpec2(config.getTechSpec2());
+        current.setTechSpec3(config.getTechSpec3());
+
+        // Update Hero Section
+        current.setHeroImageUrl(config.getHeroImageUrl());
+        current.setBadgeText1(config.getBadgeText1());
+        current.setBadgeText2(config.getBadgeText2());
+
         return shopConfigRepository.save(current);
     }
 }

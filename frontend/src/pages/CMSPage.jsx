@@ -406,20 +406,22 @@ export default function CMSPage() {
                             </div>
 
                             {/* Action Area */}
-                            <div style={{ marginTop: '20px' }}>
-                                <a href="https://wa.me/628123456789" target="_blank" rel="noopener noreferrer" style={{
-                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                    padding: '25px', background: 'black', color: 'white',
-                                    textDecoration: 'none', fontWeight: '900', fontSize: '1.5rem',
-                                    border: '4px solid black', transition: 'all 0.2s'
-                                }}
-                                    onMouseEnter={e => { e.currentTarget.style.background = '#FCD34D'; e.currentTarget.style.color = 'black'; }}
-                                    onMouseLeave={e => { e.currentTarget.style.background = 'black'; e.currentTarget.style.color = 'white'; }}
-                                >
-                                    <span>RESERVE_TABLE</span>
-                                    <ArrowRight size={32} />
-                                </a>
-                            </div>
+                            {!isMobile && (
+                                <div style={{ marginTop: '20px' }}>
+                                    <a href="https://wa.me/628123456789" target="_blank" rel="noopener noreferrer" style={{
+                                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                        padding: '25px', background: 'black', color: 'white',
+                                        textDecoration: 'none', fontWeight: '900', fontSize: '1.5rem',
+                                        border: '4px solid black', transition: 'all 0.2s'
+                                    }}
+                                        onMouseEnter={e => { e.currentTarget.style.background = '#FCD34D'; e.currentTarget.style.color = 'black'; }}
+                                        onMouseLeave={e => { e.currentTarget.style.background = 'black'; e.currentTarget.style.color = 'white'; }}
+                                    >
+                                        <span>RESERVE_TABLE</span>
+                                        <ArrowRight size={32} />
+                                    </a>
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -642,9 +644,28 @@ export default function CMSPage() {
                 )
             }
 
+            {/* Mobile Sticky Action Button */}
+            {isMobile && (
+                <a href="https://wa.me/628123456789" target="_blank" rel="noopener noreferrer" style={{
+                    position: 'fixed', bottom: '40px', right: '20px', left: 'auto',
+                    background: '#FCD34D', color: 'black',
+                    padding: '15px 25px', border: '4px solid black',
+                    boxShadow: '6px 6px 0 0 black',
+                    textDecoration: 'none', fontWeight: '900', fontSize: '1.2rem',
+                    display: 'flex', alignItems: 'center', gap: '10px',
+                    zIndex: 2000,
+                    opacity: (isInfoOpen || isMenuOpen) ? 0 : 1, transition: 'opacity 0.3s'
+                }}>
+                    <span>RESERVE</span>
+                    <ArrowRight size={20} />
+                </a>
+            )}
+
             {/* Sticker / Badge */}
             <div style={{
-                position: 'fixed', bottom: '40px', right: '40px',
+                position: 'fixed', bottom: '40px',
+                right: isMobile ? 'auto' : '40px',
+                left: isMobile ? '20px' : 'auto',
                 width: isMobile ? 'auto' : '120px',
                 height: isMobile ? 'auto' : '120px',
                 padding: isMobile ? '15px 25px' : '0',

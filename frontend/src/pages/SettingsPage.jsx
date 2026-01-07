@@ -66,8 +66,13 @@ export default function SettingsPage() {
             const res = await axios.post('/api/uploads', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            setConfig(prev => ({ ...prev, [fieldName]: res.data }));
-            setAlertMsg({ type: 'success', message: 'IMAGE UPLOADED!' });
+
+            const newUrl = res.data;
+
+            // Update local state ONLY (User must click Save)
+            setConfig(prev => ({ ...prev, [fieldName]: newUrl }));
+
+            setAlertMsg({ type: 'success', message: 'IMAGE UPLOADED! CLICK SAVE TO APPY.' });
 
             // Clear alert after 2 seconds
             setTimeout(() => setAlertMsg(null), 2000);

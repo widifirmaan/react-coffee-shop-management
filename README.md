@@ -32,6 +32,14 @@
 - **Shop Settings**: Configure Shop Name, Address, Social Media, and Logo dynamically.
 - **Authentication**: Secure login for staff/admin using JWT/Session-based auth.
 
+### 🎨 Neo-Brutalist CMS (Landing Page)
+- **Dynamic Content**: Fully customizable Hero section including Image (File Upload), Tech Spec Headers, and Floating Badges.
+- **Mobile First Design**:
+    - Adaptive Layout: Transforms significantly between Desktop and Mobile.
+    - **Thumb-Zone Controls**: Floating Action Buttons (Reserve) and Badges optimized for mobile usage.
+    - **Tech Specs**: Configurable header text (e.g., `// EST 2024`, `// V.1.0`).
+- **Blog Integration**: Dedicated section for "Latest Drops" managed via CMS.
+
 ---
 
 ## 🛠 Technology Stack
