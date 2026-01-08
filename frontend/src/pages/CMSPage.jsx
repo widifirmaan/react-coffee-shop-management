@@ -11,6 +11,49 @@ import 'swiper/css/effect-coverflow';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
+// --- Background Components ---
+const generateLetters = (count, startOffset = 0) => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const words = ["COFFEE", "JAVA", "BREW", "CAFE", "LATTE"]; // Optional: mix full words? User said "huruf" (letters). Sticking to chars.
+    return Array.from({ length: count }).map((_, i) => ({
+        id: i + startOffset,
+        char: chars[Math.floor(Math.random() * chars.length)],
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        size: 8 + Math.random() * 12, // 8rem to 20rem (Large!)
+        rotation: Math.random() * 360,
+        depth: 0.01 + Math.random() * 0.04
+    }));
+};
+
+const ParallaxBackground = ({ count, mousePos, color, startOffset = 0 }) => {
+    const [letters] = useState(() => generateLetters(count, startOffset));
+
+    return (
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+            {letters.map(l => (
+                <div key={l.id} style={{
+                    position: 'absolute',
+                    left: `${l.x}%`,
+                    top: `${l.y}%`,
+                    fontSize: `${l.size}rem`,
+                    lineHeight: 1,
+                    fontWeight: '900',
+                    fontFamily: 'Inter, sans-serif',
+                    color: 'transparent',
+                    WebkitTextStroke: `2px ${color}`,
+                    transform: `translate(${(mousePos.x - window.innerWidth / 2) * l.depth}px, ${(mousePos.y - window.innerHeight / 2) * l.depth}px) rotate(${l.rotation}deg)`,
+                    userSelect: 'none',
+                    opacity: 0.8,
+                    whiteSpace: 'nowrap'
+                }}>
+                    {l.char}
+                </div>
+            ))}
+        </div>
+    );
+};
+
 export default function CMSPage() {
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
     const [isInfoOpen, setIsInfoOpen] = useState(false);
@@ -126,6 +169,10 @@ export default function CMSPage() {
                         0% { transform: translateX(-50%); }
                         100% { transform: translateX(0); }
                     }
+                    @keyframes marquee-vertical {
+                        0% { transform: translateY(0); }
+                        100% { transform: translateY(-50%); }
+                    }
                     .marquee-container {
                         display: flex;
                         white-space: nowrap;
@@ -143,39 +190,39 @@ export default function CMSPage() {
                     }
                     .marquee-item {
                         font-size: 2rem;
-                        font-weight: 900;
-                        margin-right: 50px;
-                        text-transform: uppercase;
+                    font-weight: 900;
+                    margin-right: 50px;
+                    text-transform: uppercase;
                     }
                     .hover-image-reveal {
                         opacity: 0;
-                        transition: opacity 0.3s ease, transform 0.1s ease;
-                        pointer-events: none;
-                        position: fixed;
-                        z-index: 50;
-                        width: 250px;
-                        height: 250px;
-                        object-fit: cover;
-                        border: 4px solid black;
-                        transform: translate(-50%, -50%);
+                    transition: opacity 0.3s ease, transform 0.1s ease;
+                    pointer-events: none;
+                    position: fixed;
+                    z-index: 50;
+                    width: 250px;
+                    height: 250px;
+                    object-fit: cover;
+                    border: 4px solid black;
+                    transform: translate(-50%, -50%);
                     }
                     .menu-item:hover + .hover-image-reveal {
                         opacity: 1;
                     }
                     .menu-item {
                         font-size: 5rem;
-                        font-weight: 900;
-                        line-height: 1;
-                        cursor: pointer;
-                        transition: color 0.3s, transform 0.3s;
-                        text-transform: uppercase;
-                        mix-blend-mode: difference;
-                        color: black;
-                        display: block;
-                        text-decoration: none;
-                        background: none;
-                        border: none;
-                        padding: 0;
+                    font-weight: 900;
+                    line-height: 1;
+                    cursor: pointer;
+                    transition: color 0.3s, transform 0.3s;
+                    text-transform: uppercase;
+                    mix-blend-mode: difference;
+                    color: black;
+                    display: block;
+                    text-decoration: none;
+                    background: none;
+                    border: none;
+                    padding: 0;
                     }
                     .menu-item:hover {
                         color: transparent;
@@ -183,81 +230,96 @@ export default function CMSPage() {
                         transform: scale(1.05);
                         font-style: italic;
                     }
+                    @media (max-width: 768px) {
+                        .menu-item {
+                            font-size: 2.5rem;
+                        }
+                    }
+                    @media (max-width: 1500px) {
+                        .menu-item {
+                            font-size: 3rem;
+                        }
+                    }
+                    @media (max-width: 1300px) {
+                        .sidebar-desktop {
+                            display: none !important;
+                        }
+                    }
                     /* Promo Gate Animation */
-                    .promo-gate-left.open { transform: translateX(-100%); }
-                    .promo-gate-right.open { transform: translateX(100%); }
+                    .promo-gate-left.open {transform: translateX(-100%); }
+                    .promo-gate-right.open {transform: translateX(100%); }
 
                     /* Gate Panels */
                     .gate-panel {
                         transition: transform 0.8s cubic-bezier(0.77, 0, 0.175, 1);
-                        background: white;
-                        z-index: 10;
-                        position: relative;
+                    background: white;
+                    z-index: 10;
+                    position: relative;
                     }
-                    .gate-left.open { transform: translateX(-100%); }
-                    .gate-right.open { transform: translateX(100%); }
-                    
+                    .gate-left.open {transform: translateX(-100%); }
+                    .gate-right.open {transform: translateX(100%); }
+
                     /* Menu Overlay Slide Up */
                     .menu-overlay {
                         position: fixed;
-                        top: 0;
-                        left: 0;
-                        width: 100%;
-                        height: 100%;
-                        background: #111;
-                        z-index: 1000;
-                        transition: transform 0.6s cubic-bezier(0.85, 0, 0.15, 1);
-                        transform: translateY(100%);
-                        overflow-y: auto; /* Allow scroll */
-                        padding-top: 120px;
-                        padding-bottom: 100px;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: #111;
+                    z-index: 1000;
+                    transition: transform 0.6s cubic-bezier(0.85, 0, 0.15, 1);
+                    transform: translateY(100%);
+                    overflow-y: auto; /* Allow scroll */
+                    padding-top: 120px;
+                    padding-bottom: 100px;
                     }
                     .menu-overlay.active {
                         transform: translateY(0);
                     }
 
                     /* Swiper Styling */
-                    .swiper { width: 100%; padding-top: 50px; padding-bottom: 50px; }
+                    .swiper {width: 100%; padding-top: 50px; padding-bottom: 50px; }
                     .swiper-slide {
                         background-position: center;
-                        background-size: cover;
-                        width: 300px;
-                        height: 450px;
-                        background: #fff;
-                        border: 4px solid white;
-                        display: flex;
-                        flex-direction: column;
+                    background-size: cover;
+                    width: 300px;
+                    height: 450px;
+                    background: #fff;
+                    border: 4px solid white;
+                    display: flex;
+                    flex-direction: column;
                     }
                     .swiper-slide-shadow-left, .swiper-slide-shadow-right {
                         background-image: none !important; /* Remove default shadow gradient for cleaner look */
                     }
                     .menu-card-img {
                         width: 100%;
-                        height: 300px;
-                        object-fit: cover;
-                        border-bottom: 4px solid black;
-                        filter: grayscale(100%) contrast(1.2);
-                        transition: filter 0.3s;
+                    height: 300px;
+                    object-fit: cover;
+                    border-bottom: 4px solid black;
+                    filter: grayscale(100%) contrast(1.2);
+                    transition: filter 0.3s;
                     }
                     .swiper-slide-active .menu-card-img {
                         filter: grayscale(0%) contrast(1);
                     }
                     .menu-card-content {
                         padding: 20px;
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: space-between;
-                        flex: 1;
-                        background: #fff;
-                        color: black;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: space-between;
+                    flex: 1;
+                    background: #fff;
+                    color: black;
                     }
 
                     @media (max-width: 768px) {
-                        .menu-item { font-size: 3rem; }
-                        .hero-title { font-size: 3rem; }
-                        .gate-left.open { transform: translateY(-100%); }
-                        .gate-right.open { transform: translateY(100%); }
-                        .swiper-slide { width: 250px; height: 400px; }
+                        .menu - item {font - size: 3rem; }
+                    .hero-title {font - size: 3rem; }
+                    .gate-left.open {transform: translateY(-100%); }
+                    .gate-right.open {transform: translateY(100%); }
+                    .swiper-slide {width: 250px; height: 400px; }
                     }
                 `}
             </style>
@@ -329,20 +391,18 @@ export default function CMSPage() {
                     <div className={`gate-panel gate-left ${isInfoOpen ? 'open' : ''}`} style={{
                         display: 'flex', flexDirection: 'column',
                         borderRight: '4px solid black', pointerEvents: 'auto',
-                        backgroundColor: '#fafafa',
-                        backgroundImage: `
-                            linear-gradient(#e5e5e5 1px, transparent 1px),
-                            linear-gradient(90deg, #e5e5e5 1px, transparent 1px)
-                        `,
-                        backgroundSize: '40px 40px',
+                        backgroundColor: '#f8fafc', // Slate 50
                         position: 'relative',
                         overflow: 'hidden'
                     }}>
+                        {/* PARALLAX BACKGROUND LEFT */}
+                        <ParallaxBackground count={15} mousePos={mousePos} color="#cbd5e1" />
+
                         {/* Abstract Artistic Blur */}
                         <div style={{
                             position: 'absolute', top: '-20%', left: '-20%', width: '80%', height: '80%',
                             background: 'radial-gradient(circle, rgba(252, 211, 77, 0.15) 0%, rgba(255,255,255,0) 60%)',
-                            filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0
+                            filter: 'blur(80px)', pointerEvents: 'none', zIndex: 1
                         }} />
 
                         {/* Floating Logo Badge - Huge on Desktop (Static) */}
@@ -369,8 +429,9 @@ export default function CMSPage() {
                             display: 'flex', flexDirection: 'column',
                             justifyContent: 'space-between',
                             padding: '40px',
-                            position: 'relative', zIndex: 1
+                            position: 'relative', zIndex: 5
                         }}>
+                            {/* ... (Content remains same) ... */}
                             {/* Header Tech Specs */}
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'monospace', fontSize: '1rem', fontWeight: 'bold', borderBottom: '2px solid black', paddingBottom: '20px' }}>
                                 <span>{shopConfig?.techSpec1 || '// EST 2024'}</span>
@@ -382,11 +443,12 @@ export default function CMSPage() {
                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: isMobile ? 'center' : 'flex-start' }}>
                                 <img
                                     src={shopConfig?.heroImageUrl || "/illustration_hero.png?v=2"}
-                                    alt="Brutalist Coffee Illustration"
+                                    alt="Coffee Illustration"
                                     style={{
                                         width: '100%',
                                         maxWidth: '650px',
                                         height: 'auto',
+                                        maxHeight: '45vh',
                                         objectFit: 'contain',
                                         filter: 'drop-shadow(10px 10px 0px rgba(0,0,0,0.1))',
                                         transform: 'rotate(-2deg)',
@@ -430,11 +492,68 @@ export default function CMSPage() {
                         padding: '40px', display: 'flex', flexDirection: 'column',
                         justifyContent: 'center', alignItems: 'flex-start',
                         pointerEvents: 'auto', borderLeft: '4px solid black',
-                        backgroundColor: '#ffffff',
-                        backgroundImage: 'radial-gradient(#d1d5db 2px, transparent 2px)',
-                        backgroundSize: '30px 30px'
+                        backgroundColor: '#f8fafc', // Slate 50
+                        position: 'relative',
+                        overflow: 'hidden'
                     }}>
+                        {/* PARALLAX BACKGROUND RIGHT */}
+                        <ParallaxBackground count={10} mousePos={mousePos} color="#cbd5e1" startOffset={50} />
 
+                        {/* SIDEBAR GALLERY (Desktop Only) */}
+                        {!isMobile && (
+                            <div className="sidebar-desktop" style={{
+                                position: 'absolute',
+                                right: 0,
+                                top: 0,
+                                width: '280px',
+                                height: '100%',
+                                borderLeft: '4px solid black',
+                                background: 'white',
+                                overflow: 'hidden',
+                                zIndex: 15
+                            }}>
+                                {/* Masking Gradients */}
+                                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100px', background: 'linear-gradient(to bottom, white, transparent)', zIndex: 2 }}></div>
+                                <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '100px', background: 'linear-gradient(to top, white, transparent)', zIndex: 2 }}></div>
+
+                                {/* Scrolling Track */}
+                                <div style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    animation: 'marquee-vertical 20s linear infinite'
+                                }}>
+                                    {[...[
+                                        "https://images.unsplash.com/photo-1554118811-1e0d58224f24",
+                                        "https://images.unsplash.com/photo-1511920170033-f8396924c348",
+                                        "https://images.unsplash.com/photo-1521017432531-fbd92d768814",
+                                        "https://images.unsplash.com/photo-1509042239860-f550ce710b93",
+                                        "https://images.unsplash.com/photo-1559925393-8be0ec4767c8",
+                                        "https://images.unsplash.com/photo-1497935586351-b67a49e01000",
+                                    ], ...[
+                                        "https://images.unsplash.com/photo-1554118811-1e0d58224f24",
+                                        "https://images.unsplash.com/photo-1511920170033-f8396924c348",
+                                        "https://images.unsplash.com/photo-1521017432531-fbd92d768814",
+                                        "https://images.unsplash.com/photo-1509042239860-f550ce710b93",
+                                        "https://images.unsplash.com/photo-1559925393-8be0ec4767c8",
+                                        "https://images.unsplash.com/photo-1497935586351-b67a49e01000",
+                                    ]].map((img, i) => (
+                                        <div key={i} style={{ width: '100%', padding: '0', borderBottom: '4px solid black' }}>
+                                            <img
+                                                src={`${img}?auto=format&fit=crop&w=400&q=80`}
+                                                alt="Cafe Vibe"
+                                                style={{
+                                                    display: 'block',
+                                                    width: '100%',
+                                                    height: '280px',
+                                                    objectFit: 'cover',
+                                                    filter: 'grayscale(100%)'
+                                                }}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         <div style={{ zIndex: 10, display: 'flex', flexDirection: 'column', gap: '20px' }}>
                             {/* INFO */}
@@ -493,58 +612,50 @@ export default function CMSPage() {
                 </div>
 
                 <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-                    gap: '40px',
-                    maxWidth: '1400px',
-                    margin: '0 auto',
-                    padding: '180px 40px 100px 40px', // Increased top padding to 180px
-                    overflowY: 'auto',
-                    height: '100%'
+                    width: '100%',
+                    height: '100%',
+                    paddingTop: '180px', // Space for header
+                    paddingBottom: '100px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                 }}>
-                    {menus.map((menu) => (
-                        <div
-                            key={menu.id}
-                            onClick={() => handleMenuClick(menu)}
-                            className="menu-card-hover"
-                            style={{
-                                cursor: 'pointer',
-                                background: 'white',
-                                border: '4px solid white',
-                                transition: 'transform 0.2s',
-                                display: 'flex',
-                                flexDirection: 'column'
-                            }}
-                            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
-                            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                        >
-                            <img
-                                src={menu.imageUrl || 'https://via.placeholder.com/300x300?text=COFFEE'}
-                                alt={menu.name}
-                                loading="lazy"
-                                style={{
-                                    width: '100%',
-                                    height: '300px',
-                                    objectFit: 'cover',
-                                    borderBottom: '4px solid black',
-                                    filter: 'grayscale(100%) contrast(1.2)'
-                                }}
-                                onMouseEnter={e => e.target.style.filter = 'grayscale(0%) contrast(1)'}
-                                onMouseLeave={e => e.target.style.filter = 'grayscale(100%) contrast(1.2)'}
-                            />
-                            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                                <h3 style={{ fontSize: '1.5rem', fontWeight: '900', textTransform: 'uppercase', lineHeight: '1.2', marginBottom: '10px' }}>
-                                    {menu.name}
-                                </h3>
-                                <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '2px solid black', paddingTop: '10px' }}>
-                                    <span style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>Rp {menu.price.toLocaleString()}</span>
-                                    <div style={{ background: 'black', color: 'white', padding: '2px 8px', fontSize: '0.8rem', fontWeight: 'bold' }}>
-                                        {menu.category}
+                    <Swiper
+                        effect={'coverflow'}
+                        grabCursor={true}
+                        centeredSlides={true}
+                        slidesPerView={'auto'}
+                        initialSlide={1}
+                        coverflowEffect={{
+                            rotate: 0,
+                            stretch: 0,
+                            depth: 200,
+                            modifier: 1,
+                            slideShadows: true,
+                        }}
+                        pagination={{ clickable: true }}
+                        mousewheel={true}
+                        modules={[EffectCoverflow, Pagination, Mousewheel]}
+                        className="mySwiper"
+                        style={{ width: '100%', padding: '50px 0' }}
+                    >
+                        {menus.map((menu) => (
+                            <SwiperSlide key={menu.id} onClick={() => handleMenuClick(menu)}>
+                                <img
+                                    src={menu.imageUrl || 'https://via.placeholder.com/300x300?text=COFFEE'}
+                                    alt={menu.name}
+                                    className="menu-card-img"
+                                />
+                                <div className="menu-card-content">
+                                    <h3 style={{ fontSize: '1.5rem', fontWeight: '900', textTransform: 'uppercase', lineHeight: '1.2' }}>{menu.name}</h3>
+                                    <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '2px solid black', paddingTop: '10px' }}>
+                                        <span style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>Rp {menu.price.toLocaleString()}</span>
+                                        <div style={{ background: 'black', color: 'white', padding: '2px 8px', fontSize: '0.8rem', fontWeight: 'bold' }}>{menu.category}</div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    ))}
+                            </SwiperSlide>
+                        ))}
+                    </Swiper>
                 </div>
 
 
@@ -565,80 +676,90 @@ export default function CMSPage() {
                         <div
                             style={{
                                 background: 'white',
-                                maxWidth: '900px',
-                                width: '100%',
-                                display: 'flex',
-                                flexDirection: isMobile ? 'column' : 'row',
+                                maxWidth: '1200px',
+                                width: '95%',
                                 border: '4px solid white',
                                 maxHeight: '90vh',
-                                overflowY: isMobile ? 'auto' : 'hidden', // Scrollable on mobile
-                                overflowX: 'hidden'
+                                overflowY: 'auto',
+                                position: 'relative',
+                                padding: '30px',
+                                display: 'flex',
+                                flexDirection: 'column'
                             }}
                             onClick={e => e.stopPropagation()}
                         >
-                            {/* Image Section with Gallery */}
-                            <div style={{
-                                flex: isMobile ? 'none' : 1,
-                                height: isMobile ? '400px' : 'auto', // Fixed height for image on mobile
-                                borderRight: isMobile ? 'none' : '4px solid black',
-                                borderBottom: isMobile ? '4px solid black' : 'none',
-                                background: '#eee',
-                                display: 'flex',
-                                flexDirection: 'column'
-                            }}>
-                                <div style={{ flex: 1, overflow: 'hidden' }}>
-                                    <img
-                                        src={detailImage}
-                                        style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s' }}
-                                    />
+                            {/* Gallery Section */}
+                            <div style={{ position: 'relative', marginBottom: '30px' }}>
+                                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '15px', height: isMobile ? 'auto' : '400px' }}>
+                                    {/* Main Image */}
+                                    <div style={{ flex: 2, border: '4px solid black', background: '#ccc', position: 'relative', overflow: 'hidden', height: isMobile ? '300px' : '100%' }}>
+                                        <img
+                                            src={detailImage || selectedMenu.imageUrl || 'https://via.placeholder.com/600x400'}
+                                            alt={selectedMenu.name}
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                        />
+                                    </div>
+                                    {/* Thumbnails (Right Side on Desktop, Hidden/Row on Mobile?) OrderPage doesn't specify mobile well, but let's make it responsive */}
+                                    <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: '15px', height: isMobile ? '100px' : '100%' }}>
+                                        {[selectedMenu.imageUrl, ...(selectedMenu.gallery || [])].filter(Boolean).slice(0, 3).map((img, i) => (
+                                            <div
+                                                key={i}
+                                                onClick={(e) => { e.stopPropagation(); setDetailImage(img); }}
+                                                style={{
+                                                    flex: 1,
+                                                    border: '4px solid black',
+                                                    cursor: 'pointer',
+                                                    opacity: (detailImage || selectedMenu.imageUrl) === img ? 1 : 0.6,
+                                                    overflow: 'hidden',
+                                                    background: '#eee'
+                                                }}
+                                            >
+                                                <img src={img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                                {/* Thumbnails */}
-                                <div style={{ height: '100px', display: 'flex', borderTop: '4px solid black' }}>
-                                    {[selectedMenu.imageUrl, ...(selectedMenu.gallery || [])].filter(Boolean).slice(0, 4).map((img, i) => (
-                                        <div key={i}
-                                            onClick={(e) => { e.stopPropagation(); setDetailImage(img); }}
-                                            style={{
-                                                flex: 1,
-                                                borderRight: '4px solid black',
-                                                cursor: 'pointer',
-                                                opacity: detailImage === img ? 1 : 0.6,
-                                                height: '100%',
-                                                transition: 'opacity 0.2s'
-                                            }}>
-                                            <img src={img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                        </div>
-                                    ))}
-                                </div>
+
+                                {/* X Button (Top Right) */}
+                                <button
+                                    onClick={() => setSelectedMenu(null)}
+                                    style={{
+                                        position: 'absolute', top: -20, right: -20,
+                                        background: '#EF4444', color: 'white',
+                                        border: '4px solid black', width: '50px', height: '50px',
+                                        fontSize: '1.5rem', fontWeight: 'bold',
+                                        display: 'flex', justifyContent: 'center', alignItems: 'center',
+                                        cursor: 'pointer', zIndex: 10,
+                                        boxShadow: '4px 4px 0 0 black'
+                                    }}
+                                >
+                                    X
+                                </button>
                             </div>
 
                             {/* Content Section */}
-                            <div style={{ flex: 1, padding: '40px', display: 'flex', flexDirection: 'column', justifyContent: 'center', overflowY: 'auto' }}>
-                                <div style={{ marginBottom: '20px' }}>
-                                    <span style={{ background: '#FCD34D', padding: '5px 10px', fontWeight: '900', fontSize: '0.9rem', border: '2px solid black' }}>
-                                        {selectedMenu.category}
+                            <div>
+                                <h2 style={{ fontSize: '3rem', fontWeight: '900', lineHeight: 1, marginBottom: '15px' }}>{selectedMenu.name}</h2>
+                                <div style={{ marginBottom: '25px' }}>
+                                    <span style={{ background: '#FCD34D', padding: '5px 15px', fontWeight: '900', fontSize: '1.2rem', border: '2px solid black', boxShadow: '4px 4px 0 0 black' }}>
+                                        Rp {selectedMenu.price.toLocaleString()}
                                     </span>
                                 </div>
-                                <h2 style={{ fontSize: '3.5rem', fontWeight: '900', lineHeight: 0.9, marginBottom: '20px' }}>{selectedMenu.name}</h2>
-                                <p style={{ fontSize: '1.2rem', lineHeight: 1.6, marginBottom: '30px', fontWeight: 'bold', color: '#444' }}>
+
+                                <p style={{ fontSize: '1.2rem', lineHeight: 1.6, marginBottom: '30px', fontWeight: '500', color: '#333' }}>
                                     {selectedMenu.description || "A crafted masterpiece. Bold flavors designed to awaken your senses."}
                                 </p>
-                                <h3 style={{ fontSize: '2rem', fontWeight: '900', marginBottom: '30px' }}>
-                                    Rp {selectedMenu.price.toLocaleString()}
-                                </h3>
 
-                                <div style={{ display: 'flex', gap: '20px' }}>
-                                    <button onClick={() => setSelectedMenu(null)} style={{ padding: '15px 30px', background: 'transparent', border: '4px solid black', fontWeight: '900', cursor: 'pointer' }}>
-                                        CLOSE
-                                    </button>
-                                    <Link to="/order" style={{
-                                        padding: '15px 40px', background: 'black', color: 'white',
-                                        textDecoration: 'none', fontWeight: '900',
-                                        display: 'flex', alignItems: 'center', gap: '10px',
-                                        border: '4px solid black'
-                                    }}>
-                                        ORDER NOW <ArrowRight />
-                                    </Link>
-                                </div>
+                                <Link to="/order" style={{
+                                    padding: '20px', background: 'black', color: 'white',
+                                    textDecoration: 'none', fontWeight: '900', fontSize: '1.2rem',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px',
+                                    border: '4px solid black', width: '100%',
+                                    boxSizing: 'border-box',
+                                    transition: 'transform 0.1s'
+                                }}>
+                                    ORDER NOW <ArrowRight />
+                                </Link>
                             </div>
                         </div>
                     </div>
@@ -816,11 +937,7 @@ export default function CMSPage() {
                         </div>
 
                         {/* View All Details Button */}
-                        <div style={{ marginTop: '60px', textAlign: 'right' }}>
-                            <a href="#" style={{ fontSize: '1.5rem', fontWeight: '900', color: 'black', textDecoration: 'underline', textTransform: 'uppercase' }}>
-                                VIEW ARCHIVE -&gt;
-                            </a>
-                        </div>
+
                     </div>
                 </div>
             </div>

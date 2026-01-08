@@ -86,7 +86,7 @@ npm run dev
 - [x] Basic Ordering & Kitchen Flow
 - [x] Admin Dashboard & Analytics
 - [x] Edit Order & Payment Methods
-- [ ] **Inventory Management system** (Ingredient tracking)
+- [x] **Inventory Management system** (Ingredient tracking)
 - [ ] **Customer Loyalty Program**
 - [ ] **Multi-branch Support**
 - [ ] **Kitchen Printer Integration** (Thermal receipt printing)

@@ -1,23 +1,20 @@
 package com.americano.coffeeshop.config;
 
 import com.americano.coffeeshop.model.*;
-import com.americano.coffeeshop.repository.AttendanceRepository;
-import com.americano.coffeeshop.repository.CategoryRepository;
-import com.americano.coffeeshop.repository.EmployeeRepository;
-import com.americano.coffeeshop.repository.IngredientRepository;
-import com.americano.coffeeshop.repository.MenuRepository;
-import com.americano.coffeeshop.repository.OrderRepository;
-import com.americano.coffeeshop.repository.ShiftScheduleRepository;
+import com.americano.coffeeshop.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 @Component
 @RequiredArgsConstructor
@@ -31,36 +28,109 @@ public class DataLoader implements CommandLineRunner {
         private final OrderRepository orderRepository;
         private final ShiftScheduleRepository shiftScheduleRepository;
         private final PasswordEncoder passwordEncoder;
+        private final ShopConfigRepository shopConfigRepository;
+        private final PostRepository postRepository;
 
         @Override
         public void run(String... args) throws Exception {
-                // Clear data for fresh seeding
+                // Check if data exists
+                if (employeeRepository.count() > 0) {
+                        System.out.println("✅ Database already populated. Skipping data seeding.");
+                        return;
+                }
+
+                System.out.println("⚡ Starting Data Seeding...");
+
+                // Clear data
                 menuRepository.deleteAll();
                 categoryRepository.deleteAll();
                 ingredientRepository.deleteAll();
                 employeeRepository.deleteAll();
-                employeeRepository.deleteAll();
                 orderRepository.deleteAll();
                 shiftScheduleRepository.deleteAll();
                 attendanceRepository.deleteAll();
+                shopConfigRepository.deleteAll();
+                postRepository.deleteAll();
 
-                // CLEANUP DANGLING REFS in Employees to prevent 500 Errors
-                List<Employee> allEmployees = employeeRepository.findAll();
-                if (!allEmployees.isEmpty()) {
-                        for (Employee e : allEmployees) {
-                                e.setAttendanceRecord(null);
-                        }
-                        employeeRepository.saveAll(allEmployees);
-                        System.out.println("✓ Cleared stale attendance references from employees");
-                }
-
+                seedShopConfig();
                 seedCategories();
                 seedMenu();
                 seedIngredients();
                 seedEmployees();
-                seedOrders();
                 seedShifts();
-                System.out.println("✅ All Data Seeding Completed Successfully!");
+                seedAttendance();
+                seedOrders();
+                seedPosts();
+
+                System.out.println("✅ All Data Seeding Completed Successfully with NEW LOGIC!");
+        }
+
+        private void seedPosts() {
+                List<Post> posts = new ArrayList<>();
+
+                Post p1 = new Post();
+                p1.setTitle("GRAND OPENING PROMO 50% OFF");
+                p1.setCategory("PROMO");
+                p1.setExcerpt("Celebrate our grand opening with half-price on all coffee items!");
+                p1.setContent("<p>Join us for our grand opening week! All coffee beverages are 50% off.</p>");
+                p1.setImageUrl("https://images.unsplash.com/photo-1509042239860-f550ce710b93");
+                p1.setStatus("PUBLISHED");
+                p1.setCreatedAt(LocalDateTime.now().minusDays(5));
+                posts.add(p1);
+
+                Post p2 = new Post();
+                p2.setTitle("New Seasonal Menu: Sakura Matcha");
+                p2.setCategory("NEWS");
+                p2.setExcerpt("Experience the taste of spring with our new Sakura Matcha Latte.");
+                p2.setContent("<p>Limited time only! Authentic matcha with a hint of cherry blossom.</p>");
+                p2.setImageUrl("https://images.unsplash.com/photo-1541167760496-1628856ab772");
+                p2.setStatus("PUBLISHED");
+                p2.setCreatedAt(LocalDateTime.now().minusDays(2));
+                posts.add(p2);
+
+                postRepository.saveAll(posts);
+                System.out.println("✓ Blog Posts seeded (" + posts.size() + " items)");
+        }
+
+        private void seedShopConfig() {
+                ShopConfig config = new ShopConfig();
+                config.setShopName("SIAP NYAFE");
+                config.setWebsiteTitle("Siap Nyafe Dashboard");
+                config.setAddress("Jl. Kopi No. 123, Jakarta Selatan");
+                config.setPhoneNumber("0812-3456-7890");
+                config.setInstagramUrl("https://instagram.com/siapnyafe");
+
+                config.setTechSpec1("// EST 2026");
+                config.setTechSpec2("// JKT_SEL");
+                config.setTechSpec3("// V.2.0.FINAL");
+
+                config.setHeroImageUrl("/illustration_hero.png");
+                config.setBadgeText1("SIAP");
+                config.setBadgeText2("NYAFE");
+
+                shopConfigRepository.save(config);
+                System.out.println("✓ Shop Config seeded (with new UI fields)");
+        }
+
+        private void seedAttendance() {
+                List<Employee> activeStaff = employeeRepository.findAll().stream()
+                                .filter(e -> e.getPosition().equals("Manager") || e.getUsername().equals("barista")
+                                                || e.getUsername().equals("kitchen"))
+                                .toList();
+
+                for (Employee emp : activeStaff) {
+                        Attendance att = new Attendance();
+                        att.setEmployeeId(emp.getEmployeeId());
+                        att.setEmployeeName(emp.getName());
+                        att.setDate(LocalDate.now());
+                        att.setClockInTime(LocalDateTime.now().minusHours(4));
+                        att.setStatus("WORKING");
+                        att.setCheckInStatus("ON_TIME");
+
+                        attendanceRepository.save(att);
+                        // Removed erroneous emp.setAttendanceRecord(att) call
+                }
+                System.out.println("✓ Attendance seeded (" + activeStaff.size() + " active staff)");
         }
 
         private void seedCategories() {
@@ -84,186 +154,55 @@ public class DataLoader implements CommandLineRunner {
 
         private void seedMenu() {
                 List<Menu> menus = new ArrayList<>();
-
                 // Featured Item
                 menus.add(createMenu("Caramel Macchiato", "Featured",
                                 "Espresso with vanilla, steamed milk, and caramel drizzle", 45000,
                                 "https://images.unsplash.com/photo-1571181805149-2ce0b21e03db",
-                                Arrays.asList(
-                                                "https://images.unsplash.com/photo-1571181805149-2ce0b21e03db",
-                                                "https://images.unsplash.com/photo-1542291026-7eec264c27ff",
-                                                "https://images.unsplash.com/photo-1509042239860-f550ce710b93",
-                                                "https://images.unsplash.com/photo-1511920170033-f8396924c348")));
-
+                                Arrays.asList("https://images.unsplash.com/photo-1571181805149-2ce0b21e03db")));
                 // Coffee
-                menus.add(createMenu("Espresso", "Coffee",
-                                "Rich and bold single shot espresso", 25000,
-                                "https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04",
-                                Arrays.asList(
-                                                "https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04",
-                                                "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd",
-                                                "https://images.unsplash.com/photo-1559056199-641a0ac8b55e",
-                                                "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085")));
-
-                menus.add(createMenu("Americano", "Coffee",
-                                "Espresso diluted with hot water", 28000,
-                                "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd",
-                                Arrays.asList(
-                                                "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd",
-                                                "https://images.unsplash.com/photo-1509042239860-f550ce710b93",
-                                                "https://images.unsplash.com/photo-1497935586351-b67a49e01000",
-                                                "https://images.unsplash.com/photo-1461023058943-07fcbe16d735")));
-
-                menus.add(createMenu("Cappuccino", "Coffee",
-                                "Espresso with steamed milk and foam", 35000,
-                                "https://images.unsplash.com/photo-1517487881594-2787fef5ebf7",
-                                Arrays.asList(
-                                                "https://images.unsplash.com/photo-1517487881594-2787fef5ebf7",
-                                                "https://images.unsplash.com/photo-1534778101976-62847782c213",
-                                                "https://images.unsplash.com/photo-1572442388796-11668a67e53d",
-                                                "https://images.unsplash.com/photo-1570968915860-54d5c301fa9f")));
-
-                menus.add(createMenu("Cafe Latte", "Coffee",
-                                "Espresso with steamed milk", 38000,
-                                "https://images.unsplash.com/photo-1485808191679-5f86510681a2",
-                                Arrays.asList(
-                                                "https://images.unsplash.com/photo-1485808191679-5f86510681a2",
-                                                "https://images.unsplash.com/photo-1544787219-7f47ccb76574",
-                                                "https://images.unsplash.com/photo-1534778101976-62847782c213",
-                                                "https://images.unsplash.com/photo-1572442388796-11668a67e53d")));
-
-                menus.add(createMenu("Mocha", "Coffee",
-                                "Espresso with chocolate and steamed milk", 42000,
-                                "https://images.unsplash.com/photo-1542291026-7eec264c27ff",
-                                Arrays.asList(
-                                                "https://images.unsplash.com/photo-1542291026-7eec264c27ff",
-                                                "https://images.unsplash.com/photo-1511920170033-f8396924c348",
-                                                "https://images.unsplash.com/photo-1578374173703-4f8d26487d9a",
-                                                "https://images.unsplash.com/photo-1568649929103-2f6f8819e70f")));
-
-                menus.add(createMenu("Vietnamese Coffee", "Coffee",
-                                "Strong coffee with condensed milk", 32000,
-                                "https://images.unsplash.com/photo-1509042239860-f550ce710b93",
-                                Arrays.asList(
-                                                "https://images.unsplash.com/photo-1509042239860-f550ce710b93",
-                                                "https://images.unsplash.com/photo-1587734195503-904fca47e0e9",
-                                                "https://images.unsplash.com/photo-1517487881594-2787fef5ebf7",
-                                                "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd")));
-
+                menus.add(createMenu("Espresso", "Coffee", "Rich and bold single shot espresso", 25000,
+                                "https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04", null));
+                menus.add(createMenu("Americano", "Coffee", "Espresso diluted with hot water", 28000,
+                                "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd", null));
+                menus.add(createMenu("Cappuccino", "Coffee", "Espresso with steamed milk and foam", 35000,
+                                "https://images.unsplash.com/photo-1517487881594-2787fef5ebf7", null));
+                menus.add(createMenu("Cafe Latte", "Coffee", "Espresso with steamed milk", 38000,
+                                "https://images.unsplash.com/photo-1485808191679-5f86510681a2", null));
+                menus.add(createMenu("Mocha", "Coffee", "Espresso with chocolate and steamed milk", 42000,
+                                "https://images.unsplash.com/photo-1542291026-7eec264c27ff", null));
+                menus.add(createMenu("Vietnamese Coffee", "Coffee", "Strong coffee with condensed milk", 32000,
+                                "https://images.unsplash.com/photo-1509042239860-f550ce710b93", null)); // KDS Check
                 // Non-Coffee
-                menus.add(createMenu("Matcha Latte", "Non-Coffee",
-                                "Japanese green tea with steamed milk", 40000,
-                                "https://images.unsplash.com/photo-1536013266800-92e257e33b59",
-                                Arrays.asList(
-                                                "https://images.unsplash.com/photo-1536013266800-92e257e33b59",
-                                                "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9",
-                                                "https://images.unsplash.com/photo-1582793988951-9b7d8cd6279e",
-                                                "https://images.unsplash.com/photo-1541167760496-1628856ab772")));
-
-                menus.add(createMenu("Chocolate", "Non-Coffee",
-                                "Rich hot chocolate with whipped cream", 35000,
-                                "https://images.unsplash.com/photo-1542990253-0d0f5be5f0ed",
-                                Arrays.asList(
-                                                "https://images.unsplash.com/photo-1542990253-0d0f5be5f0ed",
-                                                "https://images.unsplash.com/photo-1553787499-6f5cd4097f8b",
-                                                "https://images.unsplash.com/photo-1517487881594-2787fef5ebf7",
-                                                "https://images.unsplash.com/photo-1511920170033-f8396924c348")));
-
-                menus.add(createMenu("Strawberry Smoothie", "Non-Coffee",
-                                "Fresh strawberry blended smoothie", 38000,
-                                "https://images.unsplash.com/photo-1505252585461-04db1eb84625",
-                                Arrays.asList(
-                                                "https://images.unsplash.com/photo-1505252585461-04db1eb84625",
-                                                "https://images.unsplash.com/photo-1546548970-71785318a17b",
-                                                "https://images.unsplash.com/photo-1553530666-ba11a7da3888",
-                                                "https://images.unsplash.com/photo-1577234286642-fc512a5f8f11")));
-
+                menus.add(createMenu("Matcha Latte", "Non-Coffee", "Japanese green tea with steamed milk", 40000,
+                                "https://images.unsplash.com/photo-1536013266800-92e257e33b59", null));
+                menus.add(createMenu("Chocolate", "Non-Coffee", "Rich hot chocolate with whipped cream", 35000,
+                                "https://images.unsplash.com/photo-1542990253-0d0f5be5f0ed", null));
+                menus.add(createMenu("Strawberry Smoothie", "Non-Coffee", "Fresh strawberry blended smoothie", 38000,
+                                "https://images.unsplash.com/photo-1505252585461-04db1eb84625", null));
                 // Tea
-                menus.add(createMenu("English Breakfast Tea", "Tea",
-                                "Classic black tea blend", 25000,
-                                "https://images.unsplash.com/photo-1576092768241-dec231879fc3",
-                                Arrays.asList(
-                                                "https://images.unsplash.com/photo-1576092768241-dec231879fc3",
-                                                "https://images.unsplash.com/photo-1556679343-c7306c1976bc",
-                                                "https://images.unsplash.com/photo-1597481499750-3e6b22637e12",
-                                                "https://images.unsplash.com/photo-1544787219-7f47ccb76574")));
-
-                menus.add(createMenu("Green Tea", "Tea",
-                                "Premium Japanese green tea", 28000,
-                                "https://images.unsplash.com/photo-1556679343-c7306c1976bc",
-                                Arrays.asList(
-                                                "https://images.unsplash.com/photo-1556679343-c7306c1976bc",
-                                                "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9",
-                                                "https://images.unsplash.com/photo-1597481499750-3e6b22637e12",
-                                                "https://images.unsplash.com/photo-1576092768241-dec231879fc3")));
-
-                menus.add(createMenu("Chamomile Tea", "Tea",
-                                "Relaxing herbal infusion", 27000,
-                                "https://images.unsplash.com/photo-1597481499750-3e6b22637e12",
-                                Arrays.asList(
-                                                "https://images.unsplash.com/photo-1597481499750-3e6b22637e12",
-                                                "https://images.unsplash.com/photo-1544787219-7f47ccb76574",
-                                                "https://images.unsplash.com/photo-1576092768241-dec231879fc3",
-                                                "https://images.unsplash.com/photo-1556679343-c7306c1976bc")));
-
+                menus.add(createMenu("English Breakfast Tea", "Tea", "Classic black tea blend", 25000,
+                                "https://images.unsplash.com/photo-1576092768241-dec231879fc3", null));
+                menus.add(createMenu("Green Tea", "Tea", "Premium Japanese green tea", 28000,
+                                "https://images.unsplash.com/photo-1556679343-c7306c1976bc", null));
+                menus.add(createMenu("Chamomile Tea", "Tea", "Relaxing herbal infusion", 27000,
+                                "https://images.unsplash.com/photo-1597481499750-3e6b22637e12", null));
                 // Pastry
-                menus.add(createMenu("Croissant", "Pastry",
-                                "Buttery French pastry", 22000,
-                                "https://images.unsplash.com/photo-1555507036-ab1f4038808a",
-                                Arrays.asList(
-                                                "https://images.unsplash.com/photo-1555507036-ab1f4038808a",
-                                                "https://images.unsplash.com/photo-1530610476181-d83430b64dcd",
-                                                "https://images.unsplash.com/photo-1509440159596-0249088772ff",
-                                                "https://images.unsplash.com/photo-1608198093002-ad4e0d1f6e9f")));
-
-                menus.add(createMenu("Chocolate Croissant", "Pastry",
-                                "Croissant filled with dark chocolate", 28000,
-                                "https://images.unsplash.com/photo-1530610476181-d83430b64dcd",
-                                Arrays.asList(
-                                                "https://images.unsplash.com/photo-1530610476181-d83430b64dcd",
-                                                "https://images.unsplash.com/photo-1555507036-ab1f4038808a",
-                                                "https://images.unsplash.com/photo-1608198093002-ad4e0d1f6e9f",
-                                                "https://images.unsplash.com/photo-1509440159596-0249088772ff")));
-
-                menus.add(createMenu("Blueberry Muffin", "Pastry",
-                                "Fresh baked muffin with blueberries", 25000,
-                                "https://images.unsplash.com/photo-1607958996333-41aef7caefaa",
-                                Arrays.asList(
-                                                "https://images.unsplash.com/photo-1607958996333-41aef7caefaa",
-                                                "https://images.unsplash.com/photo-1614707267537-b85aaf00c4b7",
-                                                "https://images.unsplash.com/photo-1608198093002-ad4e0d1f6e9f",
-                                                "https://images.unsplash.com/photo-1603532648955-039310d9ed75")));
-
+                menus.add(createMenu("Croissant", "Pastry", "Buttery French pastry", 22000,
+                                "https://images.unsplash.com/photo-1555507036-ab1f4038808a", null));
+                menus.add(createMenu("Chocolate Croissant", "Pastry", "Croissant filled with dark chocolate", 28000,
+                                "https://images.unsplash.com/photo-1530610476181-d83430b64dcd", null));
+                menus.add(createMenu("Blueberry Muffin", "Pastry", "Fresh baked muffin with blueberries", 25000,
+                                "https://images.unsplash.com/photo-1607958996333-41aef7caefaa", null));
                 // Dessert
-                menus.add(createMenu("Chocolate Cake", "Dessert",
-                                "Rich layered chocolate cake", 35000,
-                                "https://images.unsplash.com/photo-1578985545062-69928b1d9587",
-                                Arrays.asList(
-                                                "https://images.unsplash.com/photo-1578985545062-69928b1d9587",
-                                                "https://images.unsplash.com/photo-1565958011703-44f9829ba187",
-                                                "https://images.unsplash.com/photo-1588195538326-c5acd4371a08",
-                                                "https://images.unsplash.com/photo-1571115177098-24ec42ed204d")));
-
-                menus.add(createMenu("Cheesecake", "Dessert",
-                                "Creamy New York style cheesecake", 38000,
-                                "https://images.unsplash.com/photo-1533134242989-8f9c9d45dc1a",
-                                Arrays.asList(
-                                                "https://images.unsplash.com/photo-1533134242989-8f9c9d45dc1a",
-                                                "https://images.unsplash.com/photo-1524351199678-941a58a3df50",
-                                                "https://images.unsplash.com/photo-1567327942458-65446b85b2ee",
-                                                "https://images.unsplash.com/photo-1565958011703-44f9829ba187")));
-
-                menus.add(createMenu("Tiramisu", "Dessert",
-                                "Classic Italian coffee-flavored dessert", 42000,
-                                "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9",
-                                Arrays.asList(
-                                                "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9",
-                                                "https://images.unsplash.com/photo-1586040140378-b5af26e6b43c",
-                                                "https://images.unsplash.com/photo-1566739443557-02c3db36b1e6",
-                                                "https://images.unsplash.com/photo-1534432182912-63863115e106")));
+                menus.add(createMenu("Chocolate Cake", "Dessert", "Rich layered chocolate cake", 35000,
+                                "https://images.unsplash.com/photo-1578985545062-69928b1d9587", null));
+                menus.add(createMenu("Cheesecake", "Dessert", "Creamy New York style cheesecake", 38000,
+                                "https://images.unsplash.com/photo-1533134242989-8f9c9d45dc1a", null));
+                menus.add(createMenu("Tiramisu", "Dessert", "Classic Italian coffee-flavored dessert", 42000,
+                                "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9", null));
 
                 menuRepository.saveAll(menus);
-                System.out.println("✓ Menus seeded (" + menus.size() + " items with 4 images each)");
+                System.out.println("✓ Menus seeded (" + menus.size() + " items)");
         }
 
         private String optimizeUrl(String url) {
@@ -328,60 +267,25 @@ public class DataLoader implements CommandLineRunner {
 
         private void seedEmployees() {
                 String defaultPassword = passwordEncoder.encode("password123");
-
                 List<Employee> employees = Arrays.asList(
-                                // Manager
-                                createEmployee("EMP001", "Sarah Johnson", "Manager", "manager",
-                                                "sarah.johnson@americano.com",
-                                                "081234567890", "manager", defaultPassword, 15000000),
-
-                                // Baristas
-                                createEmployee("EMP002", "Michael Chen", "Barista", "barista",
-                                                "michael.chen@americano.com",
-                                                "081234567891", "barista", defaultPassword, 6500000),
-                                createEmployee("EMP003", "Emma Williams", "Barista", "barista2",
-                                                "emma.williams@americano.com",
-                                                "081234567892", "barista", defaultPassword, 6500000),
-                                createEmployee("EMP004", "David Martinez", "Barista", "barista3",
-                                                "david.martinez@americano.com",
-                                                "081234567893", "barista", defaultPassword, 6500000),
-
-                                // Cashiers
-                                createEmployee("EMP005", "Lisa Anderson", "Cashier", "cashier",
-                                                "lisa.anderson@americano.com",
-                                                "081234567894", "cashier", defaultPassword, 5500000),
-                                createEmployee("EMP006", "James Taylor", "Cashier", "cashier2",
-                                                "james.taylor@americano.com",
-                                                "081234567895", "cashier", defaultPassword, 5500000),
-
-                                // Kitchen Staff
+                                createEmployee("EMP001", "Sarah Johnson", "Manager", "manager", "sarah@americano.com",
+                                                "081", "manager",
+                                                defaultPassword, 15000000),
+                                createEmployee("EMP002", "Michael Chen", "Barista", "barista", "michael@americano.com",
+                                                "082",
+                                                "barista", defaultPassword, 6500000),
+                                createEmployee("EMP003", "Emma Williams", "Barista", "barista2", "emma@americano.com",
+                                                "083", "barista",
+                                                defaultPassword, 6500000),
+                                createEmployee("EMP005", "Lisa Anderson", "Cashier", "cashier", "lisa@americano.com",
+                                                "084", "cashier",
+                                                defaultPassword, 5500000),
                                 createEmployee("EMP007", "Sofia Rodriguez", "Kitchen Staff", "kitchen",
-                                                "sofia.rodriguez@americano.com",
-                                                "081234567896", "kitchen", defaultPassword, 6000000),
-                                createEmployee("EMP008", "Daniel Kim", "Kitchen Staff", "kitchen2",
-                                                "daniel.kim@americano.com",
-                                                "081234567897", "kitchen", defaultPassword, 6000000),
-                                createEmployee("EMP009", "Olivia Brown", "Kitchen Staff", "kitchen3",
-                                                "olivia.brown@americano.com",
-                                                "081234567898", "kitchen", defaultPassword, 6000000),
-
-                                // Waiters
-                                createEmployee("EMP010", "Ryan Davis", "Waiter", "waiter", "ryan.davis@americano.com",
-                                                "081234567899", "waiter", defaultPassword, 5000000),
-                                createEmployee("EMP011", "Isabella Garcia", "Waiter", "waiter2",
-                                                "isabella.garcia@americano.com",
-                                                "081234567800", "waiter", defaultPassword, 5000000),
-                                createEmployee("EMP012", "Lucas Wilson", "Waiter", "waiter3",
-                                                "lucas.wilson@americano.com",
-                                                "081234567801", "waiter", defaultPassword, 5000000),
-
-                                // Cleaning Staff
-                                createEmployee("EMP013", "Mia Thompson", "Cleaning Staff", "cleaning",
-                                                "mia.thompson@americano.com",
-                                                "081234567802", "cleaning", defaultPassword, 4500000),
-                                createEmployee("EMP014", "Ethan Moore", "Cleaning Staff", "cleaning2",
-                                                "ethan.moore@americano.com",
-                                                "081234567803", "cleaning", defaultPassword, 4500000));
+                                                "sofia@americano.com", "085",
+                                                "kitchen", defaultPassword, 6000000),
+                                createEmployee("EMP010", "Ryan Davis", "Waiter", "waiter", "ryan@americano.com", "086",
+                                                "waiter",
+                                                defaultPassword, 5000000));
 
                 employeeRepository.saveAll(employees);
                 System.out.println("✓ Employees seeded (" + employees.size() + " staff members)");
@@ -409,9 +313,7 @@ public class DataLoader implements CommandLineRunner {
                 List<ShiftSchedule> schedules = new ArrayList<>();
 
                 for (Employee emp : employees) {
-                        // Determine pattern based on index to make it look semi-realistic
                         int empIdx = employees.indexOf(emp);
-
                         for (DayOfWeek day : DayOfWeek.values()) {
                                 ShiftSchedule s = new ShiftSchedule();
                                 s.setEmployeeId(emp.getEmployeeId());
@@ -422,7 +324,6 @@ public class DataLoader implements CommandLineRunner {
                                 if (day == DayOfWeek.SUNDAY) {
                                         s.setShiftType(ShiftSchedule.ShiftType.OFF);
                                 } else {
-                                        // Pattern: Manager Morning, others rotated
                                         if (emp.getPosition().equalsIgnoreCase("Manager")) {
                                                 s.setShiftType(ShiftSchedule.ShiftType.MORNING);
                                         } else {
@@ -444,58 +345,87 @@ public class DataLoader implements CommandLineRunner {
 
         private void seedOrders() {
                 List<Order> orders = new ArrayList<>();
+                List<Menu> allMenu = menuRepository.findAll();
+                java.util.Random random = new java.util.Random();
 
-                // Sample orders from today
+                if (allMenu.isEmpty()) {
+                        System.out.println("⚠️ No menu items found, skipping random order generation.");
+                        return;
+                }
+
+                // 1. Historical Orders (Last 7 Days)
+                System.out.println("   Generating historical orders for Dashboard analytics...");
+                for (int i = 1; i <= 7; i++) {
+                        java.time.LocalDate date = java.time.LocalDate.now().minusDays(i);
+                        int dailyCount = 5 + random.nextInt(10); // 5 to 14 orders per day
+
+                        for (int j = 0; j < dailyCount; j++) {
+                                LocalDateTime time = date.atTime(8 + random.nextInt(12), random.nextInt(60));
+                                List<Order.OrderItem> items = new ArrayList<>();
+                                int itemCount = 1 + random.nextInt(3);
+                                for (int k = 0; k < itemCount; k++) {
+                                        Menu m = allMenu.get(random.nextInt(allMenu.size()));
+                                        items.add(createOrderItem(m.getName(), 1 + random.nextInt(2),
+                                                        m.getPrice().intValue()));
+                                }
+
+                                Order order = createOrder("Table " + (1 + random.nextInt(15)), "Guest", items,
+                                                OrderStatus.COMPLETED,
+                                                time);
+                                Order.ShiftStaff staff = new Order.ShiftStaff();
+                                staff.setBarista("Michael Chen");
+                                order.setShiftStaff(staff);
+                                orders.add(order);
+                        }
+                }
+
+                // 2. Active Orders
                 orders.add(createOrder("Table 1", "John Doe",
-                                Arrays.asList(
-                                                createOrderItem("Cappuccino", 2, 35000),
+                                Arrays.asList(createOrderItem("Cappuccino", 2, 35000),
                                                 createOrderItem("Croissant", 1, 22000)),
                                 OrderStatus.COMPLETED, LocalDateTime.now().minusHours(2)));
 
                 orders.add(createOrder("Table 3", "Jane Smith",
-                                Arrays.asList(
-                                                createOrderItem("Cafe Latte", 1, 38000),
+                                Arrays.asList(createOrderItem("Cafe Latte", 1, 38000),
                                                 createOrderItem("Chocolate Cake", 1, 35000)),
                                 OrderStatus.COMPLETED, LocalDateTime.now().minusHours(1)));
 
                 orders.add(createOrder("Table 5", "Bob Wilson",
-                                Arrays.asList(
-                                                createOrderItem("Americano", 2, 28000),
+                                Arrays.asList(createOrderItem("Americano", 2, 28000),
                                                 createOrderItem("Blueberry Muffin", 2, 25000)),
                                 OrderStatus.PENDING, LocalDateTime.now().minusMinutes(15)));
 
                 orders.add(createOrder("Takeaway", "Alice Brown",
-                                Arrays.asList(
-                                                createOrderItem("Matcha Latte", 1, 40000),
+                                Arrays.asList(createOrderItem("Matcha Latte", 1, 40000),
                                                 createOrderItem("Cheesecake", 1, 38000)),
                                 OrderStatus.PREPARING, LocalDateTime.now().minusMinutes(5)));
 
                 orders.add(createOrder("Table 7", "Charlie Davis",
-                                Arrays.asList(
-                                                createOrderItem("Mocha", 2, 42000),
-                                                createOrderItem("Tiramisu", 1, 42000),
+                                Arrays.asList(createOrderItem("Mocha", 2, 42000), createOrderItem("Tiramisu", 1, 42000),
                                                 createOrderItem("Espresso", 1, 25000)),
                                 OrderStatus.COMPLETED, LocalDateTime.now().minusHours(3)));
 
+                orders.add(createOrder("Table 9", "Eve Polastri",
+                                Arrays.asList(createOrderItem("Vietnamese Coffee", 1, 32000)),
+                                OrderStatus.READY_TO_SERVE, LocalDateTime.now().minusMinutes(2)));
+
                 orderRepository.saveAll(orders);
-                System.out.println("✓ Orders seeded (" + orders.size() + " sample orders)");
+                System.out.println("✓ Orders seeded (" + orders.size() + " total: historical & active)");
         }
 
         private Order createOrder(String tableNumber, String customerName, List<Order.OrderItem> items,
-                        OrderStatus status, LocalDateTime createdAt) {
+                        OrderStatus status,
+                        LocalDateTime createdAt) {
                 Order order = new Order();
                 order.setTableNumber(tableNumber);
                 order.setCustomerName(customerName);
                 order.setItems(items);
                 order.setStatus(status);
                 order.setCreatedAt(createdAt);
-
-                // Calculate total
                 BigDecimal total = items.stream()
                                 .map(item -> item.getPrice().multiply(new BigDecimal(item.getQuantity())))
                                 .reduce(BigDecimal.ZERO, BigDecimal::add);
                 order.setTotalAmount(total);
-
                 return order;
         }
 

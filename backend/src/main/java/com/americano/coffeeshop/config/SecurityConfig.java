@@ -42,6 +42,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/menus/**", "/api/categories/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/orders").permitAll() // Customers place orders (Public)
                         .requestMatchers(HttpMethod.GET, "/api/config").permitAll() // Shop config is public
+                        .requestMatchers(HttpMethod.GET, "/api/posts/published").permitAll() // Blog posts are public
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated())
 

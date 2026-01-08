@@ -141,6 +141,11 @@ function AppContent() {
             (response) => response,
             (error) => {
                 if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+                    // Ignore 401 from auth check, handled locally in App.useEffect
+                    if (error.config && error.config.url && error.config.url.includes('/api/auth/check')) {
+                        return Promise.reject(error);
+                    }
+
                     // Only redirect if not already on login page
                     if (window.location.pathname !== '/login') {
                         handleLogout();
