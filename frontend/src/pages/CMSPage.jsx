@@ -394,7 +394,7 @@ export default function CMSPage() {
                         backgroundColor: '#f8fafc', // Slate 50
                         position: 'relative',
                         overflow: 'hidden',
-                        minHeight: isMobile ? '60vh' : 'auto'
+                        minHeight: 'auto' // Remove forced height on mobile
                     }}>
                         {/* PARALLAX BACKGROUND LEFT */}
                         <ParallaxBackground count={15} mousePos={mousePos} color="#cbd5e1" />
@@ -429,12 +429,20 @@ export default function CMSPage() {
                             height: '100%',
                             display: 'flex', flexDirection: 'column',
                             justifyContent: 'space-between',
-                            padding: '40px',
+                            padding: isMobile ? '30px 30px 20px 30px' : '40px', // Reduced padding on mobile
                             position: 'relative', zIndex: 5
                         }}>
                             {/* ... (Content remains same) ... */}
                             {/* Header Tech Specs */}
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'monospace', fontSize: '1rem', fontWeight: 'bold', borderBottom: '2px solid black', paddingBottom: '20px' }}>
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                fontFamily: 'monospace',
+                                fontSize: isMobile ? '0.75rem' : '1rem',
+                                fontWeight: 'bold',
+                                borderBottom: '2px solid black',
+                                paddingBottom: isMobile ? '15px' : '20px'
+                            }}>
                                 <span>{shopConfig?.techSpec1 || '// EST 2024'}</span>
                                 <span>{shopConfig?.techSpec2 || '// JKT_ID'}</span>
                                 <span>{shopConfig?.techSpec3 || '// V.1.0'}</span>
@@ -442,30 +450,28 @@ export default function CMSPage() {
 
                             {/* Main Big Type (Replaced by Illustration) */}
                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: isMobile ? 'center' : 'flex-start' }}>
-                                {!isMobile && (
-                                    <img
-                                        src={shopConfig?.heroImageUrl || "/illustration_hero.png?v=2"}
-                                        alt="Coffee Illustration"
-                                        style={{
-                                            width: '100%',
-                                            maxWidth: '650px',
-                                            height: 'auto',
-                                            maxHeight: '45vh',
-                                            objectFit: 'contain',
-                                            filter: 'drop-shadow(10px 10px 0px rgba(0,0,0,0.1))',
-                                            transform: 'rotate(-2deg)',
-                                            marginBottom: '20px',
-                                            marginLeft: '-30px'
-                                        }}
-                                        onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }}
-                                    />
-                                )}
+                                <img
+                                    src={shopConfig?.heroImageUrl || "/illustration_hero.png?v=2"}
+                                    alt="Coffee Illustration"
+                                    style={{
+                                        width: '100%',
+                                        maxWidth: isMobile ? '200px' : '650px',
+                                        height: 'auto',
+                                        maxHeight: isMobile ? '15vh' : '45vh',
+                                        objectFit: 'contain',
+                                        filter: 'drop-shadow(10px 10px 0px rgba(0,0,0,0.1))',
+                                        transform: 'rotate(-2deg)',
+                                        marginBottom: isMobile ? '10px' : '20px',
+                                        marginLeft: isMobile ? '0' : '-30px'
+                                    }}
+                                    onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }}
+                                />
 
-                                <div style={{ marginTop: '10px', borderLeft: '4px solid #FCD34D', paddingLeft: '20px', width: '100%' }}>
-                                    <p style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: 0, fontFamily: 'monospace' }}>
+                                <div style={{ marginTop: isMobile ? '5px' : '10px', borderLeft: '4px solid #FCD34D', paddingLeft: isMobile ? '12px' : '20px', width: '100%' }}>
+                                    <p style={{ fontSize: isMobile ? '0.9rem' : '1.2rem', fontWeight: 'bold', margin: 0, fontFamily: 'monospace' }}>
                                         BEANS STATUS: <span style={{ color: '#059669' }}>ONLINE</span>
                                     </p>
-                                    <p style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: 0 }}>
+                                    <p style={{ fontSize: isMobile ? '0.9rem' : '1.2rem', fontWeight: 'bold', margin: 0 }}>
                                         SERVING PREMIUM CAFFEINE
                                     </p>
                                 </div>
@@ -493,14 +499,15 @@ export default function CMSPage() {
 
                     {/* Right Panel */}
                     <div className={`gate-panel gate-right ${isInfoOpen ? 'open' : ''}`} style={{
-                        padding: isMobile ? '40px 40px 140px 40px' : '40px', // Extra bottom padding on mobile
+                        padding: isMobile ? '40px 40px 140px 40px' : '40px', // Standard padding
                         display: 'flex', flexDirection: 'column',
-                        justifyContent: 'center', alignItems: 'flex-start',
+                        justifyContent: isMobile ? 'flex-start' : 'center', // Align to top on mobile
+                        alignItems: 'flex-start',
                         pointerEvents: 'auto', borderLeft: '4px solid black',
                         backgroundColor: '#f8fafc', // Slate 50
                         position: 'relative',
                         overflow: 'hidden',
-                        minHeight: isMobile ? '50vh' : 'auto'
+                        minHeight: 'auto' // Remove forced height
                     }}>
                         {/* PARALLAX BACKGROUND RIGHT */}
                         <ParallaxBackground count={10} mousePos={mousePos} color="#cbd5e1" startOffset={50} />
