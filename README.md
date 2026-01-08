@@ -1,96 +1,131 @@
-# ☕ SIAP NYAFE - Modern Coffee Shop Management System
+# ☕ Siap Nyafe - Modern Coffee Shop Management System
 
-**Siap Nyafe** is a comprehensive, modern web-based Point of Sale (POS) and Management System designed for coffee shops. It features a Neo-Brutalist design language, robust backend, and seamless real-time interaction between customers, kitchen staff, and administration.
+**Siap Nyafe** is a state-of-the-art, web-based Point of Sale (POS) and Management System designed specifically for modern coffee shops. Built with a high-performance **Spring Boot** backend and a dynamic **React** frontend, it features a distinctive **Neo-Brutalist** design language that sets it apart from generic management tools.
 
-![Project Status](https://img.shields.io/badge/Status-Active%20Development-green)
-![Tech Stack](https://img.shields.io/badge/Stack-SpringBoot%20%7C%20React%20%7C%20MongoDB-blue)
+![Status](https://img.shields.io/badge/Status-Active_Development-success?style=for-the-badge)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.2.1-green?style=for-the-badge&logo=spring)
+![React](https://img.shields.io/badge/React-18-blue?style=for-the-badge&logo=react)
+![MongoDB](https://img.shields.io/badge/MongoDB-Latest-forestgreen?style=for-the-badge&logo=mongodb)
 
 ---
 
-## 🚀 Key Features
+## 🚀 Features Overview
 
-### 🛒 Customer Ordering (QR / Public View)
-- **Interactive Menu**: Beautiful card-based menu with categories (Swipeable on mobile).
-- **Cart & Checkout**: Easy-to-use cart system.
-- **Dynamic Ordering**: Customers can input Name, Table Number (Dropdown), and **Special Notes** (e.g., "Less Sugar").
-- **Payment Methods**: Support for Cash, QRIS, Bank Transfer, E-Wallet, and Debit/Credit.
-- **Real-time Updates**: Order status flows directly to the kitchen.
-- **Shop Info**: Dynamic shop details (Name, Logo, Contact) fetched from Admin Settings.
+### �️ Customer Experience (Ordering)
+*   **Visual Menu**: Beautiful card-based layout with category filtering (Coffee, Non-Coffee, Snacks).
+*   **Smart Cart**: easy-to-use cart with quantity adjustments and special instruction fields (e.g., "Less Ice").
+*   **Self-Service**: Customers can input their name and table number directly.
+*   **Payment Integration**: Options for Cash, QRIS, and Card payments.
 
 ### 👨‍🍳 Kitchen Display System (KDS)
-- **Live Order Board**: Real-time view of incoming orders.
-- **Workflow Management**:
-  - `PENDING` -> `PREPARING` -> `READY` -> `COMPLETED`.
-- **Detailed Cards**: Shows items, customer info, table number, notes (highlighted), and assigned shift staff.
-- **Edit Capability**: Staff can edit orders (add items, change table, update payment method) directly from the kitchen view.
-- **Order History**: Log of completed orders with Requeue nctionality.
+*   **Real-Time Workflow**: Orders appear instantly with status states: `PENDING` ➔ `PREPARING` ➔ `READY` ➔ `SERVED`.
+*   **Digital Tickets**: Replaces paper tickets with clear, readable digital cards showing items, table, and notes.
+*   **Staff Assignment**: Tracks which shift member is handling specific orders.
 
-### 📊 Admin Dashboard & Management
-- **Dashboard**: Visual analytics of Revenue, Popular Items, and Order Traffic.
-- **Menu Management**: Add, edit, delete menu items with images, prices, and availability toggles.
-- **Employee & Shift**: Manage staff roles (Cashier, Barista, Kitchen, etc.) and assign them to shifts.
-- **Shop Settings**: Configure Shop Name, Address, Social Media, and Logo dynamically.
-- **Authentication**: Secure login for staff/admin using JWT/Session-based auth.
+### � Admin & Management Dashboard
+*   **Dashboard Hub**: A central view with sticky notes for team communication and quick stats.
+*   **Inventory Management**: Track ingredient levels, units, and low-stock alerts.
+*   **Finance & Transactions**: detailed logs of all sales and revenue tracking.
+*   **Employee Hub**: Manage staff profiles, roles, and shift schedules.
+*   **Menu CMS**: effortless addition/editing of menu items, prices, and images.
+*   **Content Management**: Manage the "Latest Drops" (News/Blog) section dynamically.
 
-### 🎨 Neo-Brutalist CMS (Landing Page)
-- **Dynamic Content**: Fully customizable Hero section including Image (File Upload), Tech Spec Headers, and Floating Badges.
-- **Mobile First Design**:
-    - Adaptive Layout: Transforms significantly between Desktop and Mobile.
-    - **Thumb-Zone Controls**: Floating Action Buttons (Reserve) and Badges optimized for mobile usage.
-    - **Tech Specs**: Configurable header text (e.g., `// EST 2024`, `// V.1.0`).
-- **Blog Integration**: Dedicated section for "Latest Drops" managed via CMS.
+### ⚙️ System Configuration
+*   **Dynamic Branding**: Change the Shop Name, Address, Social Media links, and Logo directly from settings.
+*   **Security**: Role-based access control (Admin, Employee) using Spring Security.
 
 ---
 
-## 🛠 Technology Stack
+## 🛠 Tech Stack
 
-### Backend
-- **Framework**: Java Spring Boot 3
-- **Database**: MongoDB
-- **Security**: Spring Security (Custom User Details, Password Encoding)
-- **Build Tool**: Maven
+### Backend (API Server)
+*   **Framework**: Java 21 + Spring Boot 3.2.1
+*   **Database**: MongoDB
+*   **Security**: Spring Security (JWT/Session)
+*   **Build Tool**: Maven
+*   **Key Modules**: `Lombok` (Boilerplate reduction), `Spring Data MongoDB`.
 
-### Frontend
-- **Framework**: React.js (Vite)
-- **Styling**: Vanilla CSS + Inline Styles (Neo-Brutalist Aesthetic) & Lucide Icons
-- **HTTP Client**: Axios
-- **State**: React Hooks (useState, useEffect)
+### Frontend (Client App)
+*   **Framework**: React.js 18
+*   **Build Tool**: Vite 5 (Super fast HMR)
+*   **Styling**: **Neo-Brutalist CSS**, Vanilla CSS modules, Lucide React Icons.
+*   **Libraries**: `Axios` (API requests), `Swiper` (Carousels), `React Router 6`.
 
 ---
 
-## 📦 Installation & Setup
+## 📂 Project Structure
+
+```bash
+/
+├── backend/                 # Spring Boot Server
+│   ├── src/main/java/...   # Controllers, Services, Models, Repositories
+│   └── src/main/resources/ # Config (application.properties)
+│
+└── frontend/                # React Vite Client
+    ├── src/
+    │   ├── components/     # Reusable UI components
+    │   ├── pages/          # Full page views (Dashboard, Menu, Kitchen, etc.)
+    │   └── assets/         # Images and global styles
+    └── public/             # Static assets
+```
+
+---
+
+## 📦 Getting Started
 
 ### Prerequisites
-- JDK 17+
-- Node.js 18+
-- MongoDB (Running locally or Atlas)
+*   **Java JDK 17** or higher (JDK 21 Recommended)
+*   **Node.js 18** or higher
+*   **MongoDB** (Local instance or MongoDB Atlas connection string)
 
 ### 1. Backend Setup
+Navigate to the backend directory and start the Spring Boot server.
+
 ```bash
 cd backend
+# Run with Maven Wrapper (Linux/Mac)
+./mvnw spring-boot:run
+# OR standard Maven
 mvn spring-boot:run
 ```
-*Server runs on `http://localhost:8080`*
+*The server will start on `http://localhost:8080`*
 
 ### 2. Frontend Setup
+Open a new terminal, navigate to the frontend, and start the Vite dev server.
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-*Client runs on `http://localhost:3000`*
+*The client will start on `http://localhost:3000`*
 
 ---
 
-## 🛣 Future Roadmap
-- [x] Basic Ordering & Kitchen Flow
-- [x] Admin Dashboard & Analytics
-- [x] Edit Order & Payment Methods
-- [x] **Inventory Management system** (Ingredient tracking)
-- [ ] **Customer Loyalty Program**
-- [ ] **Multi-branch Support**
-- [ ] **Kitchen Printer Integration** (Thermal receipt printing)
-- [ ] **Detailed Financial Reports** (Export to Excel/PDF)
+## � API Endpoints Snapshot
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/menus` | Fetch all menu items |
+| `POST` | `/api/orders` | Create a new customer order |
+| `GET` | `/api/orders/status/{status}` | Filter orders (e.g., PENDING) |
+| `GET` | `/api/ingredients` | Get inventory stock levels |
+| `POST` | `/api/auth/login` | Staff authentication |
+| `GET` | `/api/shop-config` | Get shop metadata (name, logo) |
+
+---
+
+## 🛣 Roadmap & Status
+
+- [x] **Core Ordering System** (Menu ➔ Cart ➔ Order)
+- [x] **Kitchen Workflow** (Status updates)
+- [x] **Admin Dashboard** (Analytics & Overview)
+- [x] **Inventory System** (Ingredient Stock)
+- [x] **Employee & Shift Management**
+- [x] **CMS for Landing Page**
+- [ ] **Advanced Reporting** (Export PDF/Excel)
+- [ ] **Customer Loyalty Points**
+- [ ] **Multi-location Support**
 
 ---
 
