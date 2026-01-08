@@ -116,6 +116,14 @@ npm run dev
 ---
 
 ## 🛣 Roadmap & Status
+---
+
+## 👥 Authors
+Developed by **Widi Firmaan** and the **Siap Nyafe Team**.
+
+## 📝 Development Guidelines
+For developers contributing to this project, please refer to our [Development Guidelines](DEVELOPMENT_GUIDELINES.md).
+We strictly adhere to **SOLID**, **KISS**, **DRY**, and **YAGNI** principles.
 
 - [x] **Core Ordering System** (Menu ➔ Cart ➔ Order)
 - [x] **Kitchen Workflow** (Status updates)

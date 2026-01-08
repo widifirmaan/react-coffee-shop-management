@@ -1,16 +1,14 @@
 package com.americano.coffeeshop.service;
 
-import com.americano.coffeeshop.model.Menu;
+import com.americano.coffeeshop.dto.MenuDTO;
 import java.util.List;
 
 public interface MenuService {
-    List<Menu> getAllMenus();
+    List<MenuDTO> getAllMenus();
 
-    List<Menu> getAvailableMenus();
+    MenuDTO addMenu(MenuDTO menu);
 
-    Menu addMenu(Menu menu);
-
-    Menu updateMenu(String id, Menu menu);
+    MenuDTO updateMenu(String id, MenuDTO menu);
 
     void deleteMenu(String id);
 }

@@ -1,11 +1,13 @@
 package com.americano.coffeeshop.service.impl;
 
+import com.americano.coffeeshop.dto.MenuDTO;
 import com.americano.coffeeshop.model.Menu;
 import com.americano.coffeeshop.repository.MenuRepository;
 import com.americano.coffeeshop.service.MenuService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -14,35 +16,22 @@ public class MenuServiceImpl implements MenuService {
     private final MenuRepository menuRepository;
 
     @Override
-    public List<Menu> getAllMenus() {
-        return menuRepository.findAll();
+    public List<MenuDTO> getAllMenus() {
+        return menuRepository.findAll().stream()
+                .map(MenuDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<Menu> getAvailableMenus() {
-        return menuRepository.findByAvailableTrue();
+    public MenuDTO addMenu(MenuDTO menuDto) {
+        return MenuDTO.fromEntity(menuRepository.save(menuDto.toEntity()));
     }
 
     @Override
-    public Menu addMenu(Menu menu) {
-        return menuRepository.save(menu);
-    }
-
-    @Override
-    public Menu updateMenu(String id, Menu menu) {
-        System.out.println("DEBUG: Updating Menu: " + menu.getName());
-        System.out
-                .println("DEBUG: Gallery received: " + (menu.getGallery() != null ? menu.getGallery().size() : "null"));
-        return menuRepository.findById(id).map(existing -> {
-            existing.setName(menu.getName());
-            existing.setDescription(menu.getDescription());
-            existing.setPrice(menu.getPrice());
-            existing.setCategory(menu.getCategory());
-            existing.setImageUrl(menu.getImageUrl());
-            existing.setGallery(menu.getGallery());
-            existing.setAvailable(menu.isAvailable());
-            return menuRepository.save(existing);
-        }).orElse(null);
+    public MenuDTO updateMenu(String id, MenuDTO menuDto) {
+        Menu menu = menuDto.toEntity();
+        menu.setId(id); // Ensure ID is preserved
+        return MenuDTO.fromEntity(menuRepository.save(menu));
     }
 
     @Override

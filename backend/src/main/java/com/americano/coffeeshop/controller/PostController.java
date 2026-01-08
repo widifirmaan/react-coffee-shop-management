@@ -1,43 +1,42 @@
 package com.americano.coffeeshop.controller;
 
-import com.americano.coffeeshop.model.Post;
+import com.americano.coffeeshop.dto.PostDTO;
 import com.americano.coffeeshop.service.PostService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/posts")
+@RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class PostController {
 
-    @Autowired
-    private PostService postService;
+    private final PostService postService;
 
     @GetMapping
-    public List<Post> getAllPosts() {
+    public List<PostDTO> getAllPosts() {
         return postService.getAllPosts();
     }
 
     @GetMapping("/published")
-    public List<Post> getPublishedPosts() {
+    public List<PostDTO> getPublishedPosts() {
         return postService.getPublishedPosts();
     }
 
     @GetMapping("/{id}")
-    public Post getPostById(@PathVariable String id) {
+    public PostDTO getPostById(@PathVariable String id) {
         return postService.getPostById(id);
     }
 
     @PostMapping
-    public Post createPost(@RequestBody Post post) {
+    public PostDTO createPost(@RequestBody PostDTO post) {
         return postService.createPost(post);
     }
 
     @PutMapping("/{id}")
-    public Post updatePost(@PathVariable String id, @RequestBody Post post) {
+    public PostDTO updatePost(@PathVariable String id, @RequestBody PostDTO post) {
         return postService.updatePost(id, post);
     }
 

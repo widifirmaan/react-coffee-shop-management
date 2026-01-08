@@ -1,6 +1,6 @@
 package com.americano.coffeeshop.controller;
 
-import com.americano.coffeeshop.model.Transaction;
+import com.americano.coffeeshop.dto.TransactionDTO;
 import com.americano.coffeeshop.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -15,12 +15,12 @@ public class TransactionController {
     private final TransactionService transactionService;
 
     @GetMapping
-    public List<Transaction> getAllTransactions() {
+    public List<TransactionDTO> getAllTransactions() {
         return transactionService.getAllTransactions();
     }
 
     @PostMapping
-    public Transaction addTransaction(@RequestBody Transaction transaction) {
+    public TransactionDTO addTransaction(@RequestBody TransactionDTO transaction) {
         return transactionService.addTransaction(transaction);
     }
 }

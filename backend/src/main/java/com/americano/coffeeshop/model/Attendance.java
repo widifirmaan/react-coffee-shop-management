@@ -16,8 +16,9 @@ public class Attendance {
     private LocalDate date;
     private LocalDateTime clockInTime;
     private LocalDateTime clockOutTime;
-    private String status; // 'WORKING', 'COMPLETED'
-    private String checkInStatus; // 'ON_TIME', 'LATE'
+    private Double hoursWorked; // Added
+    private String status;
+    private String checkInStatus;
     private Long minutesLate;
-    private String debugInfo; // Temporary for debugging
+    private String debugInfo;
 }

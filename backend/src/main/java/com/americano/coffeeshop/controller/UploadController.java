@@ -1,35 +1,27 @@
 package com.americano.coffeeshop.controller;
 
+import com.americano.coffeeshop.service.StorageService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/uploads")
 @CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class UploadController {
 
-    private final String UPLOAD_DIR = "uploads/";
+    private final StorageService storageService;
 
     @PostMapping
-    public String uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
-        if (file.isEmpty()) {
-            return "";
+    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
+        try {
+            String fileUrl = storageService.store(file);
+            return ResponseEntity.ok(fileUrl);
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().body("Failed to upload file: " + e.getMessage());
         }
-
-        Path uploadPath = Paths.get(UPLOAD_DIR);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
-        }
-
-        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-        Path filePath = uploadPath.resolve(fileName);
-        Files.copy(file.getInputStream(), filePath);
-
-        return "/uploads/" + fileName;
     }
 }

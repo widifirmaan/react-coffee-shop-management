@@ -1,7 +1,7 @@
 package com.americano.coffeeshop.controller;
 
-import com.americano.coffeeshop.model.Category;
-import com.americano.coffeeshop.repository.CategoryRepository;
+import com.americano.coffeeshop.dto.CategoryDTO;
+import com.americano.coffeeshop.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -12,20 +12,20 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class CategoryController {
 
-    private final CategoryRepository categoryRepository;
+    private final CategoryService categoryService;
 
     @GetMapping
-    public List<Category> getAll() {
-        return categoryRepository.findAll();
+    public List<CategoryDTO> getAll() {
+        return categoryService.getAllCategories();
     }
 
     @PostMapping
-    public Category create(@RequestBody Category category) {
-        return categoryRepository.save(category);
+    public CategoryDTO create(@RequestBody CategoryDTO category) {
+        return categoryService.createCategory(category);
     }
 
     @DeleteMapping("/{id}")
     public void delete(@PathVariable String id) {
-        categoryRepository.deleteById(id);
+        categoryService.deleteCategory(id);
     }
 }

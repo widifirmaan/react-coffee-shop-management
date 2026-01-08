@@ -1,18 +1,18 @@
 package com.americano.coffeeshop.service;
 
-import com.americano.coffeeshop.model.Post;
+import com.americano.coffeeshop.dto.PostDTO;
 import java.util.List;
 
 public interface PostService {
-    List<Post> getAllPosts();
+    List<PostDTO> getAllPosts();
 
-    List<Post> getPublishedPosts();
+    List<PostDTO> getPublishedPosts();
 
-    Post createPost(Post post);
+    PostDTO getPostById(String id);
 
-    Post updatePost(String id, Post post);
+    PostDTO createPost(PostDTO post);
+
+    PostDTO updatePost(String id, PostDTO post);
 
     void deletePost(String id);
-
-    Post getPostById(String id);
 }

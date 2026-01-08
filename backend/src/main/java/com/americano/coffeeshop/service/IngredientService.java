@@ -1,10 +1,14 @@
 package com.americano.coffeeshop.service;
 
-import com.americano.coffeeshop.model.Ingredient;
+import com.americano.coffeeshop.dto.IngredientDTO;
 import java.util.List;
 
 public interface IngredientService {
-    List<Ingredient> getAllIngredients();
+    List<IngredientDTO> getAllIngredients();
 
-    Ingredient addIngredient(Ingredient ingredient);
+    IngredientDTO addIngredient(IngredientDTO ingredient);
+
+    IngredientDTO updateIngredient(String id, IngredientDTO ingredient);
+
+    void deleteIngredient(String id);
 }

@@ -1,6 +1,7 @@
 package com.americano.coffeeshop.dto;
 
 import lombok.Data;
+import java.util.List;
 
 @Data
 public class ShopConfigDTO {
@@ -8,15 +9,26 @@ public class ShopConfigDTO {
     private String shopName;
     private String websiteTitle;
     private String faviconUrl;
+    private String logoUrl;
 
     // Footer / Contact
     private String address;
     private String phoneNumber;
 
-    // Social Media
+    // Social Media (Legacy)
     private String instagramUrl;
     private String facebookUrl;
     private String twitterUrl;
+
+    // Dynamic Social Media Links
+    private List<SocialLinkDTO> socialLinks;
+
+    @Data
+    public static class SocialLinkDTO {
+        private String platform;
+        private String url;
+        private String icon;
+    }
 
     // Tech Specs Header
     private String techSpec1;

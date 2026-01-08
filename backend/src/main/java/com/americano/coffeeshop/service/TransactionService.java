@@ -1,12 +1,10 @@
 package com.americano.coffeeshop.service;
 
-import com.americano.coffeeshop.model.Transaction;
+import com.americano.coffeeshop.dto.TransactionDTO;
 import java.util.List;
 
 public interface TransactionService {
-    List<Transaction> getAllTransactions();
+    List<TransactionDTO> getAllTransactions();
 
-    Transaction addTransaction(Transaction transaction);
-
-    Transaction recordOrderIncome(String orderId, java.math.BigDecimal amount);
+    TransactionDTO addTransaction(TransactionDTO transaction);
 }

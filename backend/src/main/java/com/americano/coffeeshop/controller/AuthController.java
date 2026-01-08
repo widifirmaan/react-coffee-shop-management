@@ -1,8 +1,10 @@
 package com.americano.coffeeshop.controller;
 
+import com.americano.coffeeshop.dto.EmployeeDTO;
 import com.americano.coffeeshop.dto.LoginRequest;
 import com.americano.coffeeshop.model.Employee;
 import com.americano.coffeeshop.repository.EmployeeRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
+@Slf4j
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -26,7 +29,6 @@ public class AuthController {
     public AuthController(AuthenticationManager authenticationManager, EmployeeRepository employeeRepository) {
         this.authenticationManager = authenticationManager;
         this.employeeRepository = employeeRepository;
-        System.out.println("DEBUG: AuthController Initialized");
     }
 
     @GetMapping("/ping")
@@ -39,13 +41,16 @@ public class AuthController {
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(401).body("Unauthorized");
         }
+        // Principal is usually UserDetails, need to cast or find entity
+        // For simplicity in this session setup, we might return principal or fetch
+        // clean DTO
         return ResponseEntity.ok(authentication.getPrincipal());
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpServletRequest request,
+    public ResponseEntity<EmployeeDTO> login(@RequestBody LoginRequest loginRequest, HttpServletRequest request,
             HttpServletResponse response) {
-        System.out.println("DEBUG: Login Request Received for user: " + loginRequest.getUsername());
+        log.info("Login Request Received for user: {}", loginRequest.getUsername());
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
@@ -54,13 +59,15 @@ public class AuthController {
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
 
-        // Crucial for Spring Boot 3+: explicitly save the context to the session
         securityContextRepository.saveContext(context, request, response);
 
         Employee employee = employeeRepository.findByUsername(loginRequest.getUsername()).orElseThrow();
-        // Don't return the password
-        employee.setPassword(null);
 
-        return ResponseEntity.ok(employee);
+        // Treat null as true (legacy users)
+        if (Boolean.FALSE.equals(employee.getActive())) {
+            return ResponseEntity.status(403).body(null);
+        }
+
+        return ResponseEntity.ok(EmployeeDTO.fromEntity(employee));
     }
 }

@@ -455,6 +455,7 @@ export default function CMSPage() {
                                         marginBottom: '20px',
                                         marginLeft: isMobile ? '0' : '-30px'
                                     }}
+                                    onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }}
                                 />
 
                                 <div style={{ marginTop: '10px', borderLeft: '4px solid #FCD34D', paddingLeft: '20px', width: '100%' }}>
@@ -548,6 +549,7 @@ export default function CMSPage() {
                                                     objectFit: 'cover',
                                                     filter: 'grayscale(100%)'
                                                 }}
+                                                onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
                                             />
                                         </div>
                                     ))}
@@ -645,6 +647,7 @@ export default function CMSPage() {
                                     src={menu.imageUrl || 'https://via.placeholder.com/300x300?text=COFFEE'}
                                     alt={menu.name}
                                     className="menu-card-img"
+                                    onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }}
                                 />
                                 <div className="menu-card-content">
                                     <h3 style={{ fontSize: '1.5rem', fontWeight: '900', textTransform: 'uppercase', lineHeight: '1.2' }}>{menu.name}</h3>
@@ -697,6 +700,7 @@ export default function CMSPage() {
                                             src={detailImage || selectedMenu.imageUrl || 'https://via.placeholder.com/600x400'}
                                             alt={selectedMenu.name}
                                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                            onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }}
                                         />
                                     </div>
                                     {/* Thumbnails (Right Side on Desktop, Hidden/Row on Mobile?) OrderPage doesn't specify mobile well, but let's make it responsive */}
@@ -714,7 +718,11 @@ export default function CMSPage() {
                                                     background: '#eee'
                                                 }}
                                             >
-                                                <img src={img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                <img
+                                                    src={img}
+                                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                    onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/200x200/e0e0e0/000000?text=No+Image" }}
+                                                />
                                             </div>
                                         ))}
                                     </div>
@@ -920,10 +928,10 @@ export default function CMSPage() {
                                     >
                                         <div style={{ background: post.category === 'PROMO' ? 'white' : 'black', color: post.category === 'PROMO' ? 'black' : 'white', display: 'inline-block', padding: '5px 15px', fontWeight: 'bold', marginBottom: '20px', fontSize: '0.9rem', alignSelf: 'flex-start' }}>{post.category}</div>
                                         {post.imageUrl && <img src={post.imageUrl} style={{ width: '100%', height: '150px', objectFit: 'cover', border: '2px solid black', marginBottom: '15px' }} />}
-                                        <h3 style={{ fontSize: '2.5rem', fontWeight: '900', lineHeight: 0.9, marginBottom: '10px' }}>{post.title}</h3>
-                                        <p style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: '20px 0', lineHeight: 1.4, flex: 1 }}>{post.excerpt}</p>
+                                        <h3 style={{ fontSize: '2.5rem', fontWeight: '900', lineHeight: 0.9, marginBottom: '10px', wordBreak: 'break-word', overflowWrap: 'break-word' }}>{post.title}</h3>
+                                        <p style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: '20px 0', lineHeight: 1.4, flex: 1, wordBreak: 'break-word', overflowWrap: 'break-word' }}>{post.excerpt}</p>
                                         <div style={{ fontSize: '0.9rem', opacity: 0.7, marginTop: 'auto', borderTop: post.category === 'PROMO' ? '2px solid white' : '2px solid black', paddingTop: '10px', fontWeight: 'bold' }}>
-                                            POSTED: {new Date(post.createdAt).toLocaleDateString()}
+                                            POSTED: {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : 'N/A'}
                                         </div>
                                     </div>
                                 ))
@@ -992,11 +1000,11 @@ export default function CMSPage() {
                                     {selectedPost.category}
                                 </span>
                                 <span style={{ fontWeight: '900', fontSize: '1.2rem', opacity: 1, borderBottom: '4px solid black' }}>
-                                    {new Date(selectedPost.createdAt).toLocaleDateString()}
+                                    {selectedPost.createdAt ? new Date(selectedPost.createdAt).toLocaleDateString() : 'N/A'}
                                 </span>
                             </div>
 
-                            <h1 style={{ fontSize: isMobile ? '2.5rem' : '4rem', fontWeight: '900', lineHeight: 0.9, marginBottom: '40px', textTransform: 'uppercase' }}>
+                            <h1 style={{ fontSize: isMobile ? '2.5rem' : '4rem', fontWeight: '900', lineHeight: 0.9, marginBottom: '40px', textTransform: 'uppercase', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                                 {selectedPost.title}
                             </h1>
 

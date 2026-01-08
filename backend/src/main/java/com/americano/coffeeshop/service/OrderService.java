@@ -1,18 +1,17 @@
 package com.americano.coffeeshop.service;
 
-import com.americano.coffeeshop.model.Order;
-import com.americano.coffeeshop.model.OrderStatus;
+import com.americano.coffeeshop.dto.CreateOrderRequest;
+import com.americano.coffeeshop.dto.OrderDTO;
 import com.americano.coffeeshop.dto.UpdateOrderRequest;
+import com.americano.coffeeshop.model.OrderStatus;
 import java.util.List;
 
 public interface OrderService {
-    Order createOrder(Order order);
+    List<OrderDTO> getAllOrders();
 
-    List<Order> getAllOrders();
+    OrderDTO createOrder(CreateOrderRequest request);
 
-    List<Order> getOrdersByStatus(OrderStatus status);
+    OrderDTO updateOrderStatus(String id, OrderStatus status);
 
-    Order updateOrderStatus(String id, OrderStatus status);
-
-    Order updateOrder(String id, UpdateOrderRequest request);
+    OrderDTO updateOrder(String id, UpdateOrderRequest request);
 }

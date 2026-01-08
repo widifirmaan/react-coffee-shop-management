@@ -3,7 +3,6 @@ package com.americano.coffeeshop.model;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -12,32 +11,31 @@ import java.util.List;
 public class Order {
     @Id
     private String id;
-    private String tableNumber; // "Takeaway" or Table Number
+    private String orderNumber;
+    private String tableNumber; // String to support "Takeaway"
     private String customerName;
     private List<OrderItem> items;
-    private BigDecimal totalAmount;
+
+    // Financials
+    private Double totalPrice;
+    private Double tax;
+    private Double grandTotal;
+
+    // Status & Notes
     private OrderStatus status;
-    private String notes; // Customer notes (e.g. less sugar)
-    private String paymentMethod; // e.g., CASH, QRIS, DEBIT
+    private String note;
+    private String paymentMethod;
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    // Shift Staff Information (employees working during this order)
-    private ShiftStaff shiftStaff;
-
-    @Data
-    public static class ShiftStaff {
-        private String cashier;
-        private String barista;
-        private String kitchenStaff;
-        private String waiter;
-        private String cleaningService;
-    }
+    // Staff Assignment
+    private String assignedStaffId;
+    private String assignedStaffName;
 
     @Data
     public static class OrderItem {
         private String menuId;
         private String menuName;
         private int quantity;
-        private BigDecimal price;
+        private Double price;
     }
 }

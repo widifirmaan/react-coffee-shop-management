@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -76,6 +76,7 @@ public class DataLoader implements CommandLineRunner {
                 p1.setImageUrl("https://images.unsplash.com/photo-1509042239860-f550ce710b93");
                 p1.setStatus("PUBLISHED");
                 p1.setCreatedAt(LocalDateTime.now().minusDays(5));
+                p1.setPublishedAt(LocalDateTime.now().minusDays(5));
                 posts.add(p1);
 
                 Post p2 = new Post();
@@ -86,6 +87,7 @@ public class DataLoader implements CommandLineRunner {
                 p2.setImageUrl("https://images.unsplash.com/photo-1541167760496-1628856ab772");
                 p2.setStatus("PUBLISHED");
                 p2.setCreatedAt(LocalDateTime.now().minusDays(2));
+                p2.setPublishedAt(LocalDateTime.now().minusDays(2));
                 posts.add(p2);
 
                 postRepository.saveAll(posts);
@@ -101,6 +103,7 @@ public class DataLoader implements CommandLineRunner {
                 config.setInstagramUrl("https://instagram.com/siapnyafe");
 
                 config.setTechSpec1("// EST 2026");
+                config.setLogoUrl("https://placehold.co/100x100/000000/FFFFFF?text=SN"); // Temporary LogoPlaceholder
                 config.setTechSpec2("// JKT_SEL");
                 config.setTechSpec3("// V.2.0.FINAL");
 
@@ -126,9 +129,9 @@ public class DataLoader implements CommandLineRunner {
                         att.setClockInTime(LocalDateTime.now().minusHours(4));
                         att.setStatus("WORKING");
                         att.setCheckInStatus("ON_TIME");
+                        att.setHoursWorked(0.0); // Not clocked out yet
 
                         attendanceRepository.save(att);
-                        // Removed erroneous emp.setAttendanceRecord(att) call
                 }
                 System.out.println("✓ Attendance seeded (" + activeStaff.size() + " active staff)");
         }
@@ -171,7 +174,7 @@ public class DataLoader implements CommandLineRunner {
                 menus.add(createMenu("Mocha", "Coffee", "Espresso with chocolate and steamed milk", 42000,
                                 "https://images.unsplash.com/photo-1542291026-7eec264c27ff", null));
                 menus.add(createMenu("Vietnamese Coffee", "Coffee", "Strong coffee with condensed milk", 32000,
-                                "https://images.unsplash.com/photo-1509042239860-f550ce710b93", null)); // KDS Check
+                                "https://images.unsplash.com/photo-1509042239860-f550ce710b93", null));
                 // Non-Coffee
                 menus.add(createMenu("Matcha Latte", "Non-Coffee", "Japanese green tea with steamed milk", 40000,
                                 "https://images.unsplash.com/photo-1536013266800-92e257e33b59", null));
@@ -218,7 +221,7 @@ public class DataLoader implements CommandLineRunner {
                 m.setName(name);
                 m.setCategory(category);
                 m.setDescription(description);
-                m.setPrice(new BigDecimal(price));
+                m.setPrice((double) price);
                 m.setImageUrl(optimizeUrl(imageUrl));
                 if (gallery != null) {
                         m.setGallery(gallery.stream().map(this::optimizeUrl).toList());
@@ -302,6 +305,7 @@ public class DataLoader implements CommandLineRunner {
                 e.setPhone(phone);
                 e.setRole(role);
                 e.setPassword(password);
+                e.setPin("123456"); // Default PIN
                 e.setSalary(new BigDecimal(salary));
                 e.setActive(true);
                 return e;
@@ -372,9 +376,7 @@ public class DataLoader implements CommandLineRunner {
                                 Order order = createOrder("Table " + (1 + random.nextInt(15)), "Guest", items,
                                                 OrderStatus.COMPLETED,
                                                 time);
-                                Order.ShiftStaff staff = new Order.ShiftStaff();
-                                staff.setBarista("Michael Chen");
-                                order.setShiftStaff(staff);
+                                order.setAssignedStaffName("Michael Chen");
                                 orders.add(order);
                         }
                 }
@@ -417,15 +419,21 @@ public class DataLoader implements CommandLineRunner {
                         OrderStatus status,
                         LocalDateTime createdAt) {
                 Order order = new Order();
+                order.setOrderNumber(UUID.randomUUID().toString().substring(0, 8).toUpperCase());
                 order.setTableNumber(tableNumber);
                 order.setCustomerName(customerName);
                 order.setItems(items);
                 order.setStatus(status);
                 order.setCreatedAt(createdAt);
-                BigDecimal total = items.stream()
-                                .map(item -> item.getPrice().multiply(new BigDecimal(item.getQuantity())))
-                                .reduce(BigDecimal.ZERO, BigDecimal::add);
-                order.setTotalAmount(total);
+
+                double total = items.stream()
+                                .mapToDouble(item -> item.getPrice() * item.getQuantity())
+                                .sum();
+
+                order.setTotalPrice(total);
+                order.setTax(total * 0.11);
+                order.setGrandTotal(total * 1.11);
+
                 return order;
         }
 
@@ -433,7 +441,7 @@ public class DataLoader implements CommandLineRunner {
                 Order.OrderItem item = new Order.OrderItem();
                 item.setMenuName(menuName);
                 item.setQuantity(quantity);
-                item.setPrice(new BigDecimal(price));
+                item.setPrice((double) price);
                 return item;
         }
 }

@@ -9,7 +9,9 @@ import java.util.List;
 public class UpdateOrderRequest {
     private List<Order.OrderItem> items;
     private String customerName;
-    private String tableNumber;
+    private String tableNumber; // Kept String for "Takeaway"
     private OrderStatus status;
     private String paymentMethod;
+    private String assignedStaffId;
+    private String assignedStaffName;
 }

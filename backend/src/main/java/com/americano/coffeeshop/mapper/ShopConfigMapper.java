@@ -4,6 +4,9 @@ import com.americano.coffeeshop.dto.ShopConfigDTO;
 import com.americano.coffeeshop.model.ShopConfig;
 import org.springframework.stereotype.Component;
 
+import java.util.stream.Collectors;
+import java.util.ArrayList;
+
 @Component
 public class ShopConfigMapper {
 
@@ -14,11 +17,24 @@ public class ShopConfigMapper {
         dto.setShopName(entity.getShopName());
         dto.setWebsiteTitle(entity.getWebsiteTitle());
         dto.setFaviconUrl(entity.getFaviconUrl());
+        dto.setLogoUrl(entity.getLogoUrl());
         dto.setAddress(entity.getAddress());
         dto.setPhoneNumber(entity.getPhoneNumber());
         dto.setInstagramUrl(entity.getInstagramUrl());
         dto.setFacebookUrl(entity.getFacebookUrl());
         dto.setTwitterUrl(entity.getTwitterUrl());
+
+        if (entity.getSocialLinks() != null) {
+            dto.setSocialLinks(entity.getSocialLinks().stream().map(link -> {
+                ShopConfigDTO.SocialLinkDTO linkDTO = new ShopConfigDTO.SocialLinkDTO();
+                linkDTO.setPlatform(link.getPlatform());
+                linkDTO.setUrl(link.getUrl());
+                linkDTO.setIcon(link.getIcon());
+                return linkDTO;
+            }).collect(Collectors.toList()));
+        } else {
+            dto.setSocialLinks(new ArrayList<>());
+        }
 
         dto.setTechSpec1(entity.getTechSpec1());
         dto.setTechSpec2(entity.getTechSpec2());
@@ -42,8 +58,21 @@ public class ShopConfigMapper {
         entity.setFacebookUrl(dto.getFacebookUrl());
         entity.setTwitterUrl(dto.getTwitterUrl());
 
+        if (dto.getSocialLinks() != null) {
+            entity.setSocialLinks(dto.getSocialLinks().stream().map(linkDTO -> {
+                ShopConfig.SocialLink link = new ShopConfig.SocialLink();
+                link.setPlatform(linkDTO.getPlatform());
+                link.setUrl(linkDTO.getUrl());
+                link.setIcon(linkDTO.getIcon());
+                return link;
+            }).collect(Collectors.toList()));
+        }
+
         if (dto.getFaviconUrl() != null && !dto.getFaviconUrl().isEmpty()) {
             entity.setFaviconUrl(dto.getFaviconUrl());
+        }
+        if (dto.getLogoUrl() != null && !dto.getLogoUrl().isEmpty()) {
+            entity.setLogoUrl(dto.getLogoUrl());
         }
 
         entity.setTechSpec1(dto.getTechSpec1());

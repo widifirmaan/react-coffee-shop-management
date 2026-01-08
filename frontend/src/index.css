@@ -466,3 +466,199 @@ input:focus {
         opacity: 1;
     }
 }
+
+/* Card Title Responsive Font Size */
+.card-title {
+    font-size: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .card-title {
+        font-size: 1.1rem;
+    }
+}
+
+/* Menu Item Title Responsive Font Size */
+.menu-item-title {
+    font-size: 1.4rem;
+}
+
+@media (max-width: 768px) {
+    .menu-item-title {
+        font-size: 1.1rem;
+    }
+}
+
+/* Category Header Responsive Font Size */
+.category-header {
+    font-size: 2rem;
+}
+
+@media (max-width: 768px) {
+    .category-header {
+        font-size: 1.5rem;
+    }
+}
+
+/* Page Header Margin for Spacing */
+.page-header-container {
+    padding: 30px;
+    margin-bottom: 50px;
+}
+
+@media (max-width: 768px) {
+    .page-header-container {
+        padding: 15px;
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 15px;
+        margin-top: 50px;
+        margin-bottom: 50px;
+    }
+}
+.page-header-title {
+    font-size: 3rem;
+}
+
+.page-header-desc {
+    font-size: 1.2rem;
+}
+
+@media (max-width: 768px) {
+    .page-header-title {
+        font-size: 1.8rem;
+    }
+    
+    .page-header-desc {
+        font-size: 0.9rem;
+    }
+
+    .page-header-icon {
+        width: 32px !important;
+        height: 32px !important;
+    }
+}
+
+/* Navbar Responsive Styles */
+.navbar-greeting {
+    padding: 5px 40px;
+    fontSize: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .navbar-brand {
+        font-size: 1.5rem;
+        padding: 5px 10px;
+    }
+
+    .navbar-greeting {
+        padding: 5px 20px;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        width: max-content;
+        max-width: 80vw;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+/* Page Title Responsive Font Size */
+.page-title {
+    font-size: 3rem;
+}
+
+@media (max-width: 768px) {
+    .page-title {
+        font-size: 2rem;
+    }
+}
+
+/* Responsive Pagination */
+@media (max-width: 768px) {
+    .pagination-container {
+        flex-direction: column;
+        gap: 15px;
+        align-items: center !important;
+        text-align: center;
+    }
+
+    .pagination-info {
+        font-size: 0.8rem !important;
+    }
+
+    /* Hide detailed page count on very small screens if needed, or keep stacked */
+    .pagination-page-count {
+        display: none; 
+    }
+    
+    .pagination-numbers {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
+
+.kitchen-page-container {
+    padding: 40px;
+    max-width: 100vw;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+    .kitchen-page-container {
+        padding: 20px;
+    }
+}
+
+.page-container {
+    padding: 40px;
+    max-width: 100vw;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+    .page-container {
+        padding: 20px;
+    }
+}
+
+.menu-modal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+@media (max-width: 768px) {
+    .menu-modal-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.dropdown-container {
+    position: relative;
+    width: 100%;
+}
+
+.dropdown-select {
+    width: 100%;
+    padding: 15px;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 3px solid black;
+    border-radius: 0;
+    font-size: 1.2rem;
+    font-weight: bold;
+    font-family: monospace;
+    background: white;
+    color: black;
+    cursor: pointer;
+    box-shadow: 5px 5px 0 0 black;
+    outline: none;
+    transition: all 0.1s;
+}
+
+.dropdown-select:focus {
+    transform: translate(-2px, -2px);
+    box-shadow: 7px 7px 0 0 black;
+}

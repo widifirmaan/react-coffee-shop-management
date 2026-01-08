@@ -1,146 +1,99 @@
 package com.americano.coffeeshop.service.impl;
 
+import com.americano.coffeeshop.dto.CreateOrderRequest;
+import com.americano.coffeeshop.dto.OrderDTO;
+import com.americano.coffeeshop.dto.UpdateOrderRequest;
 import com.americano.coffeeshop.model.Order;
 import com.americano.coffeeshop.model.OrderStatus;
-import com.americano.coffeeshop.model.Employee;
-import com.americano.coffeeshop.dto.UpdateOrderRequest;
+import com.americano.coffeeshop.model.Transaction;
+import com.americano.coffeeshop.model.TransactionType;
 import com.americano.coffeeshop.repository.OrderRepository;
-import com.americano.coffeeshop.repository.AttendanceRepository;
-import com.americano.coffeeshop.repository.EmployeeRepository;
+import com.americano.coffeeshop.repository.TransactionRepository;
 import com.americano.coffeeshop.service.OrderService;
-import com.americano.coffeeshop.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import java.time.LocalDate;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
-    private final TransactionService transactionService;
-    private final AttendanceRepository attendanceRepository;
-    private final EmployeeRepository employeeRepository;
+    private final TransactionRepository transactionRepository;
 
     @Override
-    public Order createOrder(Order order) {
+    public List<OrderDTO> getAllOrders() {
+        return orderRepository.findAll().stream()
+                .map(OrderDTO::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public OrderDTO createOrder(CreateOrderRequest request) {
+        Order order = new Order();
+        order.setOrderNumber(UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        order.setCustomerName(request.getCustomerName());
+        order.setTableNumber(request.getTableNumber());
+        order.setItems(request.getItems());
+        order.setPaymentMethod(request.getPaymentMethod());
+        order.setNote(request.getNote());
+
         order.setStatus(OrderStatus.PENDING);
+        order.setCreatedAt(LocalDateTime.now());
 
-        // Auto-populate shift staff based on who's currently working
-        Order.ShiftStaff shiftStaff = new Order.ShiftStaff();
-        var workingToday = attendanceRepository.findByDateAndStatus(LocalDate.now(), "WORKING");
+        double total = request.getItems().stream()
+                .mapToDouble(item -> item.getPrice() * item.getQuantity())
+                .sum();
+        order.setTotalPrice(total);
+        order.setTax(total * 0.11);
+        order.setGrandTotal(total * 1.11);
 
-        for (var att : workingToday) {
-            // Get employee to fetch position
-            Employee employee = employeeRepository.findById(att.getEmployeeId()).orElse(null);
-            if (employee == null || employee.getPosition() == null)
-                continue;
+        return OrderDTO.fromEntity(orderRepository.save(order));
+    }
 
-            String position = employee.getPosition();
-            String staffName = att.getEmployeeName() + " (" + att.getEmployeeId() + ")";
+    @Override
+    @Transactional
+    public OrderDTO updateOrderStatus(String id, OrderStatus newStatus) {
+        Order order = orderRepository.findById(id).orElseThrow();
+        OrderStatus previousStatus = order.getStatus();
 
-            if (position.equalsIgnoreCase("CASHIER")) {
-                shiftStaff.setCashier(staffName);
-            } else if (position.equalsIgnoreCase("BARISTA")) {
-                shiftStaff.setBarista(staffName);
-            } else if (position.equalsIgnoreCase("KITCHEN_STAFF")) {
-                shiftStaff.setKitchenStaff(staffName);
-            } else if (position.equalsIgnoreCase("WAITER")) {
-                shiftStaff.setWaiter(staffName);
-            } else if (position.equalsIgnoreCase("CLEANING_SERVICE")) {
-                shiftStaff.setCleaningService(staffName);
+        // If changing from COMPLETED to any other status (requeue), delete transaction
+        if (previousStatus == OrderStatus.COMPLETED && newStatus != OrderStatus.COMPLETED) {
+            transactionRepository.deleteByRelatedOrderId(id);
+        }
+
+        // If changing to COMPLETED, create transaction
+        if (newStatus == OrderStatus.COMPLETED && previousStatus != OrderStatus.COMPLETED) {
+            // Check if transaction already exists (safety check)
+            if (transactionRepository.findByRelatedOrderId(id).isEmpty()) {
+                Transaction transaction = new Transaction();
+                transaction.setType(TransactionType.INCOME);
+                transaction.setAmount(order.getGrandTotal());
+                transaction.setDescription("Order #" + order.getOrderNumber() + " - " + order.getCustomerName());
+                transaction.setDate(LocalDateTime.now());
+                transaction.setRelatedOrderId(id);
+                transactionRepository.save(transaction);
             }
         }
 
-        order.setShiftStaff(shiftStaff);
-
-        // Logic to deduct inventory could go here
-        return orderRepository.save(order);
+        order.setStatus(newStatus);
+        return OrderDTO.fromEntity(orderRepository.save(order));
     }
 
     @Override
-    public List<Order> getAllOrders() {
-        return orderRepository.findAll();
-    }
-
-    @Override
-    public List<Order> getOrdersByStatus(OrderStatus status) {
-        return orderRepository.findByStatus(status);
-    }
-
-    @Override
-    public Order updateOrderStatus(String id, OrderStatus status) {
-        Order order = orderRepository.findById(id).orElse(null);
-        if (order != null) {
-            if (status == OrderStatus.COMPLETED && order.getStatus() != OrderStatus.COMPLETED) {
-                transactionService.recordOrderIncome(order.getId(), order.getTotalAmount());
-            }
-            order.setStatus(status);
-            return orderRepository.save(order);
+    public OrderDTO updateOrder(String id, UpdateOrderRequest request) {
+        Order order = orderRepository.findById(id).orElseThrow();
+        if (request.getAssignedStaffId() != null) {
+            order.setAssignedStaffId(request.getAssignedStaffId());
         }
-        return null;
-    }
-
-    @Override
-    public Order updateOrder(String id, UpdateOrderRequest request) {
-        try {
-            System.out.println("=== UPDATE ORDER START ===");
-            System.out.println("Order ID: " + id);
-
-            Order existingOrder = orderRepository.findById(id).orElse(null);
-            if (existingOrder == null) {
-                System.err.println("Order not found: " + id);
-                return null;
-            }
-
-            System.out.println("Existing items: " + existingOrder.getItems().size());
-            System.out.println("New items: " + request.getItems().size());
-
-            // Update items
-            existingOrder.setItems(request.getItems());
-
-            // Recalculate total amount using BigDecimal
-            java.math.BigDecimal totalAmount = request.getItems().stream()
-                    .map(item -> item.getPrice().multiply(java.math.BigDecimal.valueOf(item.getQuantity())))
-                    .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
-            existingOrder.setTotalAmount(totalAmount);
-
-            // Update payment method
-            if (request.getPaymentMethod() != null) {
-                existingOrder.setPaymentMethod(request.getPaymentMethod());
-            }
-
-            System.out.println("New total: " + totalAmount);
-
-            // Update customer info if changed
-            if (request.getCustomerName() != null) {
-                existingOrder.setCustomerName(request.getCustomerName());
-                System.out.println("Updated customer: " + request.getCustomerName());
-            }
-            if (request.getTableNumber() != null) {
-                existingOrder.setTableNumber(request.getTableNumber());
-                System.out.println("Updated table: " + request.getTableNumber());
-            }
-            if (request.getStatus() != null) {
-                // If status changes to COMPLETED, record income
-                if (request.getStatus() == OrderStatus.COMPLETED
-                        && existingOrder.getStatus() != OrderStatus.COMPLETED) {
-                    transactionService.recordOrderIncome(existingOrder.getId(), existingOrder.getTotalAmount());
-                }
-                existingOrder.setStatus(request.getStatus());
-                System.out.println("Updated status: " + request.getStatus());
-            }
-
-            System.out.println("Saving order...");
-            Order saved = orderRepository.save(existingOrder);
-            System.out.println("=== UPDATE ORDER SUCCESS ===");
-            return saved;
-        } catch (Exception e) {
-            System.err.println("=== UPDATE ORDER ERROR ===");
-            System.err.println("Error: " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("Failed to update order: " + e.getMessage(), e);
+        if (request.getAssignedStaffName() != null) {
+            order.setAssignedStaffName(request.getAssignedStaffName());
         }
+        return OrderDTO.fromEntity(orderRepository.save(order));
     }
 }

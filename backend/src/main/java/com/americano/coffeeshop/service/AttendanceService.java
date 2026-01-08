@@ -1,16 +1,16 @@
 package com.americano.coffeeshop.service;
 
-import com.americano.coffeeshop.model.Attendance;
+import com.americano.coffeeshop.dto.AttendanceDTO;
 import java.util.List;
 
 public interface AttendanceService {
-    Attendance clockIn(String employeeId, String employeeName);
+    AttendanceDTO clockIn(String employeeId, String employeeName);
 
-    Attendance clockOut(String employeeId);
+    AttendanceDTO clockOut(String employeeId);
 
-    Attendance getTodayAttendance(String employeeId);
+    AttendanceDTO getTodayAttendance(String employeeId);
 
-    List<Attendance> getAllAttendanceToday();
+    List<AttendanceDTO> getAllAttendanceToday();
 
-    List<Attendance> getAllAttendance();
+    List<AttendanceDTO> getAllAttendance();
 }

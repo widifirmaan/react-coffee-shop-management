@@ -16,11 +16,12 @@ public class Employee {
     private String name;
     private String username;
     private String password;
-    private String role; // Barista, Cashier, Manager
+    private String pin; // Added PIN
+    private String role;
     private String position;
     private String email;
     private String phone;
-    private boolean active = true;
+    private Boolean active = true;
     private BigDecimal salary;
     private List<Attendance> attendanceRecord;
 

@@ -22,4 +22,5 @@ public class Post {
 
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt;
+    private LocalDateTime publishedAt; // Added
 }
