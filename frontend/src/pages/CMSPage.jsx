@@ -335,7 +335,7 @@ export default function CMSPage() {
                 </div>
             </div>
 
-            <div style={{ position: 'relative', height: 'calc(100vh - 160px)', overflow: 'hidden' }}>
+            <div style={{ position: 'relative', height: isMobile ? 'auto' : 'calc(100vh - 160px)', overflow: isMobile ? 'auto' : 'hidden' }}>
 
                 {/* INFO LAYER (Background) */}
                 <div style={{
@@ -393,7 +393,8 @@ export default function CMSPage() {
                         borderRight: '4px solid black', pointerEvents: 'auto',
                         backgroundColor: '#f8fafc', // Slate 50
                         position: 'relative',
-                        overflow: 'hidden'
+                        overflow: 'hidden',
+                        minHeight: isMobile ? '60vh' : 'auto'
                     }}>
                         {/* PARALLAX BACKGROUND LEFT */}
                         <ParallaxBackground count={15} mousePos={mousePos} color="#cbd5e1" />
@@ -490,12 +491,14 @@ export default function CMSPage() {
 
                     {/* Right Panel */}
                     <div className={`gate-panel gate-right ${isInfoOpen ? 'open' : ''}`} style={{
-                        padding: '40px', display: 'flex', flexDirection: 'column',
+                        padding: isMobile ? '40px 40px 140px 40px' : '40px', // Extra bottom padding on mobile
+                        display: 'flex', flexDirection: 'column',
                         justifyContent: 'center', alignItems: 'flex-start',
                         pointerEvents: 'auto', borderLeft: '4px solid black',
                         backgroundColor: '#f8fafc', // Slate 50
                         position: 'relative',
-                        overflow: 'hidden'
+                        overflow: 'hidden',
+                        minHeight: isMobile ? '50vh' : 'auto'
                     }}>
                         {/* PARALLAX BACKGROUND RIGHT */}
                         <ParallaxBackground count={10} mousePos={mousePos} color="#cbd5e1" startOffset={50} />
