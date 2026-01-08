@@ -442,22 +442,24 @@ export default function CMSPage() {
 
                             {/* Main Big Type (Replaced by Illustration) */}
                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: isMobile ? 'center' : 'flex-start' }}>
-                                <img
-                                    src={shopConfig?.heroImageUrl || "/illustration_hero.png?v=2"}
-                                    alt="Coffee Illustration"
-                                    style={{
-                                        width: '100%',
-                                        maxWidth: '650px',
-                                        height: 'auto',
-                                        maxHeight: '45vh',
-                                        objectFit: 'contain',
-                                        filter: 'drop-shadow(10px 10px 0px rgba(0,0,0,0.1))',
-                                        transform: 'rotate(-2deg)',
-                                        marginBottom: '20px',
-                                        marginLeft: isMobile ? '0' : '-30px'
-                                    }}
-                                    onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }}
-                                />
+                                {!isMobile && (
+                                    <img
+                                        src={shopConfig?.heroImageUrl || "/illustration_hero.png?v=2"}
+                                        alt="Coffee Illustration"
+                                        style={{
+                                            width: '100%',
+                                            maxWidth: '650px',
+                                            height: 'auto',
+                                            maxHeight: '45vh',
+                                            objectFit: 'contain',
+                                            filter: 'drop-shadow(10px 10px 0px rgba(0,0,0,0.1))',
+                                            transform: 'rotate(-2deg)',
+                                            marginBottom: '20px',
+                                            marginLeft: '-30px'
+                                        }}
+                                        onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }}
+                                    />
+                                )}
 
                                 <div style={{ marginTop: '10px', borderLeft: '4px solid #FCD34D', paddingLeft: '20px', width: '100%' }}>
                                     <p style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: 0, fontFamily: 'monospace' }}>
