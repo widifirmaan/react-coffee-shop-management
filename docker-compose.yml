@@ -1,14 +1,7 @@
 version: '3.8'
 
 services:
-  mongo:
-    image: mongo:latest
-    container_name: americano-mongo
-    restart: always
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo-data:/data/db
+  # mongo service uses existing 'americano-mongo' container on 'root_default' network
 
   backend:
     build: ./backend
@@ -17,10 +10,8 @@ services:
     ports:
       - "8180:8080"
     environment:
-      - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017/coffeeshop
+      - SPRING_DATA_MONGODB_URI=mongodb://americano-mongo:27017/coffeeshop
       - SERVER_PORT=8080
-    depends_on:
-      - mongo
 
   frontend:
     build: ./frontend
@@ -31,5 +22,7 @@ services:
     depends_on:
       - backend
 
-volumes:
-  mongo-data:
+networks:
+  default:
+    external: true
+    name: root_default
