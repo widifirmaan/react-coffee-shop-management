@@ -71,7 +71,10 @@ public class SecurityConfig {
     @Bean
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:3000")); // Vite ports
+        // Allow specific origins including VPS and localhost
+        configuration.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:3000",
+                "https://vps.widifirmaan.web.id", "http://vps.widifirmaan.web.id"));
+        configuration.setAllowedOriginPatterns(List.of("*")); // Fallback for flexibility
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
