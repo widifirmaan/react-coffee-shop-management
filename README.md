@@ -14,30 +14,35 @@
 ### Customer Ordering Experience
 The customer-facing interface is designed for self-service kiosks or tablets, featuring a bold, high-contrast design.
 
-| Landing Page | Menu Detail |
+| Landing Page (CMS) | Order Page (Customer) |
 |:---:|:---:|
-| ![Home Page](screenshots/01_home.png) | ![Menu Detail](screenshots/02_menu_detail.png) |
+| ![Landing Page](screenshots/01_landing.png) | ![Order Page](screenshots/02_order_page.png) |
 
-### Kitchen Display System (KDS)
-Real-time order board for kitchen staff to track and manage incoming orders.
+### Operations & Staff
+Streamlined tools for kitchen staff and secure authentication.
 
-![Kitchen Display](screenshots/03_kitchen.png)
-
-### Staff Portal & Security
-Secure login portal with fluid animations for staff authentication.
-
-![Login Page](screenshots/04_login.png)
-
-### Manager Dashboard
-Comprehensive admin panel for analytics, order management, inventory, and staff scheduling.
-
-| Dashboard Home | Order Management |
+| Kitchen Display System (KDS) | Staff Login Portal |
 |:---:|:---:|
-| ![Dashboard Home](screenshots/05_dashboard_home.png) | ![Order Management](screenshots/06_dashboard_orders.png) |
+| ![Kitchen Display](screenshots/03_kitchen.png) | ![Login Page](screenshots/04_login.png) |
 
-| Inventory Management | Staff Management |
+### Manager Dashboard & Administration
+Comprehensive admin panel for analytics, inventory, and staff scheduling.
+
+| Dashboard Overview | Finance & Order History |
 |:---:|:---:|
-| ![Inventory](screenshots/07_dashboard_inventory.png) | ![Staff](screenshots/08_dashboard_employees.png) |
+| ![Dashboard Home](screenshots/05_dashboard.png) | ![Finance](screenshots/09_finance.png) |
+
+| Inventory Management | Menu Management |
+|:---:|:---:|
+| ![Inventory](screenshots/07_inventory_management.png) | ![Menu Mgmt](screenshots/06_menu_management.png) |
+
+| Staff Management | Content (Blog) & Settings |
+|:---:|:---:|
+| ![Staff](screenshots/08_staff_management.png) | ![Posts](screenshots/10_posts.png) |
+
+| Shop Settings |
+|:---:|
+| ![Settings](screenshots/11_settings.png) |
 
 ---
 
