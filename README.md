@@ -15,16 +15,16 @@ Explore the comprehensive features of **Siap Nyafe** through our gallery.
 
 | | |
 |:---:|:---:|
-| ![Screenshot 1](screenshots/shot_01.png) | ![Screenshot 2](screenshots/shot_02.png) |
-| ![Screenshot 3](screenshots/shot_03.png) | ![Screenshot 4](screenshots/shot_04.png) |
-| ![Screenshot 5](screenshots/shot_05.png) | ![Screenshot 6](screenshots/shot_06.png) |
-| ![Screenshot 7](screenshots/shot_07.png) | ![Screenshot 8](screenshots/shot_08.png) |
-| ![Screenshot 9](screenshots/shot_09.png) | ![Screenshot 10](screenshots/shot_10.png) |
-| ![Screenshot 11](screenshots/shot_11.png) | ![Screenshot 12](screenshots/shot_12.png) |
-| ![Screenshot 13](screenshots/shot_13.png) | ![Screenshot 14](screenshots/shot_14.png) |
-| ![Screenshot 15](screenshots/shot_15.png) | ![Screenshot 16](screenshots/shot_16.png) |
-| ![Screenshot 17](screenshots/shot_17.png) | ![Screenshot 18](screenshots/shot_18.png) |
-| ![Screenshot 19](screenshots/shot_19.png) | |
+| ![Screenshot 1](screenshots/shot_01.png)<br>**Home / Landing Page** | ![Screenshot 2](screenshots/shot_02.png)<br>**Mobile / Menu Detail** |
+| ![Screenshot 3](screenshots/shot_03.png)<br>**Cart / Order Summary** | ![Screenshot 4](screenshots/shot_04.png)<br>**Customer Order View** |
+| ![Screenshot 5](screenshots/shot_05.png)<br>**Kitchen Display System (KDS)** | ![Screenshot 6](screenshots/shot_06.png)<br>**Manager Dashboard Overview** |
+| ![Screenshot 7](screenshots/shot_07.png)<br>**Real-time Statistics** | ![Screenshot 8](screenshots/shot_08.png)<br>**Menu Management (CMS)** |
+| ![Screenshot 9](screenshots/shot_09.png)<br>**Inventory Tracking** | ![Screenshot 10](screenshots/shot_10.png)<br>**Staff & Shift Management** |
+| ![Screenshot 11](screenshots/shot_11.png)<br>**Finance & Transactions** | ![Screenshot 12](screenshots/shot_12.png)<br>**Blog / Post Management** |
+| ![Screenshot 13](screenshots/shot_13.png)<br>**Shop Settings** | ![Screenshot 14](screenshots/shot_14.png)<br>**Order History** |
+| ![Screenshot 15](screenshots/shot_15.png)<br>**Detail View** | ![Screenshot 16](screenshots/shot_16.png)<br>**Edit Modal / Form** |
+| ![Screenshot 17](screenshots/shot_17.png)<br>**System Configuration** | ![Screenshot 18](screenshots/shot_18.png)<br>**User Profile** |
+| ![Screenshot 19](screenshots/shot_19.png)<br>**Mobile Responsive View** | |
 
 ---
 
