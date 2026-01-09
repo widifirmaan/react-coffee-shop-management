@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { ArrowRight, Star, Coffee, Zap, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import ImageModal from '../components/ui/ImageModal';
+import MenuDetailModal from '../components/ui/MenuDetailModal';
+import CategorySelector from '../components/ui/CategorySelector';
 
 // Swiper Imports
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -64,7 +67,9 @@ export default function CMSPage() {
     const [selectedMenu, setSelectedMenu] = useState(null);
     const [detailImage, setDetailImage] = useState('');
     const [posts, setPosts] = useState([]);
+    const [expandedImage, setExpandedImage] = useState(null);
     const [selectedPost, setSelectedPost] = useState(null);
+    const [activeCategory, setActiveCategory] = useState('All');
 
     // Responsive State
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -270,9 +275,6 @@ export default function CMSPage() {
                     z-index: 1000;
                     transition: transform 0.6s cubic-bezier(0.85, 0, 0.15, 1);
                     transform: translateY(100%);
-                    overflow-y: auto; /* Allow scroll */
-                    padding-top: 120px;
-                    padding-bottom: 100px;
                     }
                     .menu-overlay.active {
                         transform: translateY(0);
@@ -329,7 +331,7 @@ export default function CMSPage() {
                 <div className="marquee-content">
                     {[...Array(10)].map((_, i) => (
                         <div key={i} className="marquee-item">
-                            SIAP NYAFE • FRESH BREW • GOOD VIBES • 24/7 OPEN •
+                            {shopConfig?.marqueeText || 'SIAP NYAFE • FRESH BREW • GOOD VIBES • 24/7 OPEN •'}
                         </div>
                     ))}
                 </div>
@@ -535,32 +537,24 @@ export default function CMSPage() {
                                     flexDirection: 'column',
                                     animation: 'marquee-vertical 20s linear infinite'
                                 }}>
-                                    {[...[
-                                        "https://images.unsplash.com/photo-1554118811-1e0d58224f24",
-                                        "https://images.unsplash.com/photo-1511920170033-f8396924c348",
-                                        "https://images.unsplash.com/photo-1521017432531-fbd92d768814",
-                                        "https://images.unsplash.com/photo-1509042239860-f550ce710b93",
-                                        "https://images.unsplash.com/photo-1559925393-8be0ec4767c8",
-                                        "https://images.unsplash.com/photo-1497935586351-b67a49e01000",
-                                    ], ...[
-                                        "https://images.unsplash.com/photo-1554118811-1e0d58224f24",
-                                        "https://images.unsplash.com/photo-1511920170033-f8396924c348",
-                                        "https://images.unsplash.com/photo-1521017432531-fbd92d768814",
-                                        "https://images.unsplash.com/photo-1509042239860-f550ce710b93",
-                                        "https://images.unsplash.com/photo-1559925393-8be0ec4767c8",
-                                        "https://images.unsplash.com/photo-1497935586351-b67a49e01000",
-                                    ]].map((img, i) => (
+                                    {/* Double the array for seamless loop */}
+                                    {[...(shopConfig?.galleryImages || []), ...(shopConfig?.galleryImages || [])].map((img, i) => (
                                         <div key={i} style={{ width: '100%', padding: '0', borderBottom: '4px solid black' }}>
                                             <img
                                                 src={`${img}?auto=format&fit=crop&w=400&q=80`}
                                                 alt="Cafe Vibe"
+                                                onClick={() => setExpandedImage(img)}
                                                 style={{
                                                     display: 'block',
                                                     width: '100%',
                                                     height: '280px',
                                                     objectFit: 'cover',
-                                                    filter: 'grayscale(100%)'
+                                                    filter: 'grayscale(100%)',
+                                                    cursor: 'pointer',
+                                                    transition: 'filter 0.3s, transform 0.3s'
                                                 }}
+                                                onMouseEnter={(e) => { e.currentTarget.style.filter = 'grayscale(0%)'; e.currentTarget.style.transform = 'scale(1.05)'; }}
+                                                onMouseLeave={(e) => { e.currentTarget.style.filter = 'grayscale(100%)'; e.currentTarget.style.transform = 'scale(1)'; }}
                                                 onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
                                             />
                                         </div>
@@ -594,10 +588,22 @@ export default function CMSPage() {
             {/* MENU SHOWCASE OVERLAY (Slide Up) */}
             <div className={`menu-overlay ${isMenuOpen ? 'active' : ''}`}>
 
-                {/* Header Overlay */}
-                <div style={{ position: 'absolute', top: '40px', left: '0', userSelect: 'none', width: '100%', textAlign: 'center', zIndex: 10 }}>
-                    <h2 style={{ fontSize: '3rem', fontWeight: '900', color: 'white', margin: 0 }}>OUR SIGNATURES</h2>
-                    <p style={{ color: '#FCD34D', fontSize: '1.2rem', letterSpacing: '2px' }}>SWIPE TO EXPLORE</p>
+                {/* Header Overlay - Fixed with Background */}
+                <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    paddingTop: isMobile ? '30px' : '40px',
+                    paddingBottom: '20px',
+                    textAlign: 'center',
+                    zIndex: 20,
+                    background: '#111',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.8)',
+                    userSelect: 'none'
+                }}>
+                    <h2 style={{ fontSize: isMobile ? '2rem' : '3rem', fontWeight: '900', color: 'white', margin: 0 }}>OUR SIGNATURES</h2>
+                    <p style={{ color: '#FCD34D', fontSize: isMobile ? '1rem' : '1.2rem', letterSpacing: '2px', margin: '5px 0 0 0' }}>SWIPE TO EXPLORE</p>
                 </div>
 
                 <div style={{
@@ -628,163 +634,65 @@ export default function CMSPage() {
                 <div style={{
                     width: '100%',
                     height: '100%',
-                    paddingTop: '180px', // Space for header
-                    paddingBottom: '100px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
+                    padding: isMobile ? '130px 20px 100px 20px' : '180px 60px 100px 60px',
+                    overflowY: 'auto'
                 }}>
-                    <Swiper
-                        effect={'coverflow'}
-                        grabCursor={true}
-                        centeredSlides={true}
-                        slidesPerView={'auto'}
-                        initialSlide={1}
-                        coverflowEffect={{
-                            rotate: 0,
-                            stretch: 0,
-                            depth: 200,
-                            modifier: 1,
-                            slideShadows: true,
-                        }}
-                        pagination={{ clickable: true }}
-                        mousewheel={true}
-                        modules={[EffectCoverflow, Pagination, Mousewheel]}
-                        className="mySwiper"
-                        style={{ width: '100%', padding: '50px 0' }}
-                    >
-                        {menus.map((menu) => (
-                            <SwiperSlide key={menu.id} onClick={() => handleMenuClick(menu)}>
-                                <img
-                                    src={menu.imageUrl || 'https://via.placeholder.com/300x300?text=COFFEE'}
-                                    alt={menu.name}
-                                    className="menu-card-img"
-                                    onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }}
-                                />
-                                <div className="menu-card-content">
-                                    <h3 style={{ fontSize: '1.5rem', fontWeight: '900', textTransform: 'uppercase', lineHeight: '1.2' }}>{menu.name}</h3>
-                                    <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '2px solid black', paddingTop: '10px' }}>
-                                        <span style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>Rp {menu.price.toLocaleString()}</span>
-                                        <div style={{ background: 'black', color: 'white', padding: '2px 8px', fontSize: '0.8rem', fontWeight: 'bold' }}>{menu.category}</div>
+                    {/* Category Filter */}
+                    {/* Category Filter */}
+                    <CategorySelector
+                        categories={['All', ...new Set(menus.map(m => m.category).filter(cat => cat !== 'Featured'))]}
+                        activeCategory={activeCategory}
+                        onSelect={setActiveCategory}
+                        theme="dark"
+                        layout="wrap"
+                    />
+
+                    {/* Menu Grid */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '30px', maxWidth: '1400px', margin: '0 auto' }}>
+                        {(activeCategory === 'All' ? menus : menus.filter(m => m.category === activeCategory)).map(menu => (
+                            <div key={menu.id} onClick={() => handleMenuClick(menu)} style={{
+                                background: 'white', border: '4px solid white', cursor: 'pointer', overflow: 'hidden',
+                                boxShadow: '8px 8px 0 0 rgba(255,255,255,0.3)', transition: 'transform 0.2s, box-shadow 0.2s'
+                            }}
+                                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translate(-4px, -4px)'; e.currentTarget.style.boxShadow = '12px 12px 0 0 rgba(255,255,255,0.3)'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.transform = 'translate(0, 0)'; e.currentTarget.style.boxShadow = '8px 8px 0 0 rgba(255,255,255,0.3)'; }}>
+                                <div style={{ height: '200px', overflow: 'hidden', borderBottom: '4px solid black' }}>
+                                    <img src={menu.imageUrl || "https://placehold.co/600x400?text=No+Image"} alt={menu.name}
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s' }}
+                                        onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }} />
+                                </div>
+                                <div style={{ padding: '20px' }}>
+                                    <h3 style={{ margin: '0 0 10px 0', fontSize: '1.5rem', fontWeight: '900', textTransform: 'uppercase' }}>{menu.name}</h3>
+                                    <p style={{ opacity: 0.7, height: '40px', overflow: 'hidden', fontSize: '0.9rem', margin: '0 0 15px 0' }}>
+                                        {menu.description || 'Delicious menu item'}
+                                    </p>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span style={{ fontWeight: 'bold', background: '#FCD34D', padding: '8px 15px', border: '2px solid black', fontSize: '1.1rem' }}>
+                                            Rp {menu.price?.toLocaleString()}
+                                        </span>
+                                        <div style={{ background: 'black', color: 'white', padding: '5px 12px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                                            {menu.category}
+                                        </div>
                                     </div>
                                 </div>
-                            </SwiperSlide>
+                            </div>
                         ))}
-                    </Swiper>
+                    </div>
                 </div>
 
 
             </div>
 
             {/* DETAIL MODAL */}
-            {
-                selectedMenu && (
-                    <div
-                        style={{
-                            position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-                            zIndex: 2000, background: 'rgba(0,0,0,0.9)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            padding: '20px'
-                        }}
-                        onClick={() => setSelectedMenu(null)}
-                    >
-                        <div
-                            style={{
-                                background: 'white',
-                                maxWidth: '1200px',
-                                width: '95%',
-                                border: '4px solid white',
-                                maxHeight: '90vh',
-                                overflowY: 'auto',
-                                position: 'relative',
-                                padding: '30px',
-                                display: 'flex',
-                                flexDirection: 'column'
-                            }}
-                            onClick={e => e.stopPropagation()}
-                        >
-                            {/* Gallery Section */}
-                            <div style={{ position: 'relative', marginBottom: '30px' }}>
-                                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '15px', height: isMobile ? 'auto' : '400px' }}>
-                                    {/* Main Image */}
-                                    <div style={{ flex: 2, border: '4px solid black', background: '#ccc', position: 'relative', overflow: 'hidden', height: isMobile ? '300px' : '100%' }}>
-                                        <img
-                                            src={detailImage || selectedMenu.imageUrl || 'https://via.placeholder.com/600x400'}
-                                            alt={selectedMenu.name}
-                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                            onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }}
-                                        />
-                                    </div>
-                                    {/* Thumbnails (Right Side on Desktop, Hidden/Row on Mobile?) OrderPage doesn't specify mobile well, but let's make it responsive */}
-                                    <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: '15px', height: isMobile ? '100px' : '100%' }}>
-                                        {[selectedMenu.imageUrl, ...(selectedMenu.gallery || [])].filter(Boolean).slice(0, 3).map((img, i) => (
-                                            <div
-                                                key={i}
-                                                onClick={(e) => { e.stopPropagation(); setDetailImage(img); }}
-                                                style={{
-                                                    flex: 1,
-                                                    border: '4px solid black',
-                                                    cursor: 'pointer',
-                                                    opacity: (detailImage || selectedMenu.imageUrl) === img ? 1 : 0.6,
-                                                    overflow: 'hidden',
-                                                    background: '#eee'
-                                                }}
-                                            >
-                                                <img
-                                                    src={img}
-                                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                                    onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/200x200/e0e0e0/000000?text=No+Image" }}
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* X Button (Top Right) */}
-                                <button
-                                    onClick={() => setSelectedMenu(null)}
-                                    style={{
-                                        position: 'absolute', top: -20, right: -20,
-                                        background: '#EF4444', color: 'white',
-                                        border: '4px solid black', width: '50px', height: '50px',
-                                        fontSize: '1.5rem', fontWeight: 'bold',
-                                        display: 'flex', justifyContent: 'center', alignItems: 'center',
-                                        cursor: 'pointer', zIndex: 10,
-                                        boxShadow: '4px 4px 0 0 black'
-                                    }}
-                                >
-                                    X
-                                </button>
-                            </div>
-
-                            {/* Content Section */}
-                            <div>
-                                <h2 style={{ fontSize: '3rem', fontWeight: '900', lineHeight: 1, marginBottom: '15px' }}>{selectedMenu.name}</h2>
-                                <div style={{ marginBottom: '25px' }}>
-                                    <span style={{ background: '#FCD34D', padding: '5px 15px', fontWeight: '900', fontSize: '1.2rem', border: '2px solid black', boxShadow: '4px 4px 0 0 black' }}>
-                                        Rp {selectedMenu.price.toLocaleString()}
-                                    </span>
-                                </div>
-
-                                <p style={{ fontSize: '1.2rem', lineHeight: 1.6, marginBottom: '30px', fontWeight: '500', color: '#333' }}>
-                                    {selectedMenu.description || "A crafted masterpiece. Bold flavors designed to awaken your senses."}
-                                </p>
-
-                                <Link to="/order" style={{
-                                    padding: '20px', background: 'black', color: 'white',
-                                    textDecoration: 'none', fontWeight: '900', fontSize: '1.2rem',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px',
-                                    border: '4px solid black', width: '100%',
-                                    boxSizing: 'border-box',
-                                    transition: 'transform 0.1s'
-                                }}>
-                                    ORDER NOW <ArrowRight />
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
+            <MenuDetailModal
+                menu={selectedMenu}
+                isOpen={!!selectedMenu}
+                onClose={() => setSelectedMenu(null)}
+                isMobile={isMobile}
+                showAddToCart={false}
+                showOrderButton={false}
+                setExpandedImage={setExpandedImage}
+            />
 
             {/* Mobile Sticky Action Button */}
             {isMobile && (
@@ -796,7 +704,9 @@ export default function CMSPage() {
                     textDecoration: 'none', fontWeight: '900', fontSize: '1.2rem',
                     display: 'flex', alignItems: 'center', gap: '10px',
                     zIndex: 2000,
-                    opacity: (isInfoOpen || isMenuOpen) ? 0 : 1, transition: 'opacity 0.3s'
+                    opacity: (isInfoOpen || isMenuOpen) ? 0 : 1,
+                    pointerEvents: (isInfoOpen || isMenuOpen) ? 'none' : 'auto',
+                    transition: 'opacity 0.3s'
                 }}>
                     <span>RESERVE</span>
                     <ArrowRight size={20} />
@@ -939,7 +849,7 @@ export default function CMSPage() {
                                         onClick={() => setSelectedPost(post)}
                                     >
                                         <div style={{ background: post.category === 'PROMO' ? 'white' : 'black', color: post.category === 'PROMO' ? 'black' : 'white', display: 'inline-block', padding: '5px 15px', fontWeight: 'bold', marginBottom: '20px', fontSize: '0.9rem', alignSelf: 'flex-start' }}>{post.category}</div>
-                                        {post.imageUrl && <img src={post.imageUrl} style={{ width: '100%', height: '150px', objectFit: 'cover', border: '2px solid black', marginBottom: '15px' }} />}
+                                        {post.imageUrl && <img src={post.imageUrl} loading="lazy" style={{ width: '100%', height: '150px', objectFit: 'cover', border: '2px solid black', marginBottom: '15px' }} alt={post.title} />}
                                         <h3 style={{ fontSize: '2.5rem', fontWeight: '900', lineHeight: 0.9, marginBottom: '10px', wordBreak: 'break-word', overflowWrap: 'break-word' }}>{post.title}</h3>
                                         <p style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: '20px 0', lineHeight: 1.4, flex: 1, wordBreak: 'break-word', overflowWrap: 'break-word' }}>{post.excerpt}</p>
                                         <div style={{ fontSize: '0.9rem', opacity: 0.7, marginTop: 'auto', borderTop: post.category === 'PROMO' ? '2px solid white' : '2px solid black', paddingTop: '10px', fontWeight: 'bold' }}>
@@ -1036,6 +946,13 @@ export default function CMSPage() {
                     </div>
                 </div>
             )}
+
+            {/* Expanded Image Modal */}
+            <ImageModal
+                imageUrl={expandedImage}
+                onClose={() => setExpandedImage(null)}
+                alt="Gallery Image"
+            />
         </div >
     );
 }

@@ -112,6 +112,20 @@ public class DataLoader implements CommandLineRunner {
                 config.setHeroImageUrl("/illustration_hero.png");
                 config.setBadgeText1("SIAP");
                 config.setBadgeText2("NYAFE");
+                config.setMarqueeText("SIAP NYAFE • FRESH BREW • GOOD VIBES • 24/7 OPEN •");
+
+                // Gallery Images
+                config.setGalleryImages(Arrays.asList(
+                                "https://images.unsplash.com/photo-1554118811-1e0d58224f24",
+                                "https://images.unsplash.com/photo-1511920170033-f8396924c348",
+                                "https://images.unsplash.com/photo-1521017432531-fbd92d768814",
+                                "https://images.unsplash.com/photo-1509042239860-f550ce710b93",
+                                "https://images.unsplash.com/photo-1559925393-8be0ec4767c8",
+                                "https://images.unsplash.com/photo-1497935586351-b67a49e01000",
+                                "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085",
+                                "https://images.unsplash.com/photo-1442512595331-e89e73853f31",
+                                "https://images.unsplash.com/photo-1504630083234-14187a9df0f5",
+                                "https://images.unsplash.com/photo-1445116572660-236099ec97a0"));
 
                 shopConfigRepository.save(config);
                 System.out.println("✓ Shop Config seeded (with new UI fields)");

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { ShoppingCart, Plus, Trash2, Edit2, Upload } from 'lucide-react';
+import { ShoppingCart, Plus, Trash2, Edit2, Upload, X } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input, Select } from '../components/ui/Input';
@@ -19,7 +19,7 @@ export default function MenuPage({ user }) {
     const [editingMenu, setEditingMenu] = useState(null);
     const [viewingMenu, setViewingMenu] = useState(null);
     const [newCategoryName, setNewCategoryName] = useState('');
-    const [menuForm, setMenuForm] = useState({ name: '', category: '', price: '', description: '', imageUrl: '', available: true, gallery: ['', '', '', ''] });
+    const [menuForm, setMenuForm] = useState({ name: '', category: '', price: '', description: '', imageUrl: '', available: true, gallery: [] });
     const [alertMsg, setAlertMsg] = useState(null);
     const [confirmDialog, setConfirmDialog] = useState({ isOpen: false });
 
@@ -102,13 +102,16 @@ export default function MenuPage({ user }) {
             onConfirm: async () => {
                 try {
                     await axios.delete(`/api/menus/${id}`);
-                    setAlertMsg({ type: 'success', message: 'ITEM DELETED' });
+                    setConfirmDialog({ ...confirmDialog, isOpen: false });
                     setViewingMenu(null);
+                    setAlertMsg({ type: 'success', message: 'MENU ITEM DELETED SUCCESSFULLY!' });
+                    setTimeout(() => setAlertMsg(null), 3000);
                     fetchMenus();
                 } catch (e) {
-                    setAlertMsg({ type: 'error', message: 'DELETE FAILED' });
+                    setConfirmDialog({ ...confirmDialog, isOpen: false });
+                    setAlertMsg({ type: 'error', message: 'FAILED TO DELETE MENU ITEM' });
+                    setTimeout(() => setAlertMsg(null), 3000);
                 }
-                setConfirmDialog({ ...confirmDialog, isOpen: false });
             }
         });
     };
@@ -150,18 +153,23 @@ export default function MenuPage({ user }) {
         setConfirmDialog({
             isOpen: true,
             title: 'DELETE CATEGORY',
-            message: `DELETE CATEGORY "${name}"?`,
+            message: `DELETE CATEGORY "${name}"? All items in this category will be moved to "Uncategorized".`,
             onConfirm: async () => {
                 try {
-                    // Assuming API supports delete by name or we need to find ID. 
-                    // Implementation might vary, assuming name for now as per usage.
                     const cat = categories.find(c => c.name === name);
-                    if (cat) await axios.delete(`/api/categories/${cat.id}`);
-                    fetchCategories();
+                    if (cat) {
+                        await axios.delete(`/api/categories/${cat.id}`);
+                        setConfirmDialog({ ...confirmDialog, isOpen: false });
+                        setAlertMsg({ type: 'success', message: 'CATEGORY DELETED SUCCESSFULLY!' });
+                        setTimeout(() => setAlertMsg(null), 3000);
+                        fetchCategories();
+                        fetchMenus(); // Refresh menus as they might be affected
+                    }
                 } catch (e) {
+                    setConfirmDialog({ ...confirmDialog, isOpen: false });
                     setAlertMsg({ type: 'error', message: 'FAILED TO DELETE CATEGORY' });
+                    setTimeout(() => setAlertMsg(null), 3000);
                 }
-                setConfirmDialog({ ...confirmDialog, isOpen: false });
             }
         });
     };
@@ -185,46 +193,91 @@ export default function MenuPage({ user }) {
 
     const categoriesToDisplay = ['Featured', ...categories.map(c => c.name), 'Uncategorized'].filter((v, i, a) => a.indexOf(v) === i);
 
-    // Gallery Grid Component
     const GalleryGrid = ({ isEditable }) => (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '200px 100px', gap: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             {/* Main Image */}
-            <div style={{ gridColumn: '1 / -1', position: 'relative', border: '2px solid black', background: '#eee' }}>
+            <div style={{ position: 'relative', border: '2px solid black', background: '#eee', height: '250px' }}>
                 {menuForm.imageUrl ? (
                     <img src={menuForm.imageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.5, fontWeight: 'bold' }}>NO IMAGE</div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.5, fontWeight: 'bold' }}>MAIN IMAGE</div>
                 )}
                 {isEditable && (
-                    <label style={{ position: 'absolute', bottom: '10px', right: '10px', background: 'white', border: '2px solid black', padding: '5px', cursor: 'pointer' }}>
-                        <Upload size={16} />
-                        <input type="file" style={{ display: 'none' }} onChange={(e) => handleFileUpload(e, -1)} />
-                    </label>
+                    <div style={{ position: 'absolute', bottom: '10px', right: '10px', display: 'flex', gap: '5px' }}>
+                        <label style={{ background: 'white', border: '2px solid black', padding: '5px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                            <Upload size={16} style={{ marginRight: '5px' }} /> CHANGE
+                            <input type="file" style={{ display: 'none' }} onChange={(e) => handleFileUpload(e, -1)} />
+                        </label>
+                        {menuForm.imageUrl && (
+                            <Button variant="danger" style={{ padding: '5px' }} onClick={() => setMenuForm({ ...menuForm, imageUrl: '' })}><Trash2 size={16} /></Button>
+                        )}
+                    </div>
                 )}
             </div>
 
-            {/* Gallery Slots */}
-            {(menuForm.gallery || ['', '', '', '']).slice(0, 2).map((url, i) => (
-                <div key={i} style={{ position: 'relative', border: '2px solid black', background: '#eee' }}>
-                    {url ? (
-                        <img src={url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.5 }}>+</div>
-                    )}
+            {/* Gallery Section */}
+            <div>
+                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>GALLERY IMAGES ({menuForm.gallery?.length || 0})</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '10px' }}>
+                    {(menuForm.gallery || []).map((url, i) => (
+                        <div key={i} style={{ position: 'relative', border: '2px solid black', aspectRatio: '1/1', background: '#f9f9f9' }}>
+                            {url ? (
+                                <>
+                                    <img src={url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    {isEditable && (
+                                        <button
+                                            onClick={() => {
+                                                const newGallery = [...menuForm.gallery];
+                                                newGallery.splice(i, 1);
+                                                setMenuForm(prev => ({ ...prev, gallery: newGallery }));
+                                            }}
+                                            style={{
+                                                position: 'absolute', top: '5px', right: '5px',
+                                                background: 'red', color: 'white', border: '1px solid black',
+                                                cursor: 'pointer', padding: '2px', display: 'flex'
+                                            }}
+                                        >
+                                            <X size={12} />
+                                        </button>
+                                    )}
+                                </>
+                            ) : (
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>LOADING...</div>
+                            )}
+                        </div>
+                    ))}
+
+                    {/* Add New Button */}
                     {isEditable && (
-                        <label style={{ position: 'absolute', inset: 0, cursor: 'pointer' }}>
-                            <input type="file" style={{ display: 'none' }} onChange={(e) => handleFileUpload(e, i)} />
+                        <label style={{
+                            border: '2px dashed black', display: 'flex', flexDirection: 'column',
+                            alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                            background: '#fff', aspectRatio: '1/1', hover: { background: '#f0f0f0' }
+                        }}>
+                            <Plus size={24} />
+                            <span style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>ADD</span>
+                            <input type="file" multiple style={{ display: 'none' }} onChange={(e) => {
+                                const files = Array.from(e.target.files);
+                                files.forEach(async (file) => {
+                                    const formData = new FormData();
+                                    formData.append('file', file);
+                                    try {
+                                        const res = await axios.post('/api/uploads', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+                                        setMenuForm(prev => ({ ...prev, gallery: [...(prev.gallery || []), res.data] }));
+                                    } catch (err) { console.error('Upload failed', err); }
+                                });
+                            }} />
                         </label>
                     )}
                 </div>
-            ))}
+            </div>
         </div>
     );
 
     // Auto-update viewing form when viewingMenu changes
     useEffect(() => {
         if (viewingMenu) {
-            setMenuForm({ ...viewingMenu, gallery: viewingMenu.gallery || ['', '', '', ''] });
+            setMenuForm({ ...viewingMenu, gallery: viewingMenu.gallery || [] });
         }
     }, [viewingMenu]);
 
@@ -264,7 +317,7 @@ export default function MenuPage({ user }) {
                             {isManager && (
                                 <Button variant="secondary" style={{ padding: '5px 10px', height: 'fit-content', marginLeft: 'auto' }} onClick={() => {
                                     setEditingMenu(null);
-                                    setMenuForm({ name: '', category: category, price: '', description: '', imageUrl: '', available: true, gallery: ['', '', '', ''] });
+                                    setMenuForm({ name: '', category: category, price: '', description: '', imageUrl: '', available: true, gallery: [] });
                                     setIsMenuModalOpen(true);
                                 }}>
                                     <Plus size={16} /> ADD ITEM

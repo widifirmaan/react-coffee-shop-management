@@ -57,4 +57,10 @@ public class ShopConfig {
     private String heroImageUrl;
     private String badgeText1;
     private String badgeText2;
+
+    // Marquee Text
+    private String marqueeText;
+
+    // Gallery Images (Sidebar Scroll)
+    private List<String> galleryImages = new ArrayList<>();
 }

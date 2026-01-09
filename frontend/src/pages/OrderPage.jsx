@@ -10,6 +10,9 @@ import { Button } from '../components/ui/Button';
 import { Input, Select } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
 import { Alert } from '../components/ui/Alert';
+import ImageModal from '../components/ui/ImageModal';
+import MenuDetailModal from '../components/ui/MenuDetailModal';
+import CategorySelector from '../components/ui/CategorySelector';
 import OrderPageHeader from '../components/layout/OrderPageHeader';
 import OrderPageFooter from '../components/layout/OrderPageFooter';
 import './OrderPage.css';
@@ -25,11 +28,14 @@ export default function OrderPage({ shopConfig }) {
     const [selectedMenu, setSelectedMenu] = useState(null);
     const [alertMsg, setAlertMsg] = useState(null);
     const [isCallWaiterOpen, setIsCallWaiterOpen] = useState(false);
-
     const [zoomedImage, setZoomedImage] = useState(null);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
     useEffect(() => {
         fetchMenus();
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
     }, []);
 
     const fetchMenus = async () => {
@@ -95,19 +101,35 @@ export default function OrderPage({ shopConfig }) {
     }, {});
 
     const renderGallery = (menu) => {
-        const images = menu.gallery && menu.gallery.length ? menu.gallery : (menu.imageUrl ? [menu.imageUrl] : []);
-        if (!images.length) return <div style={{ height: '300px', background: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '4px solid black' }}>NO IMAGE</div>;
+        const gallery = menu.gallery && menu.gallery.length > 0 ? menu.gallery : (menu.imageUrl ? [menu.imageUrl] : []);
+        const uniqueImages = [...new Set(gallery)].filter(Boolean);
+
+        if (!uniqueImages.length) return <div style={{ height: '300px', background: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '4px solid black' }}>NO IMAGE</div>;
 
         return (
             <div style={{ display: 'grid', gap: '10px' }}>
-                <img onClick={() => setZoomedImage(images[0])} src={images[0]} style={{ width: '100%', height: '300px', objectFit: 'cover', border: '4px solid black', cursor: 'zoom-in' }} onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }} />
+                <img onClick={() => setZoomedImage(uniqueImages[0])} src={uniqueImages[0]} style={{ width: '100%', height: '300px', objectFit: 'cover', border: '4px solid black', cursor: 'zoom-in' }} onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }} />
                 <div style={{ display: 'flex', gap: '10px' }}>
-                    {images.slice(1, 4).map((img, i) => (
+                    {uniqueImages.slice(1, 4).map((img, i) => (
                         <img key={i} onClick={() => setZoomedImage(img)} src={img} style={{ width: '80px', height: '80px', objectFit: 'cover', border: '2px solid black', cursor: 'zoom-in' }} onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }} />
                     ))}
                 </div>
             </div>
         );
+    };
+
+    const handleCallWaiter = async (type) => {
+        try {
+            await axios.post('/api/notifications', {
+                type: 'CALL_WAITER',
+                message: type === 'PAYMENT' ? 'Customer requesting bill/payment' : 'Customer requesting assistance',
+                tableNumber: customerInfo.tableNumber || 'Unknown Table'
+            });
+            setAlertMsg({ type: 'success', message: 'WAITER NOTIFIED!' });
+            setIsCallWaiterOpen(false);
+        } catch (e) {
+            setAlertMsg({ type: 'error', message: 'FAILED TO CALL WAITER' });
+        }
     };
 
     return (
@@ -120,41 +142,14 @@ export default function OrderPage({ shopConfig }) {
                     <h1 className="page-title" style={{ margin: '10px 0' }}>DAFTAR MENU</h1>
                     <p style={{ fontWeight: 'bold' }}>{customerInfo.name ? `Ordering for: ${customerInfo.name}` : 'WELCOME! PLEASE SELECT YOUR ITEMS.'}</p>
 
-                    {/* Category Swiper - Standard Horizontal Scroll */}
-                    <div style={{ margin: '30px 0' }}>
-                        <Swiper
-                            spaceBetween={15}
-                            slidesPerView={'auto'}
-                            grabCursor={true}
-                            mousewheel={{ forceToAxis: true }}
-                            modules={[Mousewheel]}
-                            onSlideChange={(swiper) => setActiveCategory(categories[swiper.activeIndex])}
-                        // We don't bind 'initialSlide' strictly because with auto view it might be weird, 
-                        // but let's keep it simple. Navigation is active by clicking.
-                        >
-                            {categories.map((cat) => (
-                                <SwiperSlide key={cat} style={{ width: 'auto' }}>
-                                    <div
-                                        onClick={() => setActiveCategory(cat)}
-                                        className={`category-label ${activeCategory === cat ? 'active' : ''}`}
-                                        style={{
-                                            padding: '15px 30px',
-                                            background: activeCategory === cat ? '#FCD34D' : 'white',
-                                            border: '4px solid black',
-                                            fontWeight: '900',
-                                            textAlign: 'center',
-                                            cursor: 'pointer',
-                                            boxShadow: activeCategory === cat ? '6px 6px 0 0 black' : '4px 4px 0 0 black',
-                                            transition: 'all 0.2s',
-                                            transform: activeCategory === cat ? 'translate(-2px, -2px)' : 'none'
-                                        }}
-                                    >
-                                        {cat}
-                                    </div>
-                                </SwiperSlide>
-                            ))}
-                        </Swiper>
-                    </div>
+                    {/* Category Selector */}
+                    <CategorySelector
+                        categories={categories}
+                        activeCategory={activeCategory}
+                        onSelect={setActiveCategory}
+                        theme="light"
+                        layout="scroll"
+                    />
                 </div>
 
                 {/* Menu Grid */}
@@ -203,18 +198,15 @@ export default function OrderPage({ shopConfig }) {
             }
 
             {/* Modals */}
-            <Modal isOpen={!!selectedMenu} onClose={() => setSelectedMenu(null)} title={selectedMenu?.name || 'DETAIL'} maxWidth="800px">
-                {selectedMenu && (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
-                        <div>{renderGallery(selectedMenu)}</div>
-                        <div>
-                            <h2 style={{ fontSize: '2rem' }}>Rp {selectedMenu.price?.toLocaleString()}</h2>
-                            <p style={{ fontSize: '1.2rem', margin: '20px 0' }}>{selectedMenu.description}</p>
-                            <Button variant="success" onClick={() => { addToCart(selectedMenu); setSelectedMenu(null); }} style={{ width: '100%', fontSize: '1.2rem', padding: '20px' }}>ADD TO CART</Button>
-                        </div>
-                    </div>
-                )}
-            </Modal>
+            <MenuDetailModal
+                menu={selectedMenu}
+                isOpen={!!selectedMenu}
+                onClose={() => setSelectedMenu(null)}
+                isMobile={isMobile}
+                showAddToCart={true}
+                onAddToCart={addToCart}
+                setExpandedImage={setZoomedImage}
+            />
 
             <Modal isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} title="YOUR ORDER">
                 <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
@@ -265,26 +257,19 @@ export default function OrderPage({ shopConfig }) {
 
             <Modal isOpen={isCallWaiterOpen} onClose={() => setIsCallWaiterOpen(false)} title="CALL WAITER">
                 <div style={{ display: 'grid', gap: '20px' }}>
-                    <Button variant="primary" onClick={() => { setAlertMsg({ type: 'success', message: 'WAITER NOTIFIED!' }); setIsCallWaiterOpen(false); }}>PAYMENT / BILL</Button>
-                    <Button variant="secondary" onClick={() => { setAlertMsg({ type: 'success', message: 'WAITER NOTIFIED!' }); setIsCallWaiterOpen(false); }}>GENERAL ASSISTANCE</Button>
+                    <Button variant="primary" onClick={() => handleCallWaiter('PAYMENT')}>PAYMENT / BILL</Button>
+                    <Button variant="secondary" onClick={() => handleCallWaiter('GENERAL')}>GENERAL ASSISTANCE</Button>
                 </div>
             </Modal>
 
             {alertMsg && <Alert type={alertMsg.type} message={alertMsg.message} onClose={() => setAlertMsg(null)} />}
 
             {/* Image Zoom Overlay */}
-            {
-                zoomedImage && (
-                    <div style={{
-                        position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-                        background: 'rgba(0,0,0,0.9)', zIndex: 10000,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        cursor: 'zoom-out'
-                    }} onClick={() => setZoomedImage(null)}>
-                        <img src={zoomedImage} style={{ maxWidth: '90%', maxHeight: '90%', border: '4px solid white', boxShadow: '0 0 20px rgba(0,0,0,0.5)', objectFit: 'contain' }} />
-                    </div>
-                )
-            }
+            <ImageModal
+                imageUrl={zoomedImage}
+                onClose={() => setZoomedImage(null)}
+                alt="Menu Image"
+            />
         </div >
     );
 }

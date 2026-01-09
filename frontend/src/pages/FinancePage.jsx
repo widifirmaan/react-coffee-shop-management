@@ -5,6 +5,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { Input, Select } from '../components/ui/Input';
+import { TableContainer, Table, Thead, Tbody, Tr, Th, Td } from '../components/ui/Table';
 import Pagination from '../components/ui/Pagination';
 import SearchBar from '../components/ui/SearchBar';
 import PageHeader from '../components/ui/PageHeader';
@@ -92,19 +93,19 @@ export default function FinancePage() {
                 </Card>
             </div>
 
-            <Card style={{ padding: 0, overflow: 'hidden' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                    <thead style={{ background: 'black', color: 'white' }}>
-                        <tr>
-                            {['DATE', 'DESCRIPTION', 'TYPE', 'AMOUNT'].map(h => <th key={h} style={{ padding: '20px' }}>{h}</th>)}
-                        </tr>
-                    </thead>
-                    <tbody>
+            <TableContainer>
+                <Table>
+                    <Thead>
+                        <Tr>
+                            {['DATE', 'DESCRIPTION', 'TYPE', 'AMOUNT'].map(h => <Th key={h}>{h}</Th>)}
+                        </Tr>
+                    </Thead>
+                    <Tbody>
                         {paginatedData.map((t, i) => (
-                            <tr key={t.id} style={{ background: i % 2 ? 'white' : '#f9fafb', borderBottom: '1px solid #eee' }}>
-                                <td style={{ padding: '20px' }}>{new Date(t.date).toLocaleDateString()}</td>
-                                <td style={{ padding: '20px', fontWeight: 'bold' }}>{t.description}</td>
-                                <td style={{ padding: '20px' }}>
+                            <Tr key={t.id} index={i}>
+                                <Td>{new Date(t.date).toLocaleDateString()}</Td>
+                                <Td style={{ fontWeight: 'bold' }}>{t.description}</Td>
+                                <Td>
                                     <span style={{
                                         background: t.type === 'INCOME' ? '#dcfce7' : '#fee2e2',
                                         color: t.type === 'INCOME' ? '#166534' : '#991b1b',
@@ -112,14 +113,14 @@ export default function FinancePage() {
                                     }}>
                                         {t.type}
                                     </span>
-                                </td>
-                                <td style={{ padding: '20px', textAlign: 'right', fontWeight: '900', fontSize: '1.2rem', color: t.type === 'INCOME' ? '#166534' : '#991b1b' }}>
+                                </Td>
+                                <Td align="right" style={{ fontWeight: '900', fontSize: '1.2rem', color: t.type === 'INCOME' ? '#166534' : '#991b1b' }}>
                                     {t.type === 'INCOME' ? '+' : '-'} {t.amount.toLocaleString()}
-                                </td>
-                            </tr>
+                                </Td>
+                            </Tr>
                         ))}
-                    </tbody>
-                </table>
+                    </Tbody>
+                </Table>
                 {filtered.length === 0 && <div style={{ padding: '40px', textAlign: 'center', opacity: 0.5 }}>NO TRANSACTIONS FOUND</div>}
 
                 {filtered.length > 0 && (
@@ -131,7 +132,7 @@ export default function FinancePage() {
                         totalItems={filtered.length}
                     />
                 )}
-            </Card>
+            </TableContainer>
 
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="RECORD TRANSACTION">
                 <form onSubmit={handleAdd}>

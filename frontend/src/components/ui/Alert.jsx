@@ -21,7 +21,7 @@ export const Alert = ({ type = 'success', message, onClose, duration = 3000 }) =
     return createPortal(
         <div style={{
             position: 'fixed', top: '20px', right: '20px',
-            zIndex: 10000,
+            zIndex: 99999,
             animation: 'slideIn 0.3s ease-out'
         }}>
             <style>

@@ -171,6 +171,76 @@ export default function SettingsPage() {
                     </div>
                 </Card>
 
+                {/* Marquee Text */}
+                <Card title="MARQUEE TEXT (RUNNING TEXT)" icon={Hash}>
+                    <Input
+                        label="RUNNING TEXT"
+                        name="marqueeText"
+                        value={config.marqueeText || ''}
+                        onChange={handleChange}
+                        placeholder="SIAP NYAFE • FRESH BREW • GOOD VIBES • 24/7 OPEN •"
+                        type="textarea"
+                    />
+                    <p style={{ fontSize: '0.9rem', color: '#666', marginTop: '-10px', fontWeight: 'bold' }}>
+                        This text will scroll continuously at the top of your landing page. Use • as separator.
+                    </p>
+                </Card>
+
+                {/* Gallery Images */}
+                <Card title="GALLERY IMAGES (SIDEBAR SCROLL)" icon={Image}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                        {(config.galleryImages || []).map((url, index) => (
+                            <div key={index} style={{ display: 'flex', gap: '10px', alignItems: 'center', borderBottom: '2px dashed #ccc', paddingBottom: '15px' }}>
+                                <div style={{ flex: 1 }}>
+                                    <Input
+                                        placeholder="Image URL (https://...)"
+                                        value={url || ''}
+                                        onChange={(e) => {
+                                            const newImages = [...(config.galleryImages || [])];
+                                            newImages[index] = e.target.value;
+                                            setConfig({ ...config, galleryImages: newImages });
+                                        }}
+                                        style={{ container: { marginBottom: 0 } }}
+                                    />
+                                </div>
+                                {url && (
+                                    <img
+                                        src={`${url}?auto=format&fit=crop&w=100&q=80`}
+                                        alt={`Preview ${index + 1}`}
+                                        style={{ width: '60px', height: '60px', objectFit: 'cover', border: '2px solid black' }}
+                                        onError={(e) => { e.target.style.display = 'none'; }}
+                                    />
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const newImages = (config.galleryImages || []).filter((_, i) => i !== index);
+                                        setConfig({ ...config, galleryImages: newImages });
+                                    }}
+                                    className="brutalist-btn"
+                                    style={{ background: '#ef4444', color: 'white', padding: '15px', border: '3px solid black', cursor: 'pointer', fontWeight: 'bold' }}
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        ))}
+                        <button
+                            type="button"
+                            onClick={() => {
+                                const newImages = [...(config.galleryImages || []), ''];
+                                setConfig({ ...config, galleryImages: newImages });
+                            }}
+                            className="brutalist-btn"
+                            style={{ background: 'black', color: 'white', padding: '15px', border: '3px solid black', cursor: 'pointer', fontWeight: 'bold', marginTop: '10px' }}
+                        >
+                            + ADD IMAGE
+                        </button>
+                    </div>
+                    <p style={{ fontSize: '0.9rem', color: '#666', marginTop: '15px', fontWeight: 'bold' }}>
+                        These images will scroll vertically in the sidebar. Recommended: 6-10 images for smooth loop.
+                    </p>
+                </Card>
+
                 {/* Contact Info */}
                 <Card title="CONTACT DETAILS" icon={MapPin}>
                     <Input
