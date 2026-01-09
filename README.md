@@ -15,16 +15,16 @@ Explore the comprehensive features of **Siap Nyafe** through our gallery.
 
 | | |
 |:---:|:---:|
-| ![Screenshot 1](screenshots/shot_01.png)<br>**Dashboard** | ![Screenshot 2](screenshots/shot_02.png)<br>**Mobile / Menu Detail** |
-| ![Screenshot 3](screenshots/shot_03.png)<br>**Cart / Order Summary** | ![Screenshot 4](screenshots/shot_04.png)<br>**Customer Order View** |
-| ![Screenshot 5](screenshots/shot_05.png)<br>**Kitchen Display System (KDS)** | ![Screenshot 6](screenshots/shot_06.png)<br>**Manager Dashboard Overview** |
-| ![Screenshot 7](screenshots/shot_07.png)<br>**Real-time Statistics** | ![Screenshot 8](screenshots/shot_08.png)<br>**Menu Management (CMS)** |
-| ![Screenshot 9](screenshots/shot_09.png)<br>**Inventory Tracking** | ![Screenshot 10](screenshots/shot_10.png)<br>**Staff & Shift Management** |
-| ![Screenshot 11](screenshots/shot_11.png)<br>**Finance & Transactions** | ![Screenshot 12](screenshots/shot_12.png)<br>**Blog / Post Management** |
-| ![Screenshot 13](screenshots/shot_13.png)<br>**Shop Settings** | ![Screenshot 14](screenshots/shot_14.png)<br>**Order History** |
-| ![Screenshot 15](screenshots/shot_15.png)<br>**Detail View** | ![Screenshot 16](screenshots/shot_16.png)<br>**Edit Modal / Form** |
-| ![Screenshot 17](screenshots/shot_17.png)<br>**System Configuration** | ![Screenshot 18](screenshots/shot_18.png)<br>**User Profile** |
-| ![Screenshot 19](screenshots/shot_19.png)<br>**Mobile Responsive View** | |
+| ![Screenshot 1](screenshots/shot_01.png)<br>**Dashboard** | ![Screenshot 2](screenshots/shot_02.png)<br>**Confirmation Modal** |
+| ![Screenshot 3](screenshots/shot_03.png)<br>**Alert** | ![Screenshot 4](screenshots/shot_04.png)<br>**Table** |
+| ![Screenshot 5](screenshots/shot_05.png)<br>**Modal Edit Menu** | ![Screenshot 6](screenshots/shot_06.png)<br>**Queue Manager** |
+| ![Screenshot 7](screenshots/shot_07.png)<br>**Order History** | ![Screenshot 8](screenshots/shot_08.png)<br>**Edit Stock Modal** |
+| ![Screenshot 9](screenshots/shot_09.png)<br>**Edit Staff Modal** | ![Screenshot 10](screenshots/shot_10.png)<br>**Finance & Transactions** |
+| ![Screenshot 11](screenshots/shot_11.png)<br>**Blog CMS Post Edit Modal** | ![Screenshot 12](screenshots/shot_12.png)<br>**Store Settings** |
+| ![Screenshot 13](screenshots/shot_13.png)<br>**Homepage** | ![Screenshot 14](screenshots/shot_14.png)<br>**Blog Post Page** |
+| ![Screenshot 15](screenshots/shot_15.png)<br>**About View** | ![Screenshot 16](screenshots/shot_16.png)<br>**Menu List & Details** |
+| ![Screenshot 17](screenshots/shot_17.png)<br>**Cart System** | ![Screenshot 18](screenshots/shot_18.png)<br>**Checkout** |
+| ![Screenshot 19](screenshots/shot_19.png)<br>**Call Waiter** | **Coming Soon** |
 
 ---
 
