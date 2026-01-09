@@ -9,11 +9,43 @@
 
 ---
 
+## 📸 Application Showcase
+
+### Customer Ordering Experience
+The customer-facing interface is designed for self-service kiosks or tablets, featuring a bold, high-contrast design.
+
+| Landing Page | Menu Detail |
+|:---:|:---:|
+| ![Home Page](screenshots/01_home.png) | ![Menu Detail](screenshots/02_menu_detail.png) |
+
+### Kitchen Display System (KDS)
+Real-time order board for kitchen staff to track and manage incoming orders.
+
+![Kitchen Display](screenshots/03_kitchen.png)
+
+### Staff Portal & Security
+Secure login portal with fluid animations for staff authentication.
+
+![Login Page](screenshots/04_login.png)
+
+### Manager Dashboard
+Comprehensive admin panel for analytics, order management, inventory, and staff scheduling.
+
+| Dashboard Home | Order Management |
+|:---:|:---:|
+| ![Dashboard Home](screenshots/05_dashboard_home.png) | ![Order Management](screenshots/06_dashboard_orders.png) |
+
+| Inventory Management | Staff Management |
+|:---:|:---:|
+| ![Inventory](screenshots/07_dashboard_inventory.png) | ![Staff](screenshots/08_dashboard_employees.png) |
+
+---
+
 ## 🚀 Features Overview
 
-### �️ Customer Experience (Ordering)
+### 🛒 Customer Experience (Ordering)
 *   **Visual Menu**: Beautiful card-based layout with category filtering (Coffee, Non-Coffee, Snacks).
-*   **Smart Cart**: easy-to-use cart with quantity adjustments and special instruction fields (e.g., "Less Ice").
+*   **Smart Cart**: Easy-to-use cart with quantity adjustments and special instruction fields.
 *   **Self-Service**: Customers can input their name and table number directly.
 *   **Payment Integration**: Options for Cash, QRIS, and Card payments.
 
@@ -22,17 +54,12 @@
 *   **Digital Tickets**: Replaces paper tickets with clear, readable digital cards showing items, table, and notes.
 *   **Staff Assignment**: Tracks which shift member is handling specific orders.
 
-### � Admin & Management Dashboard
+### 📊 Admin & Management Dashboard
 *   **Dashboard Hub**: A central view with sticky notes for team communication and quick stats.
 *   **Inventory Management**: Track ingredient levels, units, and low-stock alerts.
-*   **Finance & Transactions**: detailed logs of all sales and revenue tracking.
+*   **Finance & Transactions**: Detailed logs of all sales and revenue tracking.
 *   **Employee Hub**: Manage staff profiles, roles, and shift schedules.
-*   **Menu CMS**: effortless addition/editing of menu items, prices, and images.
-*   **Content Management**: Manage the "Latest Drops" (News/Blog) section dynamically.
-
-### ⚙️ System Configuration
-*   **Dynamic Branding**: Change the Shop Name, Address, Social Media links, and Logo directly from settings.
-*   **Security**: Role-based access control (Admin, Employee) using Spring Security.
+*   **Menu CMS**: Effortless addition/editing of menu items, prices, and images.
 
 ---
 
@@ -43,13 +70,12 @@
 *   **Database**: MongoDB
 *   **Security**: Spring Security (JWT/Session)
 *   **Build Tool**: Maven
-*   **Key Modules**: `Lombok` (Boilerplate reduction), `Spring Data MongoDB`.
 
 ### Frontend (Client App)
 *   **Framework**: React.js 18
-*   **Build Tool**: Vite 5 (Super fast HMR)
+*   **Build Tool**: Vite 5
 *   **Styling**: **Neo-Brutalist CSS**, Vanilla CSS modules, Lucide React Icons.
-*   **Libraries**: `Axios` (API requests), `Swiper` (Carousels), `React Router 6`.
+*   **Libraries**: `Axios`, `Swiper`, `React Router 6`.
 
 ---
 
@@ -58,15 +84,15 @@
 ```bash
 /
 ├── backend/                 # Spring Boot Server
-│   ├── src/main/java/...   # Controllers, Services, Models, Repositories
-│   └── src/main/resources/ # Config (application.properties)
+│   ├── src/main/java/...   # Controllers, Services, Models
+│   └── src/main/resources/ # Application Config
 │
 └── frontend/                # React Vite Client
     ├── src/
     │   ├── components/     # Reusable UI components
-    │   ├── pages/          # Full page views (Dashboard, Menu, Kitchen, etc.)
+    │   ├── pages/          # Full page views
     │   └── assets/         # Images and global styles
-    └── public/             # Static assets
+    └── screenshots/        # Project display images
 ```
 
 ---
@@ -74,66 +100,24 @@
 ## 📦 Getting Started
 
 ### Prerequisites
-*   **Java JDK 17** or higher (JDK 21 Recommended)
-*   **Node.js 18** or higher
-*   **MongoDB** (Local instance or MongoDB Atlas connection string)
+*   **Java JDK 17+** (JDK 21 Recommended)
+*   **Node.js 18+**
+*   **MongoDB**
 
 ### 1. Backend Setup
-Navigate to the backend directory and start the Spring Boot server.
-
 ```bash
 cd backend
-# Run with Maven Wrapper (Linux/Mac)
 ./mvnw spring-boot:run
-# OR standard Maven
-mvn spring-boot:run
 ```
-*The server will start on `http://localhost:8080`*
+*Server runs on `http://localhost:8080`*
 
 ### 2. Frontend Setup
-Open a new terminal, navigate to the frontend, and start the Vite dev server.
-
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-*The client will start on `http://localhost:3000`*
-
----
-
-## � API Endpoints Snapshot
-
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/api/menus` | Fetch all menu items |
-| `POST` | `/api/orders` | Create a new customer order |
-| `GET` | `/api/orders/status/{status}` | Filter orders (e.g., PENDING) |
-| `GET` | `/api/ingredients` | Get inventory stock levels |
-| `POST` | `/api/auth/login` | Staff authentication |
-| `GET` | `/api/shop-config` | Get shop metadata (name, logo) |
-
----
-
-## 🛣 Roadmap & Status
----
-
-## 👥 Authors
-Developed by **Widi Firmaan** and the **Siap Nyafe Team**.
-
-## 📝 Development Guidelines
-For developers contributing to this project, please refer to our [Development Guidelines](DEVELOPMENT_GUIDELINES.md).
-We strictly adhere to **SOLID**, **KISS**, **DRY**, and **YAGNI** principles.
-
-- [x] **Core Ordering System** (Menu ➔ Cart ➔ Order)
-- [x] **Kitchen Workflow** (Status updates)
-- [x] **Admin Dashboard** (Analytics & Overview)
-- [x] **Inventory System** (Ingredient Stock)
-- [x] **Employee & Shift Management**
-- [x] **CMS for Landing Page**
-- [ ] **Advanced Reporting** (Export PDF/Excel)
-- [ ] **Customer Loyalty Points**
-- [ ] **Multi-location Support**
+*Client runs on `http://localhost:3000`*
 
 ---
 

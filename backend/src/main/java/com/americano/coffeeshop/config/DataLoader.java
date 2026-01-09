@@ -427,6 +427,21 @@ public class DataLoader implements CommandLineRunner {
                                 Arrays.asList(createOrderItem("Vietnamese Coffee", 1, 32000)),
                                 OrderStatus.READY_TO_SERVE, LocalDateTime.now().minusMinutes(2)));
 
+                // NEW ORDERS FOR KITCHEN SCREENSHOTS
+                orders.add(createOrder("Table 12", "David Miller",
+                                Arrays.asList(createOrderItem("Cappuccino", 1, 35000),
+                                                createOrderItem("Chocolate Croissant", 2, 28000)),
+                                OrderStatus.PENDING, LocalDateTime.now().minusMinutes(8)));
+
+                orders.add(createOrder("Table 4", "Sarah Connor",
+                                Arrays.asList(createOrderItem("Green Tea", 2, 28000),
+                                                createOrderItem("Cheesecake", 1, 38000)),
+                                OrderStatus.PREPARING, LocalDateTime.now().minusMinutes(12)));
+
+                orders.add(createOrder("Table 8", "John Snow",
+                                Arrays.asList(createOrderItem("Espresso", 4, 25000)),
+                                OrderStatus.PENDING, LocalDateTime.now().minusMinutes(3)));
+
                 orderRepository.saveAll(orders);
                 System.out.println("✓ Orders seeded (" + orders.size() + " total: historical & active)");
         }
