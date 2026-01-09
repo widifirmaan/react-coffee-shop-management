@@ -15,7 +15,7 @@ Explore the comprehensive features of **Siap Nyafe** through our gallery.
 
 | | |
 |:---:|:---:|
-| ![Screenshot 1](screenshots/shot_01.png)<br>**Home / Landing Page** | ![Screenshot 2](screenshots/shot_02.png)<br>**Mobile / Menu Detail** |
+| ![Screenshot 1](screenshots/shot_01.png)<br>**Dashboard** | ![Screenshot 2](screenshots/shot_02.png)<br>**Mobile / Menu Detail** |
 | ![Screenshot 3](screenshots/shot_03.png)<br>**Cart / Order Summary** | ![Screenshot 4](screenshots/shot_04.png)<br>**Customer Order View** |
 | ![Screenshot 5](screenshots/shot_05.png)<br>**Kitchen Display System (KDS)** | ![Screenshot 6](screenshots/shot_06.png)<br>**Manager Dashboard Overview** |
 | ![Screenshot 7](screenshots/shot_07.png)<br>**Real-time Statistics** | ![Screenshot 8](screenshots/shot_08.png)<br>**Menu Management (CMS)** |
