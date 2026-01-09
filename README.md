@@ -11,38 +11,20 @@
 
 ## 📸 Application Showcase
 
-### Customer Ordering Experience
-The customer-facing interface is designed for self-service kiosks or tablets, featuring a bold, high-contrast design.
+Explore the comprehensive features of **Siap Nyafe** through our gallery.
 
-| Landing Page (CMS) | Order Page (Customer) |
+| | |
 |:---:|:---:|
-| ![Landing Page](screenshots/01_landing.png) | ![Order Page](screenshots/02_order_page.png) |
-
-### Operations & Staff
-Streamlined tools for kitchen staff and secure authentication.
-
-| Kitchen Display System (KDS) | Staff Login Portal |
-|:---:|:---:|
-| ![Kitchen Display](screenshots/03_kitchen.png) | ![Login Page](screenshots/04_login.png) |
-
-### Manager Dashboard & Administration
-Comprehensive admin panel for analytics, inventory, and staff scheduling.
-
-| Dashboard Overview | Finance & Order History |
-|:---:|:---:|
-| ![Dashboard Home](screenshots/05_dashboard.png) | ![Finance](screenshots/09_finance.png) |
-
-| Inventory Management | Menu Management |
-|:---:|:---:|
-| ![Inventory](screenshots/07_inventory_management.png) | ![Menu Mgmt](screenshots/06_menu_management.png) |
-
-| Staff Management | Content (Blog) & Settings |
-|:---:|:---:|
-| ![Staff](screenshots/08_staff_management.png) | ![Posts](screenshots/10_posts.png) |
-
-| Shop Settings |
-|:---:|
-| ![Settings](screenshots/11_settings.png) |
+| ![Screenshot 1](screenshots/shot_01.png) | ![Screenshot 2](screenshots/shot_02.png) |
+| ![Screenshot 3](screenshots/shot_03.png) | ![Screenshot 4](screenshots/shot_04.png) |
+| ![Screenshot 5](screenshots/shot_05.png) | ![Screenshot 6](screenshots/shot_06.png) |
+| ![Screenshot 7](screenshots/shot_07.png) | ![Screenshot 8](screenshots/shot_08.png) |
+| ![Screenshot 9](screenshots/shot_09.png) | ![Screenshot 10](screenshots/shot_10.png) |
+| ![Screenshot 11](screenshots/shot_11.png) | ![Screenshot 12](screenshots/shot_12.png) |
+| ![Screenshot 13](screenshots/shot_13.png) | ![Screenshot 14](screenshots/shot_14.png) |
+| ![Screenshot 15](screenshots/shot_15.png) | ![Screenshot 16](screenshots/shot_16.png) |
+| ![Screenshot 17](screenshots/shot_17.png) | ![Screenshot 18](screenshots/shot_18.png) |
+| ![Screenshot 19](screenshots/shot_19.png) | |
 
 ---
 
