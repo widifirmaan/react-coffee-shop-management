@@ -143,6 +143,28 @@ export default function KitchenPage() {
                 color="#fef08a"
             />
 
+            <style>{`
+                .brutalist-tooltip { position: relative; }
+                .brutalist-tooltip:hover::after {
+                    content: attr(data-tooltip);
+                    position: absolute;
+                    bottom: 110%;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: black;
+                    color: white;
+                    padding: 5px 10px;
+                    border: 2px solid white;
+                    font-weight: 900;
+                    font-size: 0.7rem;
+                    white-space: nowrap;
+                    box-shadow: 4px 4px 0 0 rgba(0,0,0,0.2);
+                    z-index: 100;
+                    pointer-events: none;
+                    text-transform: uppercase;
+                }
+            `}</style>
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '30px' }}>
                 {orders.map(order => (
                     <Card key={order.id} style={{ background: 'white', padding: '20px' }}>
@@ -265,7 +287,7 @@ export default function KitchenPage() {
                                             <Td>{order.items?.map(i => `${i.quantity}x ${i.menuName}`).join(', ')}</Td>
                                             <Td>Rp {order.grandTotal?.toLocaleString()}</Td>
                                             <Td>
-                                                <Button title="Requeue" onClick={() => handleStatusChange(order.id, 'PENDING')} variant="secondary" style={{ padding: '5px 10px', fontSize: '0.8rem' }}>↻</Button>
+                                                <Button className="brutalist-tooltip" data-tooltip="REQUEUE ORDER" onClick={() => handleStatusChange(order.id, 'PENDING')} variant="secondary" style={{ padding: '5px 10px', fontSize: '0.8rem' }}>↻</Button>
                                             </Td>
                                         </Tr>
                                     ))}

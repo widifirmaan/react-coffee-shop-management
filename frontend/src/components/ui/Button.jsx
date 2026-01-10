@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const Button = ({ children, onClick, type = 'button', variant = 'primary', className = '', style = {}, disabled = false }) => {
+export const Button = ({ children, onClick, type = 'button', variant = 'primary', className = '', style = {}, disabled = false, ...props }) => {
     const baseStyle = {
         padding: '15px 30px',
         fontSize: '1.2rem',
@@ -37,6 +37,7 @@ export const Button = ({ children, onClick, type = 'button', variant = 'primary'
             onMouseLeave={e => !disabled && (e.currentTarget.style.transform = 'translate(0, 0)', e.currentTarget.style.boxShadow = activeStyle.boxShadow)}
             onMouseDown={e => !disabled && (e.currentTarget.style.transform = 'translate(2px, 2px)', e.currentTarget.style.boxShadow = '2px 2px 0 0 black')}
             onMouseUp={e => !disabled && (e.currentTarget.style.transform = 'translate(-2px, -2px)', e.currentTarget.style.boxShadow = '6px 6px 0 0 black')}
+            {...props}
         >
             {children}
         </button>
