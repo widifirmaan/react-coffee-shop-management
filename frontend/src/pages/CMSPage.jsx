@@ -889,7 +889,7 @@ export default function CMSPage() {
                     }} onClick={e => e.stopPropagation()}>
 
                         {/* Close Button */}
-                        <button onClick={() => setSelectedPost(null)} style={{
+                        <button type="button" onClick={() => setSelectedPost(null)} style={{
                             position: 'absolute', top: '15px', right: '15px',
                             background: '#ef4444', color: 'white', border: '2px solid black',
                             width: '50px', height: '50px', cursor: 'pointer', zIndex: 20,
@@ -900,7 +900,7 @@ export default function CMSPage() {
                             onMouseEnter={e => e.currentTarget.style.transform = 'translate(2px, 2px)'}
                             onMouseLeave={e => e.currentTarget.style.transform = 'translate(0, 0)'}
                         >
-                            <X size={32} strokeWidth={4} color="#ffffff" />
+                            <X size={32} strokeWidth={3} />
                         </button>
 
                         {/* Image Header */}
