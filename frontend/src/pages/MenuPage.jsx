@@ -325,9 +325,9 @@ export default function MenuPage({ user }) {
                             )}
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px', alignItems: 'stretch' }}>
                             {items.map(menu => (
-                                <Card key={menu.id} style={{ opacity: menu.available ? 1 : 0.6, cursor: 'pointer', padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%' }} onClick={() => setViewingMenu(menu)}>
+                                <Card key={menu.id} style={{ opacity: menu.available ? 1 : 0.6, cursor: 'pointer', padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%', marginBottom: 0 }} onClick={() => setViewingMenu(menu)}>
                                     <div style={{ height: '200px', background: '#ccc', borderBottom: '4px solid black' }}>
                                         {menu.imageUrl && <img src={menu.imageUrl} alt={menu.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400?text=No+Image" }} />}
                                     </div>
