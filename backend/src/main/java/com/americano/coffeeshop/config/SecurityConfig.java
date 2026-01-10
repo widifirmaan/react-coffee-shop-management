@@ -68,7 +68,7 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @org.springframework.beans.factory.annotation.Value("${ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}")
+    @org.springframework.beans.factory.annotation.Value("${ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000,http://localhost:8085,https://vps.widifirmaan.web.id,http://vps.widifirmaan.web.id}")
     private String allowedOrigins;
 
     @Bean
