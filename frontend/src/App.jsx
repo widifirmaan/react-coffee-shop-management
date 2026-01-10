@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Backend Config
 if (import.meta.env.VITE_API_URL) {
@@ -26,8 +27,7 @@ import ShiftPage from './pages/ShiftPage';
 
 function AppContent() {
     const location = useLocation();
-    const [user, setUser] = useState(null);
-    const [isAuthenticating, setIsAuthenticating] = useState(true);
+    const { user, login, logout, loading } = useAuth(); // Use Context
     const [shopConfig, setShopConfig] = useState(null);
 
     useEffect(() => {
@@ -47,74 +47,11 @@ function AppContent() {
                 }
             }
         }).catch(e => console.error("Config load error", e));
-
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            try {
-                const parsedUser = JSON.parse(storedUser);
-                if (parsedUser) {
-                    // Verify session with backend
-                    axios.get('/api/auth/check')
-                        .then(() => {
-                            setUser(parsedUser);
-                        })
-                        .catch(() => {
-                            console.log("Session invalid or expired");
-                            localStorage.removeItem('user');
-                            setUser(null);
-                        })
-                        .finally(() => {
-                            setIsAuthenticating(false);
-                        });
-                } else {
-                    localStorage.removeItem('user');
-                    setIsAuthenticating(false);
-                }
-            } catch (e) {
-                localStorage.removeItem('user');
-                setIsAuthenticating(false);
-            }
-        } else {
-            setIsAuthenticating(false);
-        }
     }, []);
 
-    const handleLogin = (userData) => {
-        setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
-    };
+    if (loading) return <div className="loading-screen">LOADING...</div>;
 
-    const handleLogout = () => {
-        setUser(null);
-        localStorage.removeItem('user');
-    };
 
-    // Axios Interceptor for 401/403 (Session Expired)
-    useEffect(() => {
-        const interceptor = axios.interceptors.response.use(
-            (response) => response,
-            (error) => {
-                if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-                    // Ignore 401 from auth check, handled locally in App.useEffect
-                    if (error.config && error.config.url && error.config.url.includes('/api/auth/check')) {
-                        return Promise.reject(error);
-                    }
-
-                    // Only redirect if not already on login page
-                    if (window.location.pathname !== '/login') {
-                        handleLogout();
-                        // Force redirect to login page
-                        window.location.href = '/login';
-                    }
-                }
-                return Promise.reject(error);
-            }
-        );
-
-        return () => axios.interceptors.response.eject(interceptor);
-    }, []);
-
-    if (isAuthenticating) return null;
 
     // Public Routes
     if (location.pathname === '/order') {
@@ -124,7 +61,7 @@ function AppContent() {
         return <CMSPage />;
     }
     if (location.pathname === '/login') {
-        return user ? <Navigate to="/dashboard" replace /> : <LoginPage onLogin={handleLogin} />;
+        return user ? <Navigate to="/dashboard" replace /> : <LoginPage onLogin={login} />;
     }
 
     // Protected Routes Check
@@ -148,7 +85,7 @@ function AppContent() {
 
     return (
         <div className="app">
-            <Navbar user={user} onLogout={handleLogout} shopConfig={shopConfig} />
+            <Navbar user={user} onLogout={logout} shopConfig={shopConfig} />
             <div className="container" style={{ position: 'relative', zIndex: 1 }}>
                 <Routes>
                     <Route path="/dashboard" element={<DashboardPage user={user} />} />
@@ -190,7 +127,9 @@ function AppContent() {
 function App() {
     return (
         <Router>
-            <AppContent />
+            <AuthProvider>
+                <AppContent />
+            </AuthProvider>
         </Router>
     );
 }

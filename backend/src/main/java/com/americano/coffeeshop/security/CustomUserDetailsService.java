@@ -30,7 +30,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         return User.builder()
                 .username(employee.getUsername())
                 .password(employee.getPassword())
-                .roles(employee.getRole()) // Assuming role is like "ADMIN", "USER"
+                .roles(employee.getRole())
+                .disabled(Boolean.FALSE.equals(employee.getActive())) // Block login if inactive
+                .accountExpired(Boolean.FALSE.equals(employee.getActive())) // Treat inactive as expired too for safety
+                .accountLocked(Boolean.FALSE.equals(employee.getActive())) // Treat inactive as locked
                 .build();
     }
 }
