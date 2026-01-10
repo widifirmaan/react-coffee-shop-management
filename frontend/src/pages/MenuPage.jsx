@@ -198,9 +198,16 @@ export default function MenuPage({ user }) {
             {/* Main Image */}
             <div style={{ position: 'relative', border: '2px solid black', background: '#eee', height: '250px' }}>
                 {menuForm.imageUrl ? (
-                    <img src={menuForm.imageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img
+                        src={menuForm.imageUrl}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400?text=No+Image"; }}
+                    />
                 ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.5, fontWeight: 'bold' }}>MAIN IMAGE</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.5, fontWeight: 'bold', background: '#e5e5e5', color: '#555' }}>
+                        <Upload size={48} style={{ marginBottom: '10px' }} />
+                        <span>NO IMAGE SELECTED</span>
+                    </div>
                 )}
                 {isEditable && (
                     <div style={{ position: 'absolute', bottom: '10px', right: '10px', display: 'flex', gap: '5px' }}>
@@ -223,7 +230,11 @@ export default function MenuPage({ user }) {
                         <div key={i} style={{ position: 'relative', border: '2px solid black', aspectRatio: '1/1', background: '#f9f9f9' }}>
                             {url ? (
                                 <>
-                                    <img src={url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <img
+                                        src={url}
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                        onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.parentNode.style.background = '#ccc'; }}
+                                    />
                                     {isEditable && (
                                         <button
                                             onClick={() => {
