@@ -3,10 +3,10 @@ version: '3.8'
 services:
   mongo:
     image: mongo:latest
-    container_name: americano-mongo
+    container_name: americano-mongo-internal
     restart: always
     ports:
-      - "27017:27017" # Exposed to host if needed, or remove for internal only
+      - "27019:27017" # Map to different host port (27019) to avoid conflict with existing mongo
     volumes:
       - mongo_data:/data/db
 
