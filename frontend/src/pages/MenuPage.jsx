@@ -327,11 +327,11 @@ export default function MenuPage({ user }) {
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
                             {items.map(menu => (
-                                <Card key={menu.id} style={{ opacity: menu.available ? 1 : 0.6, cursor: 'pointer', padding: 0, overflow: 'hidden' }} onClick={() => setViewingMenu(menu)}>
+                                <Card key={menu.id} style={{ opacity: menu.available ? 1 : 0.6, cursor: 'pointer', padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%' }} onClick={() => setViewingMenu(menu)}>
                                     <div style={{ height: '200px', background: '#ccc', borderBottom: '4px solid black' }}>
                                         {menu.imageUrl && <img src={menu.imageUrl} alt={menu.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400?text=No+Image" }} />}
                                     </div>
-                                    <div style={{ padding: '20px' }}>
+                                    <div style={{ padding: '20px', flex: 1, display: 'flex', flexDirection: 'column' }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '10px' }}>
                                             <h3 className="menu-item-title" style={{ margin: 0, fontWeight: 900, lineHeight: 1.1 }}>{menu.name}</h3>
                                             <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{menu.price.toLocaleString()}</span>
@@ -339,7 +339,7 @@ export default function MenuPage({ user }) {
                                         <p style={{ opacity: 0.7, fontSize: '0.9rem', marginBottom: '15px', height: '40px', overflow: 'hidden' }}>{menu.description}</p>
 
                                         {isManager && (
-                                            <div style={{ paddingTop: '15px', borderTop: '2px dashed black', display: 'flex', gap: '8px' }}>
+                                            <div style={{ paddingTop: '15px', borderTop: '2px dashed black', display: 'flex', gap: '8px', marginTop: 'auto' }}>
                                                 <Button style={{ flex: 1, padding: '5px' }} variant={menu.available ? 'secondary' : 'success'} onClick={(e) => { e.stopPropagation(); toggleAvailability(menu); }}>
                                                     {menu.available ? 'DISABLE' : 'ENABLE'}
                                                 </Button>
