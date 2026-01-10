@@ -13,7 +13,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/shifts")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class ShiftController {
 
     private final ShiftService shiftService;

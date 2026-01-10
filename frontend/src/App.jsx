@@ -1,6 +1,13 @@
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+
+// Backend Config
+if (import.meta.env.VITE_API_URL) {
+    axios.defaults.baseURL = import.meta.env.VITE_API_URL;
+}
+// Ensure session cookies are sent/received
+axios.defaults.withCredentials = true;
 import Navbar from './components/layout/Navbar';
 import DashboardPage from './pages/DashboardPage';
 import MenuPage from './pages/MenuPage';

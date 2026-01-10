@@ -68,13 +68,15 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    @org.springframework.beans.factory.annotation.Value("${ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}")
+    private String allowedOrigins;
+
     @Bean
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Allow specific origins including VPS and localhost
-        configuration.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:3000", "http://localhost:8085",
-                "https://vps.widifirmaan.web.id", "http://vps.widifirmaan.web.id"));
-        configuration.setAllowedOriginPatterns(List.of("*")); // Fallback for flexibility
+        // Allow specific origins from environment variable
+        configuration.setAllowedOrigins(java.util.Arrays.asList(allowedOrigins.split(",")));
+        configuration.setAllowedOriginPatterns(List.of("*")); // Fallback
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

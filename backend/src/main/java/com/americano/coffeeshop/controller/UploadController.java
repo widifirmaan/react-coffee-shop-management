@@ -9,7 +9,6 @@ import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/uploads")
-@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class UploadController {
 
