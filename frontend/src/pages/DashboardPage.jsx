@@ -34,8 +34,9 @@ export default function DashboardPage({ user }) {
     const [scheduleSearchTerm, setScheduleSearchTerm] = useState('');
     const [scheduleCurrentPage, setScheduleCurrentPage] = useState(1);
     const scheduleItemsPerPage = 5;
+    const [todayShift, setTodayShift] = useState(null);
 
-    const [notifications, setNotifications] = useState([]);
+
 
     // Schedule Helper
     const days = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
@@ -64,37 +65,15 @@ export default function DashboardPage({ user }) {
         checkAttendance();
         fetchNote();
         fetchShiftData();
+        fetchTodayShift();
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-
-        let notifInterval;
-        if (isWaiter) {
-            fetchNotifications();
-            notifInterval = setInterval(fetchNotifications, 5000);
-        }
 
         return () => {
             clearInterval(timer);
-            if (notifInterval) clearInterval(notifInterval);
         };
     }, [user]);
 
-    const fetchNotifications = async () => {
-        try {
-            const res = await axios.get('/api/notifications');
-            setNotifications(res.data);
-        } catch (e) {
-            console.error("Failed to fetch notifications");
-        }
-    };
 
-    const markAsRead = async (id) => {
-        try {
-            await axios.put(`/api/notifications/${id}/read`);
-            fetchNotifications();
-        } catch (e) {
-            console.error("Failed to mark read");
-        }
-    };
 
     const fetchShiftData = async () => {
         try {
@@ -141,6 +120,27 @@ export default function DashboardPage({ user }) {
         }
     };
 
+    const fetchTodayShift = async () => {
+        if (!user || !user.username) return;
+        try {
+            // First, get the employee data to map username to employeeId
+            const empRes = await axios.get('/api/employees');
+            const currentEmployee = empRes.data.find(e => e.username === user.username);
+
+            if (!currentEmployee) {
+                console.error('Employee not found for user:', user.username);
+                return;
+            }
+
+            const shiftRes = await axios.get('/api/shifts');
+            const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+            const userShift = shiftRes.data.find(s => s.employeeId === currentEmployee.employeeId && s.dayOfWeek === today);
+            setTodayShift(userShift);
+        } catch (e) {
+            console.error('Failed to fetch today shift', e);
+        }
+    };
+
     const fetchNote = async () => {
         try {
             const res = await axios.get('/api/notes/dashboard');
@@ -169,10 +169,18 @@ export default function DashboardPage({ user }) {
     };
 
     const checkAttendance = async () => {
-        if (!user || (!user.id && !user.employeeId)) return;
+        if (!user || !user.username) return;
         try {
-            const id = user.id || user.employeeId;
-            const res = await axios.get(`/api/attendance/today/${id}`);
+            // Fetch employee data to get correct employeeId
+            const empRes = await axios.get('/api/employees');
+            const currentEmployee = empRes.data.find(e => e.username === user.username);
+
+            if (!currentEmployee) {
+                console.log('Employee not found for user:', user.username);
+                return;
+            }
+
+            const res = await axios.get(`/api/attendance/today/${currentEmployee.employeeId}`);
             setAttendance(res.data);
         } catch (error) {
             console.log("No attendance record yet (or error)");
@@ -184,9 +192,19 @@ export default function DashboardPage({ user }) {
             message: "CONFIRM CLOCK IN?",
             onConfirm: async () => {
                 try {
+                    // Fetch employee data to get correct employeeId
+                    const empRes = await axios.get('/api/employees');
+                    const currentEmployee = empRes.data.find(e => e.username === user.username);
+
+                    if (!currentEmployee) {
+                        setAlertMsg({ type: 'error', message: 'EMPLOYEE NOT FOUND!' });
+                        setConfirmation(null);
+                        return;
+                    }
+
                     const payload = {
-                        employeeId: user.id || user.employeeId,
-                        employeeName: user.name || user.username
+                        employeeId: currentEmployee.employeeId,
+                        employeeName: currentEmployee.name
                     };
                     const res = await axios.post('/api/attendance/clock-in', payload);
                     if (res.data.checkInStatus === 'BLOCKED') {
@@ -204,7 +222,7 @@ export default function DashboardPage({ user }) {
                             setLateModal({
                                 type: 'late',
                                 message: 'LATE ARRIVAL DETECTED!',
-                                details: `YOU ARE ${res.data.minutesLate} MINUTES LATE. PLEASE EXPLAIN TO MANAGER.`
+                                details: 'YOU ARE LATE! PLEASE EXPLAIN TO MANAGER.'
                             });
                             setAlertMsg({ type: 'error', message: 'LATE RECORDED!' });
                         } else {
@@ -226,14 +244,23 @@ export default function DashboardPage({ user }) {
             message: "CONFIRM CLOCK OUT?",
             onConfirm: async () => {
                 try {
-                    const id = user.id || user.employeeId;
-                    const res = await axios.post('/api/attendance/clock-out', { employeeId: id });
+                    // Fetch employee data to get correct employeeId
+                    const empRes = await axios.get('/api/employees');
+                    const currentEmployee = empRes.data.find(e => e.username === user.username);
+
+                    if (!currentEmployee) {
+                        setAlertMsg({ type: 'error', message: 'EMPLOYEE NOT FOUND!' });
+                        setConfirmation(null);
+                        return;
+                    }
+
+                    const res = await axios.post('/api/attendance/clock-out', { employeeId: currentEmployee.employeeId });
 
                     if (res.data && res.data.checkInStatus === 'TOO_EARLY') {
                         setLateModal({
                             type: 'early',
                             message: 'TOO EARLY!',
-                            details: res.data.debugInfo
+                            details: 'YOU CANNOT CLOCK OUT BEFORE YOUR SHIFT ENDS!'
                         });
                         setAlertMsg({ type: 'error', message: 'SHIFT INCOMPLETE!' });
                     } else {
@@ -327,26 +354,7 @@ export default function DashboardPage({ user }) {
             />
 
             {/* NOTIFICATIONS WIDGET */}
-            {isWaiter && notifications.length > 0 && (
-                <div style={{ marginBottom: '40px', background: '#fee2e2', border: '4px solid #dc2626', padding: '20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
-                        <Bell size={32} color="#dc2626" className={notifications.length > 0 ? 'animate-pulse' : ''} />
-                        <h2 style={{ margin: 0, color: '#991b1b', fontWeight: '900', textTransform: 'uppercase' }}>WAITER REQUESTS ({notifications.length})</h2>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '15px' }}>
-                        {notifications.map(n => (
-                            <div key={n.id} style={{ background: 'white', border: '2px solid #b91c1c', padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '4px 4px 0 0 #b91c1c' }}>
-                                <div>
-                                    <div style={{ fontWeight: '900', fontSize: '1.2rem', color: '#b91c1c' }}>{n.tableNumber}</div>
-                                    <div style={{ fontWeight: 'bold' }}>{n.message}</div>
-                                    <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>{new Date(n.timestamp).toLocaleTimeString()}</div>
-                                </div>
-                                <Button variant="danger" onClick={() => markAsRead(n.id)} style={{ padding: '10px' }}>RESOLVE</Button>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
+
 
             {/* Stats Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '40px' }}>
@@ -367,6 +375,23 @@ export default function DashboardPage({ user }) {
                             <span style={{ fontSize: '1.5rem', opacity: 0.5 }}>:{currentTime.getSeconds().toString().padStart(2, '0')}</span>
                         </h1>
                     </div>
+
+                    {todayShift && todayShift.shiftType !== 'OFF' && (
+                        <div style={{
+                            background: 'rgba(0,0,0,0.1)',
+                            padding: '8px',
+                            marginBottom: '15px',
+                            border: '2px solid black',
+                            textAlign: 'center'
+                        }}>
+                            <div style={{ fontSize: '0.75rem', opacity: 0.7, fontWeight: 'bold', marginBottom: '2px' }}>YOUR SHIFT TODAY</div>
+                            <div style={{ fontSize: '1rem', fontWeight: '900' }}>
+                                {todayShift.shiftType === 'MORNING' && '07:00 - 15:00'}
+                                {todayShift.shiftType === 'AFTERNOON' && '15:00 - 23:00'}
+                                {todayShift.shiftType === 'EVENING' && '23:00 - 07:00'}
+                            </div>
+                        </div>
+                    )}
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                         <div style={{ background: 'rgba(255,255,255,0.5)', padding: '10px', border: '2px solid black', textAlign: 'center' }}>
@@ -407,7 +432,7 @@ export default function DashboardPage({ user }) {
                         overflow: 'hidden'
                     }}
                 >
-                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '40px', background: 'rgba(0,0,0,0.05)', borderBottom: '2px solid black' }}></div>
+                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '60px', background: 'rgba(0,0,0,0.05)', borderBottom: '2px solid black' }}></div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', position: 'relative', zIndex: 1 }}>
                         <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1rem', opacity: 0.8 }}>
                             <StickyNote size={20} /> TEAM NOTES
@@ -489,156 +514,39 @@ export default function DashboardPage({ user }) {
 
 
                 {/* Stats Cards */}
-                {[
-                    { title: "TODAY'S REVENUE", value: stats.todayRevenue, icon: DollarSign, color: "var(--success-color)", text: "white" },
-                    { title: "TODAY'S ORDERS", value: stats.todayOrders, icon: ShoppingBag, color: "var(--primary-color)", text: "white" },
-                    { title: "PENDING ORDERS", value: stats.pendingOrders, icon: ChefHat, color: "var(--accent-color)", text: "black" },
-                    {
-                        title: "LOW STOCK ITEMS",
-                        value: stats.lowStockItems,
-                        icon: AlertTriangle,
-                        color: stats.lowStockItems > 0 ? 'var(--danger-color)' : 'var(--neutral-color)',
-                        text: stats.lowStockItems > 0 ? 'white' : 'black'
-                    },
-                    { title: "MENU ITEMS", value: stats.totalMenuItems, icon: Package, color: "var(--secondary-color)", text: "white" },
-                    { title: "TOTAL STAFF", value: stats.totalEmployees, icon: Users, color: "var(--neutral-color)", text: "black" }
-                ].map((stat, i) => (
-                    <Card key={i} style={{ background: stat.color, color: stat.text }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <div>
-                                <p style={{ margin: 0, fontSize: '0.9rem', opacity: stat.text === 'white' ? 0.9 : 0.7 }}>{stat.title}</p>
-                                <h2 style={{ fontSize: '2.5rem', margin: '10px 0' }}>
-                                    {typeof stat.value === 'number' && stat.title.includes('REVENUE') ? `Rp ${stat.value.toLocaleString()}` : stat.value}
-                                </h2>
-                            </div>
-                            <stat.icon size={40} />
+                {/* Unified Stats Card */}
+                <Card style={{ background: 'white' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', borderBottom: '4px solid black', paddingBottom: '10px' }}>
+                        <TrendingUp size={24} />
+                        <h3 style={{ margin: 0 }}>PERFORMANCE</h3>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                        {/* Revenue */}
+                        <div style={{ background: 'var(--success-color)', color: 'white', padding: '15px', border: '2px solid black', boxShadow: '4px 4px 0 0 black' }}>
+                            <div style={{ fontSize: '0.8rem', opacity: 0.9, fontWeight: 'bold' }}>REVENUE</div>
+                            <div style={{ fontSize: '1.4rem', fontWeight: '900' }}>Rp {stats.todayRevenue.toLocaleString()}</div>
                         </div>
-                    </Card>
-                ))}
+                        {/* Orders */}
+                        <div style={{ background: 'var(--primary-color)', color: 'white', padding: '15px', border: '2px solid black', boxShadow: '4px 4px 0 0 black' }}>
+                            <div style={{ fontSize: '0.8rem', opacity: 0.9, fontWeight: 'bold' }}>ORDERS</div>
+                            <div style={{ fontSize: '1.4rem', fontWeight: '900' }}>{stats.todayOrders}</div>
+                        </div>
+                        {/* Pending */}
+                        <div style={{ background: 'var(--accent-color)', color: 'black', padding: '15px', border: '2px solid black', boxShadow: '4px 4px 0 0 black' }}>
+                            <div style={{ fontSize: '0.8rem', opacity: 0.7, fontWeight: 'bold' }}>PENDING</div>
+                            <div style={{ fontSize: '1.4rem', fontWeight: '900' }}>{stats.pendingOrders}</div>
+                        </div>
+                        {/* Low Stock */}
+                        <div style={{ background: stats.lowStockItems > 0 ? 'var(--danger-color)' : 'var(--neutral-color)', color: stats.lowStockItems > 0 ? 'white' : 'black', padding: '15px', border: '2px solid black', boxShadow: '4px 4px 0 0 black' }}>
+                            <div style={{ fontSize: '0.8rem', opacity: 0.7, fontWeight: 'bold' }}>LOW STOCK</div>
+                            <div style={{ fontSize: '1.4rem', fontWeight: '900' }}>{stats.lowStockItems}</div>
+                        </div>
+                    </div>
+                </Card>
             </div>
 
 
-            {/* Weekly Shift Schedule Widget */}
-            <Card style={{ marginBottom: '40px', background: 'white' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '20px', flexWrap: 'wrap' }}>
-                    <h2 className="card-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px', textTransform: 'uppercase' }}>
-                        <Calendar size={28} /> WEEKLY SHIFT SCHEDULE
-                    </h2>
-                    <div style={{ width: '300px' }}>
-                        <SearchBar
-                            value={scheduleSearchTerm}
-                            onChange={setScheduleSearchTerm}
-                            placeholder="FIND STAFF..."
-                        />
-                    </div>
-                </div>
 
-                <TableContainer>
-                    <Table>
-                        <Thead>
-                            <Tr>
-                                <Th style={{ position: 'sticky', left: 0, background: 'black', zIndex: 10, minWidth: '150px' }}>STAFF</Th>
-                                {days.map(day => {
-                                    const isToday = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase() === day;
-                                    return (
-                                        <Th key={day} style={{
-                                            textAlign: 'center',
-                                            background: isToday ? '#facc15' : 'black',
-                                            color: isToday ? 'black' : 'white',
-                                            width: '12%',
-                                            minWidth: '100px'
-                                        }}>
-                                            {day.substring(0, 3)}
-                                        </Th>
-                                    );
-                                })}
-                            </Tr>
-                        </Thead>
-                        <Tbody>
-                            {(() => {
-                                const filtered = weeklyShifts.filter(emp => emp.name.toLowerCase().includes(scheduleSearchTerm.toLowerCase()));
-                                const paginated = filtered.slice((scheduleCurrentPage - 1) * scheduleItemsPerPage, scheduleCurrentPage * scheduleItemsPerPage);
-
-                                if (filtered.length === 0 && weeklyShifts.length === 0) return <Tr><Td colSpan="8" style={{ textAlign: 'center', padding: '30px' }}>LOADING...</Td></Tr>;
-                                if (filtered.length === 0) return <Tr><Td colSpan="8" style={{ textAlign: 'center', padding: '30px' }}>NO STAFF FOUND</Td></Tr>;
-
-                                return paginated.map((emp, idx) => (
-                                    <Tr key={emp.id} index={idx}>
-                                        <Td style={{
-                                            borderRight: '2px solid black', fontWeight: 'bold',
-                                            position: 'sticky', left: 0, background: idx % 2 === 0 ? 'white' : '#f9fafb', zIndex: 10
-                                        }}>
-                                            {emp.name}
-                                            <div style={{ fontSize: '0.7rem', opacity: 0.6 }}>{emp.position}</div>
-                                        </Td>
-                                        {days.map(day => {
-                                            const dateStr = weekDates[day];
-                                            const att = emp.attendanceHistory ? emp.attendanceHistory[dateStr] : null;
-                                            const shiftType = emp.schedule[day] || 'OFF';
-                                            const isTodayHeader = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase() === day;
-
-                                            let icon = null;
-                                            let bg = isTodayHeader ? '#fffbeb' : 'inherit';
-                                            let border = '1px solid #ddd';
-
-                                            if (shiftType !== 'OFF') {
-                                                const now = new Date();
-                                                const cellDate = new Date(dateStr);
-                                                let startH = 7;
-                                                if (shiftType === 'AFTERNOON') startH = 15;
-                                                if (shiftType === 'EVENING') startH = 23;
-
-                                                const shiftStart = new Date(cellDate);
-                                                shiftStart.setHours(startH, 0, 0, 0);
-                                                const shiftEnd = new Date(shiftStart);
-                                                shiftEnd.setHours(shiftStart.getHours() + 8);
-                                                const graceLimit = new Date(shiftStart);
-                                                graceLimit.setMinutes(graceLimit.getMinutes() + 15);
-
-                                                if (att && att.status === 'COMPLETED') {
-                                                    if (att.checkInStatus === 'LATE') { icon = '⏰'; bg = '#fde047'; }
-                                                    else { icon = '✅'; bg = '#86efac'; }
-                                                } else if (att && att.status === 'WORKING') {
-                                                    if (now > shiftEnd) { icon = '🚪'; bg = '#fde047'; }
-                                                    else if (att.checkInStatus === 'LATE') { icon = '⏳'; bg = '#fde047'; }
-                                                    else { icon = '🚀'; bg = '#86efac'; }
-                                                } else {
-                                                    if (now > graceLimit && now.getDate() >= cellDate.getDate()) { icon = '❌'; bg = '#fca5a5'; }
-                                                }
-                                            } else {
-                                                bg = '#f3f4f6';
-                                            }
-
-                                            return (
-                                                <Td key={day} style={{ textAlign: 'center', borderRight: border, background: bg }}>
-                                                    {shiftType !== 'OFF' && <div style={{ fontSize: '0.75rem', marginBottom: '4px' }}>{shiftType.substring(0, 4)}</div>}
-                                                    {icon && <div style={{ fontSize: '1.5rem', lineHeight: 1 }}>{icon}</div>}
-                                                </Td>
-                                            );
-                                        })}
-                                    </Tr>
-                                ));
-                            })()}
-                        </Tbody>
-                    </Table>
-                </TableContainer>
-
-                {weeklyShifts.length > 0 && (
-                    <Pagination
-                        currentPage={scheduleCurrentPage}
-                        totalPages={Math.ceil(weeklyShifts.filter(emp => emp.name.toLowerCase().includes(scheduleSearchTerm.toLowerCase())).length / scheduleItemsPerPage)}
-                        onPageChange={setScheduleCurrentPage}
-                        itemsPerPage={scheduleItemsPerPage}
-                        totalItems={weeklyShifts.filter(emp => emp.name.toLowerCase().includes(scheduleSearchTerm.toLowerCase())).length}
-                    />
-                )}
-
-                <div style={{ marginTop: '10px', display: 'flex', gap: '15px', fontSize: '0.8rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ width: '10px', height: '10px', background: '#bae6fd', border: '1px solid black' }}></span> MORNING (07-15)</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ width: '10px', height: '10px', background: '#fde047', border: '1px solid black' }}></span> AFTERNOON (15-23)</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ width: '10px', height: '10px', background: '#fda4af', border: '1px solid black' }}></span> EVENING (23-07)</div>
-                </div>
-            </Card>
 
 
 

@@ -363,14 +363,13 @@ export default function CMSPage() {
                             {shopConfig?.shopName || 'SIAP NYAFE'}
                         </div>
 
-                        <h2 style={{ fontSize: '4rem', fontWeight: '900', marginBottom: '20px' }}>ABOUT US</h2>
-                        <p style={{ fontSize: '1.5rem', maxWidth: '800px', margin: '0 auto 40px', lineHeight: '1.6', fontWeight: 'bold' }}>
-                            We are not just a coffee shop. We are a movement.<br />
-                            Born in Jakarta, brewed for the bold.
+                        <h2 style={{ fontSize: '4rem', fontWeight: '900', marginBottom: '20px' }}>{shopConfig?.infoTitle || 'ABOUT US'}</h2>
+                        <p style={{ fontSize: '1.5rem', maxWidth: '800px', margin: '0 auto 40px', lineHeight: '1.6', fontWeight: 'bold', whiteSpace: 'pre-line' }}>
+                            {shopConfig?.infoContent || 'We are not just a coffee shop. We are a movement.\nBorn in Jakarta, brewed for the bold.'}
                         </p>
                         <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
-                            <div style={{ border: '4px solid black', padding: '20px', background: 'white' }}><h3 style={{ fontWeight: '900' }}>EST. 2024</h3></div>
-                            <div style={{ border: '4px solid black', padding: '20px', background: 'white' }}><h3 style={{ fontWeight: '900' }}>JAKARTA</h3></div>
+                            <div style={{ border: '4px solid black', padding: '20px', background: 'white' }}><h3 style={{ fontWeight: '900' }}>{shopConfig?.infoFooter1 || 'EST. 2024'}</h3></div>
+                            <div style={{ border: '4px solid black', padding: '20px', background: 'white' }}><h3 style={{ fontWeight: '900' }}>{shopConfig?.infoFooter2 || 'JAKARTA'}</h3></div>
                         </div>
                         <button
                             onClick={() => setIsInfoOpen(false)}

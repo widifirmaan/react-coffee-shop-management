@@ -14,4 +14,6 @@ public interface AttendanceRepository extends MongoRepository<Attendance, String
     List<Attendance> findByEmployeeIdAndStatus(String employeeId, String status);
 
     List<Attendance> findByDateAndStatus(LocalDate date, String status);
+
+    List<Attendance> findByEmployeeIdOrderByDateDesc(String employeeId);
 }

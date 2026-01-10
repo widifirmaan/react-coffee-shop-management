@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const Card = ({ children, className = '', style = {}, title, icon: Icon, action, onClick }) => {
+export const Card = ({ children, className = '', style = {}, title, icon: Icon, action, onClick, ...props }) => {
     return (
         <div
             onClick={onClick}
@@ -35,6 +35,7 @@ export const Card = ({ children, className = '', style = {}, title, icon: Icon, 
                     e.currentTarget.style.boxShadow = '12px 12px 0 0 black';
                 }
             }}
+            {...props}
         >
             {(title || Icon) && (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '4px solid black', paddingBottom: '10px', marginBottom: '20px' }}>

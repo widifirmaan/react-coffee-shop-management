@@ -22,4 +22,10 @@ public class ShiftController {
     public ResponseEntity<List<ShiftScheduleDTO>> getAllShifts() {
         return ResponseEntity.ok(shiftService.getAllShifts());
     }
+
+    @org.springframework.web.bind.annotation.PostMapping
+    public ResponseEntity<List<ShiftScheduleDTO>> updateShifts(
+            @org.springframework.web.bind.annotation.RequestBody List<ShiftScheduleDTO> shifts) {
+        return ResponseEntity.ok(shiftService.updateShifts(shifts));
+    }
 }

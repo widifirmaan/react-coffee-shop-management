@@ -63,4 +63,10 @@ public class ShopConfig {
 
     // Gallery Images (Sidebar Scroll)
     private List<String> galleryImages = new ArrayList<>();
+
+    // Info Section
+    private String infoTitle;
+    private String infoContent;
+    private String infoFooter1;
+    private String infoFooter2;
 }

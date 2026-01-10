@@ -119,11 +119,15 @@ export default function OrderPage({ shopConfig }) {
     };
 
     const handleCallWaiter = async (type) => {
+        if (!customerInfo.tableNumber) {
+            setAlertMsg({ type: 'error', message: 'PLEASE SELECT TABLE NUMBER' });
+            return;
+        }
         try {
             await axios.post('/api/notifications', {
                 type: 'CALL_WAITER',
                 message: type === 'PAYMENT' ? 'Customer requesting bill/payment' : 'Customer requesting assistance',
-                tableNumber: customerInfo.tableNumber || 'Unknown Table'
+                tableNumber: customerInfo.tableNumber
             });
             setAlertMsg({ type: 'success', message: 'WAITER NOTIFIED!' });
             setIsCallWaiterOpen(false);
@@ -137,45 +141,66 @@ export default function OrderPage({ shopConfig }) {
             {/* Header */}
             <OrderPageHeader shopConfig={shopConfig} onCallWaiter={() => setIsCallWaiterOpen(true)} />
 
-            <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-                <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-                    <h1 className="page-title" style={{ margin: '10px 0' }}>DAFTAR MENU</h1>
-                    <p style={{ fontWeight: 'bold' }}>{customerInfo.name ? `Ordering for: ${customerInfo.name}` : 'WELCOME! PLEASE SELECT YOUR ITEMS.'}</p>
+            <div style={{
+                minHeight: '100vh',
+                width: '100%',
+                backgroundImage: 'url(/bg-menu-color.png)',
+                backgroundSize: '300px',
+                backgroundRepeat: 'repeat',
+                backgroundAttachment: 'fixed'
+            }}>
+                <div style={{
+                    padding: '20px',
+                    maxWidth: '1200px',
+                    margin: '0 auto',
+                    minHeight: '100vh'
+                }}>
+                    <div style={{
+                        textAlign: 'center',
+                        marginBottom: '40px',
+                        backgroundColor: 'white',
+                        border: '4px solid black',
+                        boxShadow: '10px 10px 0 0 black',
+                        padding: '30px'
+                    }}>
+                        <h1 className="page-title" style={{ margin: '10px 0' }}>DAFTAR MENU</h1>
+                        <p style={{ fontWeight: 'bold' }}>{customerInfo.name ? `Ordering for: ${customerInfo.name}` : 'WELCOME! PLEASE SELECT YOUR ITEMS.'}</p>
 
-                    {/* Category Selector */}
-                    <CategorySelector
-                        categories={categories}
-                        activeCategory={activeCategory}
-                        onSelect={setActiveCategory}
-                        theme="light"
-                        layout="scroll"
-                    />
-                </div>
-
-                {/* Menu Grid */}
-                {Object.entries(groupedMenus).map(([category, items]) => (
-                    <div key={category} style={{ marginBottom: '50px' }}>
-                        <h2 className="category-header" style={{ borderBottom: '4px solid black', display: 'inline-block', marginBottom: '20px', background: 'black', color: 'white', padding: '5px 20px', transform: 'rotate(-1deg)' }}>{category}</h2>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '30px' }}>
-                            {items.map(menu => (
-                                <Card key={menu.id} onClick={() => setSelectedMenu(menu)} style={{ cursor: 'pointer', padding: 0, overflow: 'hidden' }}>
-                                    <div style={{ height: '200px', overflow: 'hidden', borderBottom: '4px solid black' }}>
-                                        <img src={menu.imageUrl || "https://placehold.co/600x400?text=No+Image"} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s' }} className="hover-zoom" onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }} />
-                                    </div>
-                                    <div style={{ padding: '20px' }}>
-                                        <h3 className="menu-item-title" style={{ margin: '0 0 10px 0' }}>{menu.name}</h3>
-                                        <p style={{ opacity: 0.7, height: '40px', overflow: 'hidden', fontSize: '0.9rem' }}>{menu.description}</p>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px' }}>
-                                            <span style={{ fontWeight: 'bold', background: '#eee', padding: '5px 10px', border: '2px solid black' }}>Rp {menu.price?.toLocaleString()}</span>
-                                            <Button variant="success" onClick={(e) => { e.stopPropagation(); addToCart(menu); }} style={{ padding: '5px 15px' }}>ADD +</Button>
-                                        </div>
-                                    </div>
-                                </Card>
-                            ))}
-                        </div>
+                        {/* Category Selector */}
+                        <CategorySelector
+                            categories={categories}
+                            activeCategory={activeCategory}
+                            onSelect={setActiveCategory}
+                            theme="light"
+                            layout="scroll"
+                        />
                     </div>
-                ))}
 
+                    {/* Menu Grid */}
+                    {Object.entries(groupedMenus).map(([category, items]) => (
+                        <div key={category} style={{ marginBottom: '50px' }}>
+                            <h2 className="category-header" style={{ borderBottom: '4px solid black', display: 'inline-block', marginBottom: '20px', background: 'black', color: 'white', padding: '5px 20px', transform: 'rotate(-1deg)' }}>{category}</h2>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '30px' }}>
+                                {items.map(menu => (
+                                    <Card key={menu.id} onClick={() => setSelectedMenu(menu)} style={{ cursor: 'pointer', padding: 0, overflow: 'hidden' }}>
+                                        <div style={{ height: '200px', overflow: 'hidden', borderBottom: '4px solid black' }}>
+                                            <img src={menu.imageUrl || "https://placehold.co/600x400?text=No+Image"} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s' }} className="hover-zoom" onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }} />
+                                        </div>
+                                        <div style={{ padding: '20px' }}>
+                                            <h3 className="menu-item-title" style={{ margin: '0 0 10px 0' }}>{menu.name}</h3>
+                                            <p style={{ opacity: 0.7, height: '40px', overflow: 'hidden', fontSize: '0.9rem' }}>{menu.description}</p>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px' }}>
+                                                <span style={{ fontWeight: 'bold', background: '#eee', padding: '5px 10px', border: '2px solid black' }}>Rp {menu.price?.toLocaleString()}</span>
+                                                <Button variant="success" onClick={(e) => { e.stopPropagation(); addToCart(menu); }} style={{ padding: '5px 15px' }}>ADD +</Button>
+                                            </div>
+                                        </div>
+                                    </Card>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+
+                </div>
             </div>
 
             {/* Footer Info */}
@@ -256,6 +281,14 @@ export default function OrderPage({ shopConfig }) {
             </Modal>
 
             <Modal isOpen={isCallWaiterOpen} onClose={() => setIsCallWaiterOpen(false)} title="CALL WAITER">
+                <div style={{ marginBottom: '20px' }}>
+                    <Select
+                        label="TABLE NUMBER"
+                        value={customerInfo.tableNumber}
+                        onChange={e => setCustomerInfo({ ...customerInfo, tableNumber: e.target.value })}
+                        options={[{ value: '', label: 'Select Table' }, ...[...Array(20)].map((_, i) => ({ value: `Table ${i + 1}`, label: `Table ${i + 1}` }))]}
+                    />
+                </div>
                 <div style={{ display: 'grid', gap: '20px' }}>
                     <Button variant="primary" onClick={() => handleCallWaiter('PAYMENT')}>PAYMENT / BILL</Button>
                     <Button variant="secondary" onClick={() => handleCallWaiter('GENERAL')}>GENERAL ASSISTANCE</Button>

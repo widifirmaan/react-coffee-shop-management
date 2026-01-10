@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { UserPlus, Plus, Trash2, Search, Mail, Phone, User, Users, Edit, Lock, Unlock } from 'lucide-react';
+import { UserPlus, Plus, Trash2, Search, Mail, Phone, User, Users, Edit, Lock, Unlock, History, Calendar, Clock } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input, Select } from '../components/ui/Input';
@@ -9,6 +9,7 @@ import { Alert } from '../components/ui/Alert';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import Pagination from '../components/ui/Pagination';
 import SearchBar from '../components/ui/SearchBar';
+import { TableContainer, Table, Thead, Tbody, Tr, Th, Td } from '../components/ui/Table';
 
 import PageHeader from '../components/ui/PageHeader';
 
@@ -18,6 +19,7 @@ export default function EmployeePage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [alertMsg, setAlertMsg] = useState(null);
     const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
+    const [historyModal, setHistoryModal] = useState({ isOpen: false, logs: [], loading: false, employeeName: '' });
     const [currentPage, setCurrentPage] = useState(1);
     const [editingId, setEditingId] = useState(null);
     const itemsPerPage = 10;
@@ -132,6 +134,18 @@ export default function EmployeePage() {
         });
     };
 
+    const handleViewHistory = async (emp) => {
+        setHistoryModal({ isOpen: true, logs: [], loading: true, employeeName: emp.name });
+        try {
+            const res = await axios.get(`/api/attendance/history/${emp.employeeId}`);
+            setHistoryModal(prev => ({ ...prev, logs: res.data, loading: false }));
+        } catch (e) {
+            console.error(e);
+            setAlertMsg({ type: 'error', message: 'FAILED TO LOAD HISTORY' });
+            setHistoryModal(prev => ({ ...prev, loading: false, isOpen: false }));
+        }
+    };
+
     const filtered = employees.filter(e =>
         e.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         e.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -142,7 +156,7 @@ export default function EmployeePage() {
     const paginatedData = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     return (
-        <div className="page-container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <div className="page-container">
             <PageHeader
                 title="STAFF ROSTER"
                 description="MANAGE YOUR TEAM MEMBERS"
@@ -215,6 +229,11 @@ export default function EmployeePage() {
                                     {emp.active ? <><Lock size={16} /> FREEZE</> : <><Unlock size={16} /> ACTIVATE</>}
                                 </Button>
                             </div>
+                            <div style={{ marginBottom: '10px' }}>
+                                <Button onClick={() => handleViewHistory(emp)} variant="secondary" style={{ width: '100%', border: '2px dashed black' }}>
+                                    <History size={16} /> ATTENDANCE HISTORY
+                                </Button>
+                            </div>
                             <Button onClick={() => handleDelete(emp.id)} variant="danger" style={{ width: '100%' }}>
                                 <Trash2 size={18} /> TERMINATE
                             </Button>
@@ -268,6 +287,51 @@ export default function EmployeePage() {
                         <Button type="submit" variant="primary" style={{ flex: 1 }}>{editingId ? "SAVE CHANGES" : "CONFIRM RECRUIT"}</Button>
                     </div>
                 </form>
+            </Modal>
+
+            {/* History Modal */}
+            <Modal isOpen={historyModal.isOpen} onClose={() => setHistoryModal({ ...historyModal, isOpen: false })} title={`ATTENDANCE: ${historyModal.employeeName}`} maxWidth="1000px">
+                {historyModal.loading ? (
+                    <div style={{ textAlign: 'center', padding: '20px' }}>LOADING RECORDS...</div>
+                ) : (
+                    <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                        {historyModal.logs.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '20px', opacity: 0.5 }}>NO HISTORY FOUND</div>
+                        ) : (
+                            <TableContainer>
+                                <Table>
+                                    <Thead>
+                                        <Tr>
+                                            <Th>DATE</Th>
+                                            <Th>IN</Th>
+                                            <Th>OUT</Th>
+                                            <Th>STATUS</Th>
+                                            <Th>HOURS</Th>
+                                        </Tr>
+                                    </Thead>
+                                    <Tbody>
+                                        {historyModal.logs.map((log) => (
+                                            <Tr key={log.id}>
+                                                <Td>{log.date}</Td>
+                                                <Td>{log.clockInTime ? new Date(log.clockInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</Td>
+                                                <Td>{log.clockOutTime ? new Date(log.clockOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</Td>
+                                                <Td>
+                                                    <span style={{
+                                                        fontWeight: 'bold',
+                                                        color: log.checkInStatus === 'LATE' ? 'red' : 'green'
+                                                    }}>
+                                                        {log.checkInStatus || log.status}
+                                                    </span>
+                                                </Td>
+                                                <Td>{log.hoursWorked ? log.hoursWorked.toFixed(1) : '-'}</Td>
+                                            </Tr>
+                                        ))}
+                                    </Tbody>
+                                </Table>
+                            </TableContainer>
+                        )}
+                    </div>
+                )}
             </Modal>
 
 

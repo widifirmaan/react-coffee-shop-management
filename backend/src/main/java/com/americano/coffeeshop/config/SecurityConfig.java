@@ -72,7 +72,7 @@ public class SecurityConfig {
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         // Allow specific origins including VPS and localhost
-        configuration.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:3000",
+        configuration.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:3000", "http://localhost:8085",
                 "https://vps.widifirmaan.web.id", "http://vps.widifirmaan.web.id"));
         configuration.setAllowedOriginPatterns(List.of("*")); // Fallback for flexibility
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));

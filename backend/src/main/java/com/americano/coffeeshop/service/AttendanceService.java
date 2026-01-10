@@ -13,4 +13,8 @@ public interface AttendanceService {
     List<AttendanceDTO> getAllAttendanceToday();
 
     List<AttendanceDTO> getAllAttendance();
+
+    List<AttendanceDTO> getCheckedInEmployees();
+
+    List<AttendanceDTO> getAttendanceHistory(String employeeId);
 }

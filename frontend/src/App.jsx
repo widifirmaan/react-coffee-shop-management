@@ -13,6 +13,9 @@ import OrderPage from './pages/OrderPage';
 import CMSPage from './pages/CMSPage';
 import SettingsPage from './pages/SettingsPage';
 import PostManagementPage from './pages/PostManagementPage';
+import WaiterPage from './pages/WaiterPage';
+import FeedbackPage from './pages/FeedbackPage';
+import ShiftPage from './pages/ShiftPage';
 
 function AppContent() {
     const location = useLocation();
@@ -149,6 +152,9 @@ function AppContent() {
                     <Route path="/finance" element={<FinancePage user={user} />} />
                     <Route path="/settings" element={<SettingsPage />} />
                     <Route path="/posts" element={<PostManagementPage user={user} />} />
+                    <Route path="/waiter" element={<WaiterPage />} />
+                    <Route path="/feedback" element={<FeedbackPage />} />
+                    <Route path="/shifts" element={<ShiftPage />} />
                     {/* Fallback route */}
                     <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Routes>

@@ -56,7 +56,7 @@ export default function FinancePage() {
     const paginatedData = filtered.slice(startIndex, startIndex + itemsPerPage);
 
     return (
-        <div className="page-container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <div className="page-container">
             <PageHeader
                 title="FINANCIAL"
                 description="PROFIT & LOSS TRACKER"

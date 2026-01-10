@@ -14,6 +14,8 @@ public class AttendanceDTO {
     private LocalDateTime clockInTime;
     private LocalDateTime clockOutTime;
     private Double hoursWorked;
+    private String status;
+    private String checkInStatus;
 
     public static AttendanceDTO fromEntity(Attendance attendance) {
         if (attendance == null)
@@ -26,6 +28,8 @@ public class AttendanceDTO {
         dto.setClockInTime(attendance.getClockInTime());
         dto.setClockOutTime(attendance.getClockOutTime());
         dto.setHoursWorked(attendance.getHoursWorked());
+        dto.setStatus(attendance.getStatus());
+        dto.setCheckInStatus(attendance.getCheckInStatus());
         return dto;
     }
 }

@@ -21,4 +21,22 @@ public class ShiftServiceImpl implements ShiftService {
                 .map(ShiftScheduleDTO::fromEntity)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<ShiftScheduleDTO> updateShifts(List<ShiftScheduleDTO> shifts) {
+        shiftRepository.deleteAll();
+        List<com.americano.coffeeshop.model.ShiftSchedule> entities = shifts.stream().map(dto -> {
+            com.americano.coffeeshop.model.ShiftSchedule s = new com.americano.coffeeshop.model.ShiftSchedule();
+            s.setEmployeeId(dto.getEmployeeId());
+            s.setEmployeeName(dto.getEmployeeName());
+            s.setPosition(dto.getPosition());
+            s.setDayOfWeek(dto.getDayOfWeek()); // Direct assignment
+            s.setShiftType(dto.getShiftType()); // Direct assignment
+            return s;
+        }).collect(Collectors.toList());
+
+        return shiftRepository.saveAll(entities).stream()
+                .map(ShiftScheduleDTO::fromEntity)
+                .collect(Collectors.toList());
+    }
 }

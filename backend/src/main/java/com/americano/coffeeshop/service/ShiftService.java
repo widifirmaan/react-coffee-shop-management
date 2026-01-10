@@ -5,4 +5,6 @@ import java.util.List;
 
 public interface ShiftService {
     List<ShiftScheduleDTO> getAllShifts();
+
+    List<ShiftScheduleDTO> updateShifts(List<ShiftScheduleDTO> shifts);
 }

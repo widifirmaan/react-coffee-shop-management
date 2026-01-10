@@ -39,4 +39,16 @@ public class ShopConfigDTO {
     private String heroImageUrl;
     private String badgeText1;
     private String badgeText2;
+
+    // Marquee Text
+    private String marqueeText;
+
+    // Gallery Images (Sidebar Scroll)
+    private List<String> galleryImages;
+
+    // Info Section
+    private String infoTitle;
+    private String infoContent;
+    private String infoFooter1;
+    private String infoFooter2;
 }

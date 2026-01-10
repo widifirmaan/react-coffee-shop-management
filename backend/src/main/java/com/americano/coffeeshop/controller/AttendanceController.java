@@ -44,4 +44,9 @@ public class AttendanceController {
     public ResponseEntity<List<AttendanceDTO>> getAllAttendance() {
         return ResponseEntity.ok(attendanceService.getAllAttendance());
     }
+
+    @GetMapping("/history/{employeeId}")
+    public ResponseEntity<List<AttendanceDTO>> getAttendanceHistory(@PathVariable String employeeId) {
+        return ResponseEntity.ok(attendanceService.getAttendanceHistory(employeeId));
+    }
 }

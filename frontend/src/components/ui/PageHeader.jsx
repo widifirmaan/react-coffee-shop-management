@@ -5,7 +5,12 @@ export default function PageHeader({ title, description, icon: Icon, color = 'wh
         <div className="page-header-container" style={{
             background: color,
             border: '4px solid black',
-            boxShadow: '8px 8px 0 0 black'
+            boxShadow: '8px 8px 0 0 black',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '20px'
         }}>
             <div>
                 <h1 className="page-header-title" style={{

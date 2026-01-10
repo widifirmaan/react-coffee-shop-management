@@ -98,7 +98,7 @@ export default function InventoryPage() {
     const paginatedData = filtered.slice(startIndex, endIndex);
 
     return (
-        <div className="page-container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <div className="page-container">
             {/* Header */}
             <PageHeader
                 title="INVENTORY"

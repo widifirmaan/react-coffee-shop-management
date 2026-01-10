@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const TableContainer = ({ children, className = '', style = {} }) => (
+export const TableContainer = ({ children, className = '', style = {}, ...props }) => (
     <div className={`table-container ${className}`} style={{
         overflowX: 'auto',
         border: '4px solid black',
@@ -8,30 +8,30 @@ export const TableContainer = ({ children, className = '', style = {} }) => (
         marginBottom: '30px',
         background: 'white',
         ...style
-    }}>
+    }} {...props}>
         {children}
     </div>
 );
 
-export const Table = ({ children, style = {} }) => (
-    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px', ...style }}>
+export const Table = ({ children, style = {}, ...props }) => (
+    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px', ...style }} {...props}>
         {children}
     </table>
 );
 
-export const Thead = ({ children, style = {} }) => (
-    <thead style={{ background: 'black', color: 'white', ...style }}>
+export const Thead = ({ children, style = {}, ...props }) => (
+    <thead style={{ background: 'black', color: 'white', ...style }} {...props}>
         {children}
     </thead>
 );
 
-export const Tbody = ({ children, style = {} }) => (
-    <tbody style={{ ...style }}>
+export const Tbody = ({ children, style = {}, ...props }) => (
+    <tbody style={{ ...style }} {...props}>
         {children}
     </tbody>
 );
 
-export const Tr = ({ children, style = {}, index }) => {
+export const Tr = ({ children, style = {}, index, ...props }) => {
     let background = 'transparent';
     if (index !== undefined) {
         background = index % 2 !== 0 ? '#f9fafb' : 'white';
@@ -42,13 +42,13 @@ export const Tr = ({ children, style = {}, index }) => {
             borderBottom: '2px solid black',
             background,
             ...style
-        }}>
+        }} {...props}>
             {children}
         </tr>
     );
 };
 
-export const Th = ({ children, style = {}, align = 'left' }) => (
+export const Th = ({ children, style = {}, align = 'left', ...props }) => (
     <th style={{
         padding: '15px',
         textAlign: align,
@@ -57,12 +57,12 @@ export const Th = ({ children, style = {}, align = 'left' }) => (
         fontWeight: '900',
         whiteSpace: 'nowrap',
         ...style
-    }}>
+    }} {...props}>
         {children}
     </th>
 );
 
-export const Td = ({ children, style = {}, align = 'left' }) => (
+export const Td = ({ children, style = {}, align = 'left', ...props }) => (
     <td style={{
         padding: '15px',
         textAlign: align,
@@ -70,7 +70,7 @@ export const Td = ({ children, style = {}, align = 'left' }) => (
         fontWeight: 'bold',
         fontSize: '0.95rem',
         ...style
-    }}>
+    }} {...props}>
         {children}
     </td>
 );

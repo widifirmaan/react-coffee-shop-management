@@ -134,7 +134,7 @@ input:focus {
 }
 
 .container {
-    max-width: 1400px;
+    max-width: 100%;
     margin: 0 auto;
     padding: 0 15px;
 }
@@ -502,7 +502,7 @@ input:focus {
 
 /* Page Header Margin for Spacing */
 .page-header-container {
-    padding: 30px;
+    padding: 20px;
     margin-bottom: 50px;
 }
 
@@ -516,6 +516,7 @@ input:focus {
         margin-bottom: 50px;
     }
 }
+
 .page-header-title {
     font-size: 3rem;
 }
@@ -528,7 +529,7 @@ input:focus {
     .page-header-title {
         font-size: 1.8rem;
     }
-    
+
     .page-header-desc {
         font-size: 0.9rem;
     }
@@ -588,9 +589,9 @@ input:focus {
 
     /* Hide detailed page count on very small screens if needed, or keep stacked */
     .pagination-page-count {
-        display: none; 
+        display: none;
     }
-    
+
     .pagination-numbers {
         flex-wrap: wrap;
         justify-content: center;

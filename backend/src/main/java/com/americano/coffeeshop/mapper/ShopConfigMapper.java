@@ -43,6 +43,19 @@ public class ShopConfigMapper {
         dto.setHeroImageUrl(entity.getHeroImageUrl());
         dto.setBadgeText1(entity.getBadgeText1());
         dto.setBadgeText2(entity.getBadgeText2());
+
+        dto.setMarqueeText(entity.getMarqueeText());
+        if (entity.getGalleryImages() != null) {
+            dto.setGalleryImages(new ArrayList<>(entity.getGalleryImages()));
+        } else {
+            dto.setGalleryImages(new ArrayList<>());
+        }
+
+        dto.setInfoTitle(entity.getInfoTitle());
+        dto.setInfoContent(entity.getInfoContent());
+        dto.setInfoFooter1(entity.getInfoFooter1());
+        dto.setInfoFooter2(entity.getInfoFooter2());
+
         return dto;
     }
 
@@ -82,5 +95,15 @@ public class ShopConfigMapper {
         entity.setHeroImageUrl(dto.getHeroImageUrl());
         entity.setBadgeText1(dto.getBadgeText1());
         entity.setBadgeText2(dto.getBadgeText2());
+
+        entity.setMarqueeText(dto.getMarqueeText());
+        if (dto.getGalleryImages() != null) {
+            entity.setGalleryImages(new ArrayList<>(dto.getGalleryImages()));
+        }
+
+        entity.setInfoTitle(dto.getInfoTitle());
+        entity.setInfoContent(dto.getInfoContent());
+        entity.setInfoFooter1(dto.getInfoFooter1());
+        entity.setInfoFooter2(dto.getInfoFooter2());
     }
 }
