@@ -1,7 +1,14 @@
 version: '3.8'
 
 services:
-  # mongo service uses existing 'americano-mongo' container on 'root_default' network
+  mongo:
+    image: mongo:latest
+    container_name: americano-mongo
+    restart: always
+    ports:
+      - "27017:27017" # Exposed to host if needed, or remove for internal only
+    volumes:
+      - mongo_data:/data/db
 
   backend:
     build: ./backend
@@ -10,9 +17,11 @@ services:
     ports:
       - "8180:8080"
     environment:
-      - MONGODB_URI=mongodb+srv://admin:admin@cluster0.yrb9vc6.mongodb.net/coffeeshop?appName=Cluster0
+      - MONGODB_URI=mongodb://mongo:27017/coffeeshop
       - PORT=8080
-      - ALLOWED_ORIGINS=http://localhost:8085,http://localhost:8180,https://nyafe.widifirmaan.web.id
+      - ALLOWED_ORIGINS=http://localhost:8085,http://localhost:8180,https://nyafe.widifirmaan.web.id,http://localhost:3000
+    depends_on:
+      - mongo
 
   frontend:
     build: ./frontend
@@ -23,7 +32,10 @@ services:
     depends_on:
       - backend
 
+volumes:
+  mongo_data:
+
+
 networks:
   default:
-    external: true
-    name: root_default
+    name: coffeeshop_network
