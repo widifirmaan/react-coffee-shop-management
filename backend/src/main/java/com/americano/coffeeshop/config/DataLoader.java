@@ -33,13 +33,11 @@ public class DataLoader implements CommandLineRunner {
 
         @Override
         public void run(String... args) throws Exception {
-                // Check if data exists - DISABLED TO FORCE SEED (User Request)
-                /*
-                 * if (employeeRepository.count() > 0) {
-                 * System.out.println("✅ Database already populated. Skipping data seeding.");
-                 * return;
-                 * }
-                 */
+                // Check if data exists - Enable for Production Safety
+                if (employeeRepository.count() > 0) {
+                        System.out.println("✅ Database already populated. Skipping data seeding.");
+                        return;
+                }
 
                 System.out.println("⚡ Starting Data Seeding...");
 
