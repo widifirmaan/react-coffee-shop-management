@@ -254,13 +254,13 @@ export default function ShiftPage() {
                     </TableContainer>
                     <div style={{ marginTop: '15px', display: 'flex', gap: '20px', fontSize: '0.9rem', fontWeight: 'bold' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            <span style={{ width: '12px', height: '12px', background: '#bae6fd', border: '2px solid black' }}></span> MORNING (07:00 - 15:00)
+                            MORNING (07:00 - 15:00)
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            <span style={{ width: '12px', height: '12px', background: '#fde047', border: '2px solid black' }}></span> AFTERNOON (15:00 - 23:00)
+                            AFTERNOON (15:00 - 23:00)
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            <span style={{ width: '12px', height: '12px', background: '#fda4af', border: '2px solid black' }}></span> EVENING (23:00 - 07:00)
+                            EVENING (23:00 - 07:00)
                         </div>
                     </div>
                 </div>
