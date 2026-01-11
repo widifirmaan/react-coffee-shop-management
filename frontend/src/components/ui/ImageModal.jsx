@@ -107,14 +107,14 @@ export default function ImageModal({ imageUrl, onClose, alt = 'Expanded view' })
                         onClick={handleClose}
                         style={{
                             position: 'absolute',
-                            top: '-25px',
-                            right: '-25px',
+                            top: '-30px',
+                            right: '-30px',
                             zIndex: 20000,
                             background: '#EF4444',
                             color: 'white',
                             border: '4px solid white',
-                            width: '50px',
-                            height: '50px',
+                            width: '60px',
+                            height: '60px',
                             fontSize: '1.5rem',
                             fontWeight: '900',
                             fontFamily: 'sans-serif',
@@ -123,13 +123,13 @@ export default function ImageModal({ imageUrl, onClose, alt = 'Expanded view' })
                             alignItems: 'center',
                             justifyContent: 'center',
                             borderRadius: '50%',
-                            boxShadow: '4px 4px 0 0 black',
+                            boxShadow: '6px 6px 0 0 black',
                             transition: 'transform 0.2s'
                         }}
                         onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
                         onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                     >
-                        <span>X</span>
+                        <X size={40} strokeWidth={4} style={{ minWidth: '40px', minHeight: '40px' }} />
                     </button>
                 </div>
             </div>

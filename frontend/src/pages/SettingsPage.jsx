@@ -205,13 +205,23 @@ export default function SettingsPage() {
                                                 newImages[index] = e.target.value;
                                                 setConfig({ ...config, galleryImages: newImages });
                                             }}
-                                            style={{ container: { marginBottom: 0 } }}
+                                            style={{
+                                                container: { marginBottom: 0, height: '56px' },
+                                                input: { height: '100%', padding: '10px 15px' }
+                                            }}
                                         />
                                     </div>
-                                    <label>
-                                        <div className="brutalist-btn" style={{ background: 'black', color: 'white', padding: '12px', border: '2px solid black', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', height: '100%' }}>
-                                            <Upload size={18} /> UPLOAD
-                                        </div>
+
+                                    {url && (
+                                        <img
+                                            src={`${url}?auto=format&fit=crop&w=100&q=80`}
+                                            alt={`Preview ${index + 1}`}
+                                            style={{ width: '56px', height: '56px', objectFit: 'cover', border: '3px solid black', flexShrink: 0 }}
+                                            onError={(e) => { e.target.style.display = 'none'; }}
+                                        />
+                                    )}
+
+                                    <label style={{ cursor: 'pointer', margin: 0, display: 'flex' }}>
                                         <input
                                             type="file"
                                             accept="image/*"
@@ -238,15 +248,27 @@ export default function SettingsPage() {
                                                 }
                                             }}
                                         />
+                                        <div
+                                            className="brutalist-btn"
+                                            style={{
+                                                background: 'black',
+                                                color: 'white',
+                                                padding: '0',
+                                                width: '56px',
+                                                height: '56px',
+                                                border: '3px solid black',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                transition: 'all 0.1s'
+                                            }}
+                                            onMouseEnter={e => { e.currentTarget.style.transform = 'translate(-2px, -2px)'; e.currentTarget.style.boxShadow = '4px 4px 0 0 black'; }}
+                                            onMouseLeave={e => { e.currentTarget.style.transform = 'translate(0, 0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                                        >
+                                            <Upload size={20} />
+                                        </div>
                                     </label>
-                                    {url && (
-                                        <img
-                                            src={`${url}?auto=format&fit=crop&w=100&q=80`}
-                                            alt={`Preview ${index + 1}`}
-                                            style={{ width: '60px', height: '60px', objectFit: 'cover', border: '2px solid black' }}
-                                            onError={(e) => { e.target.style.display = 'none'; }}
-                                        />
-                                    )}
+
                                     <button
                                         type="button"
                                         onClick={() => {
@@ -254,7 +276,20 @@ export default function SettingsPage() {
                                             setConfig({ ...config, galleryImages: newImages });
                                         }}
                                         className="brutalist-btn"
-                                        style={{ background: '#ef4444', color: 'white', padding: '15px', border: '3px solid black', cursor: 'pointer', fontWeight: 'bold' }}
+                                        style={{
+                                            background: '#ef4444',
+                                            color: 'white',
+                                            padding: '0',
+                                            width: '56px',
+                                            height: '56px',
+                                            border: '3px solid black',
+                                            cursor: 'pointer',
+                                            fontWeight: 'bold',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '1.2rem'
+                                        }}
                                     >
                                         ✕
                                     </button>

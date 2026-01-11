@@ -34,8 +34,11 @@ export const AuthProvider = ({ children }) => {
             (response) => response,
             (error) => {
                 if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-                    // Ignorer specific check endpoints if needed
-                    if (!error.config.url.includes('/api/auth/check')) {
+                    // Ignore specific endpoints that don't require auth
+                    const publicEndpoints = ['/api/auth/check', '/api/config', '/api/menus', '/api/posts'];
+                    const isPublicEndpoint = publicEndpoints.some(endpoint => error.config.url.includes(endpoint));
+
+                    if (!isPublicEndpoint) {
                         logout();
                     }
                 }

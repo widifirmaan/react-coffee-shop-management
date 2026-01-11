@@ -168,8 +168,8 @@ export default function ShiftPage() {
             <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
 
                 {/* Main Matrix Area */}
-                <div style={{ flex: 1 }}>
-                    <TableContainer>
+                <div style={{ flex: 1, overflowX: 'auto', paddingBottom: '20px' }}>
+                    <TableContainer style={{ minWidth: '1400px' }}>
                         <Table>
                             <Thead>
                                 <Tr>

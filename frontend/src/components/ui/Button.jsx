@@ -2,7 +2,7 @@ import React from 'react';
 
 export const Button = ({ children, onClick, type = 'button', variant = 'primary', className = '', style = {}, disabled = false, ...props }) => {
     const baseStyle = {
-        padding: '15px 30px',
+        padding: '15px',
         fontSize: '1.2rem',
         fontWeight: '900',
         border: '3px solid black',
@@ -13,6 +13,7 @@ export const Button = ({ children, onClick, type = 'button', variant = 'primary'
         gap: '10px',
         transition: 'all 0.1s',
         opacity: disabled ? 0.6 : 1,
+        boxSizing: 'border-box',
         ...style
     };
 
@@ -32,7 +33,7 @@ export const Button = ({ children, onClick, type = 'button', variant = 'primary'
             onClick={onClick}
             disabled={disabled}
             className={`${className}`}
-            style={{ ...baseStyle, ...activeStyle }}
+            style={{ ...baseStyle, ...activeStyle, ...style }}
             onMouseEnter={e => !disabled && (e.currentTarget.style.transform = 'translate(-2px, -2px)', e.currentTarget.style.boxShadow = '6px 6px 0 0 black')}
             onMouseLeave={e => !disabled && (e.currentTarget.style.transform = 'translate(0, 0)', e.currentTarget.style.boxShadow = activeStyle.boxShadow)}
             onMouseDown={e => !disabled && (e.currentTarget.style.transform = 'translate(2px, 2px)', e.currentTarget.style.boxShadow = '2px 2px 0 0 black')}

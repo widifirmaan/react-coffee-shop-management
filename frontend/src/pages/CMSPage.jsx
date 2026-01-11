@@ -215,19 +215,19 @@ export default function CMSPage() {
                         opacity: 1;
                     }
                     .menu-item {
-                        font-size: 5rem;
-                    font-weight: 900;
-                    line-height: 1;
-                    cursor: pointer;
-                    transition: color 0.3s, transform 0.3s;
-                    text-transform: uppercase;
-                    mix-blend-mode: difference;
-                    color: black;
-                    display: block;
-                    text-decoration: none;
-                    background: none;
-                    border: none;
-                    padding: 0;
+                        font-size: 3.5rem;
+                        font-weight: 900;
+                        line-height: 1;
+                        cursor: pointer;
+                        transition: color 0.3s, transform 0.3s;
+                        text-transform: uppercase;
+                        mix-blend-mode: difference;
+                        color: black;
+                        display: block;
+                        text-decoration: none;
+                        background: none;
+                        border: none;
+                        padding: 0;
                     }
                     .menu-item:hover {
                         color: transparent;
@@ -242,7 +242,22 @@ export default function CMSPage() {
                     }
                     @media (max-width: 1500px) {
                         .menu-item {
-                            font-size: 3rem;
+                            font-size: 2.5rem;
+                        }
+                        .hero-badge {
+                            font-size: 2.5rem;
+                            padding: 12px 24px;
+                        }
+                    }
+                    @media (max-width: 1280px) {
+                        .menu-item {
+                            font-size: 2rem;
+                        }
+                        .hero-badge {
+                            font-size: 2rem;
+                            padding: 10px 20px;
+                            border-width: 5px;
+                            box-shadow: 6px 6px 0px black;
                         }
                     }
                     @media (max-width: 1300px) {
@@ -263,6 +278,19 @@ export default function CMSPage() {
                     }
                     .gate-left.open {transform: translateX(-100%); }
                     .gate-right.open {transform: translateX(100%); }
+                    
+                    /* Hero Badge Class */
+                    .hero-badge {
+                        background: #FCD34D;
+                        color: black;
+                        padding: 15px 30px;
+                        font-size: 3.5rem;
+                        font-weight: 900;
+                        border: 8px solid black;
+                        box-shadow: 10px 10px 0px black;
+                        white-space: nowrap;
+                        line-height: 1;
+                    }
 
                     /* Menu Overlay Slide Up */
                     .menu-overlay {
@@ -410,17 +438,7 @@ export default function CMSPage() {
                         {/* Floating Logo Badge - Huge on Desktop (Static) */}
                         {!isMobile && (
                             <div style={{ position: 'absolute', top: '20%', right: '5%', zIndex: 10, transform: 'rotate(5deg)' }}>
-                                <div style={{
-                                    background: '#FCD34D',
-                                    color: 'black',
-                                    padding: '20px 40px',
-                                    fontSize: 'clamp(2rem, 5vw, 5rem)', // 3x Bigger on desktop
-                                    fontWeight: '900',
-                                    border: '8px solid black', // Thicker border
-                                    boxShadow: '12px 12px 0px black',
-                                    whiteSpace: 'nowrap',
-                                    lineHeight: 1
-                                }}>
+                                <div className="hero-badge">
                                     {shopConfig?.shopName || 'SIAP NYAFE'}
                                 </div>
                             </div>
