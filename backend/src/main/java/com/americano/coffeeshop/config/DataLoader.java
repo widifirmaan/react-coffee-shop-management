@@ -39,7 +39,10 @@ public class DataLoader implements CommandLineRunner {
                                         "✅ Database already populated (Config/Employees found). Skipping data seeding.");
                         return;
                 }
+                seed();
+        }
 
+        public void seed() {
                 System.out.println("⚡ Starting Data Seeding...");
 
                 // Clear data
@@ -63,7 +66,7 @@ public class DataLoader implements CommandLineRunner {
                 seedOrders();
                 seedPosts();
 
-                System.out.println("✅ All Data Seeding Completed Successfully with NEW LOGIC!");
+                System.out.println("✅ All Data Seeding Completed Successfully manually!");
         }
 
         private void seedPosts() {

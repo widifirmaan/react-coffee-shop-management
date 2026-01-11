@@ -35,6 +35,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login", "/api/auth/ping").permitAll()
+                        .requestMatchers("/api/seeder/**").permitAll() // TODO: Remove in production
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/menus/**", "/api/categories/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/orders").permitAll() // Customers place orders (Public)
