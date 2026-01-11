@@ -12,7 +12,7 @@ services:
     environment:
       # Ganti 'mongo' dengan nama container existing Anda (misal: mongolatest)
       # Pastikan port tetap 27017 (port internal docker), bukan port host (27019)
-      - MONGODB_URI=mongodb://mongolatest:27017/coffeeshop
+      - MONGODB_URI=mongodb://americano-mongo:27017/coffeeshop
       - PORT=8080
       - ALLOWED_ORIGINS=http://localhost:8085,http://localhost:8180,https://nyafe.widifirmaan.web.id,http://localhost:3000
     volumes:
@@ -35,6 +35,7 @@ services:
 volumes:
   uploads_data:
 
+
 networks:
   coffeeshop_network:
-    external: true  # PENTING: Menandakan network ini sudah dibuat di luar compose
+    external: true # PENTING: Menandakan network ini sudah dibuat di luar compose
