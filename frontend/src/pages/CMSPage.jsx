@@ -661,7 +661,18 @@ export default function CMSPage() {
                                         onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }} />
                                 </div>
                                 <div style={{ padding: '20px' }}>
-                                    <h3 style={{ margin: '0 0 10px 0', fontSize: '1.5rem', fontWeight: '900', textTransform: 'uppercase' }}>{menu.name}</h3>
+                                    <h3 style={{
+                                        margin: '0 0 10px 0',
+                                        fontSize: '1.5rem',
+                                        fontWeight: '900',
+                                        textTransform: 'uppercase',
+                                        lineHeight: 1.2,
+                                        display: '-webkit-box',
+                                        WebkitLineClamp: 2,
+                                        WebkitBoxOrient: 'vertical',
+                                        overflow: 'hidden',
+                                        height: '2.4em'
+                                    }}>{menu.name}</h3>
                                     <p style={{ opacity: 0.7, height: '40px', overflow: 'hidden', fontSize: '0.9rem', margin: '0 0 15px 0' }}>
                                         {menu.description || 'Delicious menu item'}
                                     </p>
@@ -849,8 +860,19 @@ export default function CMSPage() {
                                     >
                                         <div style={{ background: post.category === 'PROMO' ? 'white' : 'black', color: post.category === 'PROMO' ? 'black' : 'white', display: 'inline-block', padding: '5px 15px', fontWeight: 'bold', marginBottom: '20px', fontSize: '0.9rem', alignSelf: 'flex-start' }}>{post.category}</div>
                                         {post.imageUrl && <img src={post.imageUrl} loading="lazy" style={{ width: '100%', height: '150px', objectFit: 'cover', border: '2px solid black', marginBottom: '15px' }} alt={post.title} />}
-                                        <h3 style={{ fontSize: '2.5rem', fontWeight: '900', lineHeight: 0.9, marginBottom: '10px', wordBreak: 'break-word', overflowWrap: 'break-word' }}>{post.title}</h3>
-                                        <p style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: '20px 0', lineHeight: 1.4, flex: 1, wordBreak: 'break-word', overflowWrap: 'break-word' }}>{post.excerpt}</p>
+                                        <h3 style={{
+                                            fontSize: '2.5rem',
+                                            fontWeight: '900',
+                                            lineHeight: 0.9,
+                                            marginBottom: '10px',
+                                            wordBreak: 'break-word',
+                                            overflowWrap: 'break-word',
+                                            display: '-webkit-box',
+                                            WebkitLineClamp: 2,
+                                            WebkitBoxOrient: 'vertical',
+                                            overflow: 'hidden',
+                                            height: '2.4em'
+                                        }}>{post.title}</h2>
                                         <div style={{ fontSize: '0.9rem', opacity: 0.7, marginTop: 'auto', borderTop: post.category === 'PROMO' ? '2px solid white' : '2px solid black', paddingTop: '10px', fontWeight: 'bold' }}>
                                             POSTED: {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : 'N/A'}
                                         </div>

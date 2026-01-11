@@ -187,7 +187,15 @@ export default function OrderPage({ shopConfig }) {
                                             <img src={menu.imageUrl || "https://placehold.co/600x400?text=No+Image"} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s' }} className="hover-zoom" onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }} />
                                         </div>
                                         <div style={{ padding: '20px' }}>
-                                            <h3 className="menu-item-title" style={{ margin: '0 0 10px 0' }}>{menu.name}</h3>
+                                            <h3 className="menu-item-title" style={{
+                                                margin: '0 0 10px 0',
+                                                lineHeight: 1.2,
+                                                display: '-webkit-box',
+                                                WebkitLineClamp: 2,
+                                                WebkitBoxOrient: 'vertical',
+                                                overflow: 'hidden',
+                                                height: '2.4em'
+                                            }}>{menu.name}</h3>
                                             <p style={{ opacity: 0.7, height: '40px', overflow: 'hidden', fontSize: '0.9rem' }}>{menu.description}</p>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px' }}>
                                                 <span style={{ fontWeight: 'bold', background: '#eee', padding: '5px 10px', border: '2px solid black' }}>Rp {menu.price?.toLocaleString()}</span>

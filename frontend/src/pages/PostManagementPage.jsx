@@ -159,7 +159,19 @@ export default function PostManagementPage({ user }) {
                             <span style={{ background: post.status === 'PUBLISHED' ? '#86efac' : '#e5e7eb', padding: '5px 10px', fontWeight: 'bold', fontSize: '0.8rem', border: '2px solid black' }}>{post.status}</span>
                             <span style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.8rem', opacity: 0.5 }}>{post.category}</span>
                         </div>
-                        <h2 style={{ fontSize: '1.5rem', fontWeight: '900', margin: '0 0 10px 0', wordBreak: 'break-word', overflowWrap: 'break-word' }}>{post.title}</h2>
+                        <h2 style={{
+                            fontSize: '1.5rem',
+                            fontWeight: '900',
+                            margin: '0 0 10px 0',
+                            wordBreak: 'break-word',
+                            overflowWrap: 'break-word',
+                            lineHeight: 1.2,
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                            height: '2.4em'
+                        }}>{post.title}</h2>
                         <p style={{ flex: 1, opacity: 0.7, fontSize: '0.9rem', wordBreak: 'break-word', overflowWrap: 'break-word' }}>{post.excerpt}</p>
 
                         <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
