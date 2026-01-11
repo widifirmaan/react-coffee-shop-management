@@ -10,6 +10,98 @@ import { Alert } from '../components/ui/Alert';
 import PageHeader from '../components/ui/PageHeader';
 import SearchBar from '../components/ui/SearchBar';
 
+const GalleryGrid = ({ isEditable, menuForm, setMenuForm, handleFileUpload }) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+        {/* Main Image */}
+        <div style={{ position: 'relative', border: '2px solid black', background: '#eee', height: '250px' }}>
+            {menuForm.imageUrl ? (
+                <img
+                    src={menuForm.imageUrl}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400?text=No+Image"; }}
+                />
+            ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.5, fontWeight: 'bold', background: '#e5e5e5', color: '#555' }}>
+                    <Upload size={48} style={{ marginBottom: '10px' }} />
+                    <span>NO IMAGE SELECTED</span>
+                </div>
+            )}
+            {isEditable && (
+                <div style={{ position: 'absolute', bottom: '10px', right: '10px', display: 'flex', gap: '5px' }}>
+                    <label style={{ background: 'white', border: '2px solid black', padding: '5px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                        <Upload size={16} style={{ marginRight: '5px' }} /> CHANGE
+                        <input type="file" style={{ display: 'none' }} onChange={(e) => handleFileUpload(e, -1)} />
+                    </label>
+                    {menuForm.imageUrl && (
+                        <Button variant="danger" style={{ padding: '5px' }} onClick={() => setMenuForm({ ...menuForm, imageUrl: '' })}><Trash2 size={16} /></Button>
+                    )}
+                </div>
+            )}
+        </div>
+
+        {/* Gallery Section */}
+        <div>
+            <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>GALLERY IMAGES ({menuForm.gallery?.length || 0})</label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '10px' }}>
+                {(menuForm.gallery || []).map((url, i) => (
+                    <div key={i} style={{ position: 'relative', border: '2px solid black', aspectRatio: '1/1', background: '#f9f9f9' }}>
+                        {url ? (
+                            <>
+                                <img
+                                    src={url}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.parentNode.style.background = '#ccc'; }}
+                                />
+                                {isEditable && (
+                                    <button
+                                        onClick={() => {
+                                            const newGallery = [...menuForm.gallery];
+                                            newGallery.splice(i, 1);
+                                            setMenuForm(prev => ({ ...prev, gallery: newGallery }));
+                                        }}
+                                        style={{
+                                            position: 'absolute', top: '5px', right: '5px',
+                                            background: 'red', color: 'white', border: '1px solid black',
+                                            cursor: 'pointer', padding: '2px', display: 'flex'
+                                        }}
+                                    >
+                                        <X size={12} />
+                                    </button>
+                                )}
+                            </>
+                        ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>LOADING...</div>
+                        )}
+                    </div>
+                ))}
+
+                {/* Add New Button */}
+                {isEditable && (
+                    <label style={{
+                        border: '2px dashed black', display: 'flex', flexDirection: 'column',
+                        alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                        background: '#fff', aspectRatio: '1/1', hover: { background: '#f0f0f0' }
+                    }}>
+                        <Plus size={24} />
+                        <span style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>ADD</span>
+                        <input type="file" multiple style={{ display: 'none' }} onChange={(e) => {
+                            const files = Array.from(e.target.files);
+                            files.forEach(async (file) => {
+                                const formData = new FormData();
+                                formData.append('file', file);
+                                try {
+                                    const res = await axios.post('/api/uploads', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+                                    setMenuForm(prev => ({ ...prev, gallery: [...(prev.gallery || []), res.data] }));
+                                } catch (err) { console.error('Upload failed', err); }
+                            });
+                        }} />
+                    </label>
+                )}
+            </div>
+        </div>
+    </div>
+);
+
 export default function MenuPage({ user }) {
     const [menus, setMenus] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -193,97 +285,7 @@ export default function MenuPage({ user }) {
 
     const categoriesToDisplay = ['Featured', ...categories.map(c => c.name), 'Uncategorized'].filter((v, i, a) => a.indexOf(v) === i);
 
-    const GalleryGrid = ({ isEditable }) => (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-            {/* Main Image */}
-            <div style={{ position: 'relative', border: '2px solid black', background: '#eee', height: '250px' }}>
-                {menuForm.imageUrl ? (
-                    <img
-                        src={menuForm.imageUrl}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400?text=No+Image"; }}
-                    />
-                ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.5, fontWeight: 'bold', background: '#e5e5e5', color: '#555' }}>
-                        <Upload size={48} style={{ marginBottom: '10px' }} />
-                        <span>NO IMAGE SELECTED</span>
-                    </div>
-                )}
-                {isEditable && (
-                    <div style={{ position: 'absolute', bottom: '10px', right: '10px', display: 'flex', gap: '5px' }}>
-                        <label style={{ background: 'white', border: '2px solid black', padding: '5px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                            <Upload size={16} style={{ marginRight: '5px' }} /> CHANGE
-                            <input type="file" style={{ display: 'none' }} onChange={(e) => handleFileUpload(e, -1)} />
-                        </label>
-                        {menuForm.imageUrl && (
-                            <Button variant="danger" style={{ padding: '5px' }} onClick={() => setMenuForm({ ...menuForm, imageUrl: '' })}><Trash2 size={16} /></Button>
-                        )}
-                    </div>
-                )}
-            </div>
 
-            {/* Gallery Section */}
-            <div>
-                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>GALLERY IMAGES ({menuForm.gallery?.length || 0})</label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '10px' }}>
-                    {(menuForm.gallery || []).map((url, i) => (
-                        <div key={i} style={{ position: 'relative', border: '2px solid black', aspectRatio: '1/1', background: '#f9f9f9' }}>
-                            {url ? (
-                                <>
-                                    <img
-                                        src={url}
-                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                        onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.parentNode.style.background = '#ccc'; }}
-                                    />
-                                    {isEditable && (
-                                        <button
-                                            onClick={() => {
-                                                const newGallery = [...menuForm.gallery];
-                                                newGallery.splice(i, 1);
-                                                setMenuForm(prev => ({ ...prev, gallery: newGallery }));
-                                            }}
-                                            style={{
-                                                position: 'absolute', top: '5px', right: '5px',
-                                                background: 'red', color: 'white', border: '1px solid black',
-                                                cursor: 'pointer', padding: '2px', display: 'flex'
-                                            }}
-                                        >
-                                            <X size={12} />
-                                        </button>
-                                    )}
-                                </>
-                            ) : (
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>LOADING...</div>
-                            )}
-                        </div>
-                    ))}
-
-                    {/* Add New Button */}
-                    {isEditable && (
-                        <label style={{
-                            border: '2px dashed black', display: 'flex', flexDirection: 'column',
-                            alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                            background: '#fff', aspectRatio: '1/1', hover: { background: '#f0f0f0' }
-                        }}>
-                            <Plus size={24} />
-                            <span style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>ADD</span>
-                            <input type="file" multiple style={{ display: 'none' }} onChange={(e) => {
-                                const files = Array.from(e.target.files);
-                                files.forEach(async (file) => {
-                                    const formData = new FormData();
-                                    formData.append('file', file);
-                                    try {
-                                        const res = await axios.post('/api/uploads', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-                                        setMenuForm(prev => ({ ...prev, gallery: [...(prev.gallery || []), res.data] }));
-                                    } catch (err) { console.error('Upload failed', err); }
-                                });
-                            }} />
-                        </label>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
 
     // Auto-update viewing form when viewingMenu changes
     useEffect(() => {
@@ -368,7 +370,7 @@ export default function MenuPage({ user }) {
             <Modal isOpen={isMenuModalOpen} onClose={() => setIsMenuModalOpen(false)} title={editingMenu ? 'EDIT MENU ITEM' : 'ADD NEW ITEM'} maxWidth="900px">
                 <form onSubmit={handleMenuSubmit} className="menu-modal-grid">
                     <div>
-                        <GalleryGrid isEditable={true} />
+                        <GalleryGrid isEditable={true} menuForm={menuForm} setMenuForm={setMenuForm} handleFileUpload={handleFileUpload} />
                     </div>
                     <div>
                         <Input label="NAME" value={menuForm.name} onChange={e => setMenuForm({ ...menuForm, name: e.target.value })} required />
@@ -397,7 +399,7 @@ export default function MenuPage({ user }) {
                 {viewingMenu && (
                     <div className="menu-modal-grid">
                         <div>
-                            <GalleryGrid isEditable={isManager} />
+                            <GalleryGrid isEditable={isManager} menuForm={menuForm} setMenuForm={setMenuForm} handleFileUpload={handleFileUpload} />
                         </div>
                         <div>
                             {isManager ? (
