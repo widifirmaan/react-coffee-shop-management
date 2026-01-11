@@ -872,7 +872,7 @@ export default function CMSPage() {
                                             WebkitBoxOrient: 'vertical',
                                             overflow: 'hidden',
                                             height: '2.4em'
-                                        }}>{post.title}</h2>
+                                        }}>{post.title}</h3>
                                         <div style={{ fontSize: '0.9rem', opacity: 0.7, marginTop: 'auto', borderTop: post.category === 'PROMO' ? '2px solid white' : '2px solid black', paddingTop: '10px', fontWeight: 'bold' }}>
                                             POSTED: {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : 'N/A'}
                                         </div>
