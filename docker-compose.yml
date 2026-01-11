@@ -1,14 +1,7 @@
 version: '3.8'
 
 services:
-  mongo:
-    image: mongo:latest
-    container_name: americano-mongo
-    restart: always
-    ports:
-      - "27019:27019" # Map to different host port (27019) to avoid conflict with existing mongo
-    volumes:
-      - mongo_data:/data/db
+  # Service 'mongo' DIHAPUS karena kita menggunakan yang sudah ada
 
   backend:
     build: ./backend
@@ -17,13 +10,16 @@ services:
     ports:
       - "8180:8080"
     environment:
-      - MONGODB_URI=mongodb://mongo:27017/coffeeshop
+      # Ganti 'mongo' dengan nama container existing Anda (misal: mongolatest)
+      # Pastikan port tetap 27017 (port internal docker), bukan port host (27019)
+      - MONGODB_URI=mongodb://mongolatest:27017/coffeeshop
       - PORT=8080
       - ALLOWED_ORIGINS=http://localhost:8085,http://localhost:8180,https://nyafe.widifirmaan.web.id,http://localhost:3000
     volumes:
       - uploads_data:/app/uploads
-    depends_on:
-      - mongo
+    # depends_on dihapus karena service mongo tidak ada di file ini
+    networks:
+      - coffeeshop_network
 
   frontend:
     build: ./frontend
@@ -33,12 +29,12 @@ services:
       - "8085:80"
     depends_on:
       - backend
+    networks:
+      - coffeeshop_network
 
 volumes:
-  mongo_data:
   uploads_data:
 
-
 networks:
-  default:
-    name: coffeeshop_network
+  coffeeshop_network:
+    external: true  # PENTING: Menandakan network ini sudah dibuat di luar compose
