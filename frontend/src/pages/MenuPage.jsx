@@ -346,7 +346,17 @@ export default function MenuPage({ user }) {
                                     </div>
                                     <div style={{ padding: '20px', flex: 1, display: 'flex', flexDirection: 'column' }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '10px' }}>
-                                            <h3 className="menu-item-title" style={{ margin: 0, fontWeight: 900, lineHeight: 1.1 }}>{menu.name}</h3>
+                                            <h3 className="menu-item-title" style={{
+                                                margin: 0,
+                                                fontWeight: 900,
+                                                lineHeight: 1.1,
+                                                display: '-webkit-box',
+                                                WebkitLineClamp: 2,
+                                                WebkitBoxOrient: 'vertical',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                height: '2.2em' // Ensure fixed height for alignment
+                                            }}>{menu.name}</h3>
                                             <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{menu.price.toLocaleString()}</span>
                                         </div>
                                         <p style={{ opacity: 0.7, fontSize: '0.9rem', marginBottom: '15px', height: '40px', overflow: 'hidden' }}>{menu.description}</p>
