@@ -138,8 +138,8 @@ export default function FinancePage() {
                 <form onSubmit={handleAdd}>
                     <Select label="TYPE" value={newTrans.type} onChange={e => setNewTrans({ ...newTrans, type: e.target.value })}
                         options={[{ value: 'EXPENSE', label: 'EXPENSE (PENGELUARAN)' }, { value: 'INCOME', label: 'INCOME (PEMASUKAN)' }]} />
-                    <Input label="DESCRIPTION" value={newTrans.description} onChange={e => setNewTrans({ ...newTrans, description: e.target.value })} required />
-                    <Input label="AMOUNT (IDR)" type="number" value={newTrans.amount} onChange={e => setNewTrans({ ...newTrans, amount: e.target.value })} required />
+                    <Input label="DESCRIPTION" value={newTrans.description} onChange={e => setNewTrans({ ...newTrans, description: e.target.value })} required maxLength={100} />
+                    <Input label="AMOUNT (IDR)" type="number" value={newTrans.amount} onChange={e => setNewTrans({ ...newTrans, amount: e.target.value })} required max={100000000} />
 
                     <div style={{ display: 'flex', gap: '15px', marginTop: '20px' }}>
                         <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)} style={{ flex: 1 }}>CANCEL</Button>

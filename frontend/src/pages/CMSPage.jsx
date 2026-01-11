@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowRight, Star, Coffee, Zap, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, Star, Coffee, Zap, X, ChevronLeft, ChevronRight, ArrowUp } from 'lucide-react';
 import ImageModal from '../components/ui/ImageModal';
 import MenuDetailModal from '../components/ui/MenuDetailModal';
 import CategorySelector from '../components/ui/CategorySelector';
@@ -17,13 +17,13 @@ import 'swiper/css/pagination';
 // --- Background Components ---
 const generateLetters = (count, startOffset = 0) => {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    const words = ["COFFEE", "JAVA", "BREW", "CAFE", "LATTE"]; // Optional: mix full words? User said "huruf" (letters). Sticking to chars.
+    const words = ["COFFEE", "JAVA", "BREW", "CAFE", "LATTE"];
     return Array.from({ length: count }).map((_, i) => ({
         id: i + startOffset,
         char: chars[Math.floor(Math.random() * chars.length)],
         x: Math.random() * 100,
         y: Math.random() * 100,
-        size: 8 + Math.random() * 12, // 8rem to 20rem (Large!)
+        size: 8 + Math.random() * 12,
         rotation: Math.random() * 360,
         depth: 0.01 + Math.random() * 0.04
     }));
@@ -78,6 +78,29 @@ export default function CMSPage() {
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    // Browser Back Button Handling for Latest Drop
+    useEffect(() => {
+        if (isPromoOpen) {
+            // Push state when opening if not already there
+            if (window.location.hash !== '#latest') {
+                window.history.pushState({ modal: 'latest' }, '', '#latest');
+            }
+
+            const handlePopState = () => {
+                // If back button is pressed, close the promo section
+                setIsPromoOpen(false);
+            };
+
+            window.addEventListener('popstate', handlePopState);
+            return () => window.removeEventListener('popstate', handlePopState);
+        } else {
+            // If closed via UI (e.g. swipe), remove the hash if it exists
+            if (window.location.hash === '#latest') {
+                window.history.back();
+            }
+        }
+    }, [isPromoOpen]);
 
     const handleMenuClick = (menu) => {
         setSelectedMenu(menu);
@@ -655,7 +678,6 @@ export default function CMSPage() {
                     overflowY: 'auto'
                 }}>
                     {/* Category Filter */}
-                    {/* Category Filter */}
                     <CategorySelector
                         categories={['All', ...new Set(menus.map(m => m.category).filter(cat => cat !== 'Featured'))]}
                         activeCategory={activeCategory}
@@ -707,8 +729,6 @@ export default function CMSPage() {
                         ))}
                     </div>
                 </div>
-
-
             </div>
 
             {/* DETAIL MODAL */}
@@ -826,8 +846,34 @@ export default function CMSPage() {
                     height: '100%', // Full height
                     opacity: isPromoOpen ? 1 : 0,
                     transition: 'opacity 0.5s 0.8s', // Delay fade in
-                    overflowY: isMobile ? 'auto' : 'hidden' // Scrollable on mobile
+                    overflowY: isMobile ? 'auto' : 'hidden', // Scrollable on mobile
+                    position: 'relative' // Needed for absolute back button
                 }}>
+                    {/* BACK BUTTON (Top Left - Icon Only - Transparent - No Shadow) */}
+                    <button
+                        onClick={() => setIsPromoOpen(false)}
+                        style={{
+                            position: 'absolute',
+                            top: isMobile ? '15px' : '30px',
+                            left: isMobile ? '15px' : '30px',
+                            zIndex: 100,
+                            background: 'transparent',
+                            color: 'black',
+                            border: 'none',
+                            padding: 0,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'transform 0.2s',
+                            boxShadow: 'none' // Explicitly ensure no shadow
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-5px)'}
+                        onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                    >
+                        <ArrowUp size={isMobile ? 32 : 48} strokeWidth={3} />
+                    </button>
+
                     {/* Left Side: Title */}
                     <div style={{
                         flex: isMobile ? 'none' : '0 0 30%',
@@ -879,9 +925,9 @@ export default function CMSPage() {
                                         <div style={{ background: post.category === 'PROMO' ? 'white' : 'black', color: post.category === 'PROMO' ? 'black' : 'white', display: 'inline-block', padding: '5px 15px', fontWeight: 'bold', marginBottom: '20px', fontSize: '0.9rem', alignSelf: 'flex-start' }}>{post.category}</div>
                                         {post.imageUrl && <img src={post.imageUrl} loading="lazy" style={{ width: '100%', height: '150px', objectFit: 'cover', border: '2px solid black', marginBottom: '15px' }} alt={post.title} />}
                                         <h3 style={{
-                                            fontSize: '2.5rem',
+                                            fontSize: '1.8rem', // Reduced font size
                                             fontWeight: '900',
-                                            lineHeight: 0.9,
+                                            lineHeight: 1.1,
                                             marginBottom: '10px',
                                             wordBreak: 'break-word',
                                             overflowWrap: 'break-word',
@@ -889,7 +935,7 @@ export default function CMSPage() {
                                             WebkitLineClamp: 2,
                                             WebkitBoxOrient: 'vertical',
                                             overflow: 'hidden',
-                                            height: '2.4em'
+                                            maxHeight: '2.2em'
                                         }}>{post.title}</h3>
                                         <div style={{ fontSize: '0.9rem', opacity: 0.7, marginTop: 'auto', borderTop: post.category === 'PROMO' ? '2px solid white' : '2px solid black', paddingTop: '10px', fontWeight: 'bold' }}>
                                             POSTED: {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : 'N/A'}
@@ -905,7 +951,7 @@ export default function CMSPage() {
 
                         </div>
 
-                        {/* View All Details Button */}
+                        {/* End of content grid */}
 
                     </div>
                 </div>

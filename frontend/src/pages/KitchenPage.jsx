@@ -319,7 +319,7 @@ export default function KitchenPage() {
                 {editingOrder && (
                     <>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
-                            <Input label="CUSTOMER NAME" value={editingOrder.customerName} onChange={e => setEditingOrder({ ...editingOrder, customerName: e.target.value })} />
+                            <Input label="CUSTOMER NAME" value={editingOrder.customerName} onChange={e => setEditingOrder({ ...editingOrder, customerName: e.target.value })} maxLength={50} />
                             <Select label="TABLE" value={editingOrder.tableNumber} onChange={e => setEditingOrder({ ...editingOrder, tableNumber: e.target.value })}
                                 options={[{ value: 'Take Away', label: 'Take Away' }, ...[...Array(20)].map((_, i) => ({ value: `Table ${i + 1}`, label: `Table ${i + 1}` }))]} />
                             <Select label="STATUS" value={editingOrder.status} onChange={e => setEditingOrder({ ...editingOrder, status: e.target.value })}

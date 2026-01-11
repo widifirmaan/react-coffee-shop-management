@@ -106,12 +106,14 @@ export default function SettingsPage() {
                             value={config.shopName || ''}
                             onChange={handleChange}
                             required
+                            maxLength={50}
                         />
                         <Input
                             label="WEBSITE TITLE (BROWSER TAB)"
                             name="websiteTitle"
                             value={config.websiteTitle || ''}
                             onChange={handleChange}
+                            maxLength={50}
                         />
                         <Input
                             label="FAVICON URL"
@@ -119,6 +121,7 @@ export default function SettingsPage() {
                             value={config.faviconUrl || ''}
                             onChange={(e) => { handleChange(e); setPreviewFavicon(e.target.value); }}
                             placeholder="https://example.com/icon.png"
+                            maxLength={500}
                         />
                         {previewFavicon && (
                             <div style={{ marginTop: '-10px', marginBottom: '20px' }}>
@@ -135,9 +138,9 @@ export default function SettingsPage() {
                     {/* Tech Specs */}
                     <Card title="TECH SPECS (HEADER)" icon={Hash}>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
-                            <Input label="SPEC 1" name="techSpec1" value={config.techSpec1 || ''} onChange={handleChange} placeholder="// EST 2024" />
-                            <Input label="SPEC 2" name="techSpec2" value={config.techSpec2 || ''} onChange={handleChange} placeholder="// JKT_ID" />
-                            <Input label="SPEC 3" name="techSpec3" value={config.techSpec3 || ''} onChange={handleChange} placeholder="// V.1.0" />
+                            <Input label="SPEC 1" name="techSpec1" value={config.techSpec1 || ''} onChange={handleChange} placeholder="// EST 2024" maxLength={20} />
+                            <Input label="SPEC 2" name="techSpec2" value={config.techSpec2 || ''} onChange={handleChange} placeholder="// JKT_ID" maxLength={20} />
+                            <Input label="SPEC 3" name="techSpec3" value={config.techSpec3 || ''} onChange={handleChange} placeholder="// V.1.0" maxLength={20} />
                         </div>
                     </Card>
 
@@ -152,6 +155,7 @@ export default function SettingsPage() {
                                     value={config.heroImageUrl || ''}
                                     onChange={handleChange}
                                     placeholder="/illustration_hero.png"
+                                    maxLength={500}
                                 />
                                 <label>
                                     <div className="brutalist-btn" style={{ background: 'black', color: 'white', padding: '15px', border: '3px solid black', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -171,8 +175,8 @@ export default function SettingsPage() {
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                            <Input label="BADGE LINE 1" name="badgeText1" value={config.badgeText1 || ''} onChange={handleChange} placeholder="EST 2024" />
-                            <Input label="BADGE LINE 2" name="badgeText2" value={config.badgeText2 || ''} onChange={handleChange} placeholder="JAKARTA" />
+                            <Input label="BADGE LINE 1" name="badgeText1" value={config.badgeText1 || ''} onChange={handleChange} placeholder="EST 2024" maxLength={20} />
+                            <Input label="BADGE LINE 2" name="badgeText2" value={config.badgeText2 || ''} onChange={handleChange} placeholder="JAKARTA" maxLength={20} />
                         </div>
                     </Card>
 
@@ -185,6 +189,7 @@ export default function SettingsPage() {
                             onChange={handleChange}
                             placeholder="SIAP NYAFE • FRESH BREW • GOOD VIBES • 24/7 OPEN •"
                             type="textarea"
+                            maxLength={500}
                         />
                         <p style={{ fontSize: '0.9rem', color: '#666', marginTop: '-10px', fontWeight: 'bold' }}>
                             This text will scroll continuously at the top of your landing page. Use • as separator.
@@ -209,6 +214,7 @@ export default function SettingsPage() {
                                                 container: { marginBottom: 0, height: '56px' },
                                                 input: { height: '100%', padding: '10px 15px' }
                                             }}
+                                            maxLength={500}
                                         />
                                     </div>
 
@@ -319,6 +325,7 @@ export default function SettingsPage() {
                             name="infoTitle"
                             value={config.infoTitle || 'ABOUT US'}
                             onChange={handleChange}
+                            maxLength={50}
                         />
                         <Input
                             label="CONTENT (PARAGRAPH)"
@@ -327,6 +334,7 @@ export default function SettingsPage() {
                             onChange={handleChange}
                             type="textarea"
                             placeholder="We are not just a coffee shop..."
+                            maxLength={1000}
                         />
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                             <Input
@@ -334,12 +342,14 @@ export default function SettingsPage() {
                                 name="infoFooter1"
                                 value={config.infoFooter1 || 'EST. 2024'}
                                 onChange={handleChange}
+                                maxLength={20}
                             />
                             <Input
                                 label="FOOTER BOX 2"
                                 name="infoFooter2"
                                 value={config.infoFooter2 || 'JAKARTA'}
                                 onChange={handleChange}
+                                maxLength={20}
                             />
                         </div>
                     </Card>
@@ -352,12 +362,14 @@ export default function SettingsPage() {
                             value={config.address || ''}
                             onChange={handleChange}
                             type="textarea"
+                            maxLength={200}
                         />
                         <Input
                             label="PHONE NUMBER"
                             name="phoneNumber"
                             value={config.phoneNumber || ''}
                             onChange={handleChange}
+                            maxLength={20}
                         />
                     </Card>
 
@@ -400,6 +412,7 @@ export default function SettingsPage() {
                                                 setConfig({ ...config, socialLinks: newLinks });
                                             }}
                                             style={{ container: { marginBottom: '5px' } }}
+                                            maxLength={500}
                                         />
                                     </div>
                                     <Button

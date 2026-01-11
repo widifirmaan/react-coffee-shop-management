@@ -1,6 +1,6 @@
 import Dropdown from './Dropdown';
 
-export const Input = ({ label, name, value, onChange, type = 'text', placeholder, required = false, style = {}, readOnly = false }) => {
+export const Input = ({ label, name, value, onChange, type = 'text', placeholder, required = false, style = {}, readOnly = false, ...rest }) => {
     return (
         <div style={{ marginBottom: '20px', ...style.container }}>
             {label && (
@@ -30,6 +30,7 @@ export const Input = ({ label, name, value, onChange, type = 'text', placeholder
                         boxShadow: '4px 4px 0 0 rgba(0,0,0,0.1)',
                         ...style.input
                     }}
+                    {...rest}
                 />
             ) : (
                 <input
@@ -52,6 +53,7 @@ export const Input = ({ label, name, value, onChange, type = 'text', placeholder
                         boxShadow: '4px 4px 0 0 rgba(0,0,0,0.1)',
                         ...style.input
                     }}
+                    {...rest}
                 />
             )}
         </div>

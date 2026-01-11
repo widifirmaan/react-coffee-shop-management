@@ -383,7 +383,7 @@ export default function MenuPage({ user }) {
                         <GalleryGrid isEditable={true} menuForm={menuForm} setMenuForm={setMenuForm} handleFileUpload={handleFileUpload} />
                     </div>
                     <div>
-                        <Input label="NAME" value={menuForm.name} onChange={e => setMenuForm({ ...menuForm, name: e.target.value })} required />
+                        <Input label="NAME" value={menuForm.name} onChange={e => setMenuForm({ ...menuForm, name: e.target.value })} required maxLength={50} />
                         <Select
                             label="CATEGORY"
                             value={menuForm.category}
@@ -394,8 +394,8 @@ export default function MenuPage({ user }) {
                                 { value: 'Uncategorized', label: 'Uncategorized' }
                             ]}
                         />
-                        <Input label="DESCRIPTION" value={menuForm.description} onChange={e => setMenuForm({ ...menuForm, description: e.target.value })} type="textarea" />
-                        <Input label="PRICE (IDR)" type="number" value={menuForm.price} onChange={e => setMenuForm({ ...menuForm, price: e.target.value })} required />
+                        <Input label="DESCRIPTION" value={menuForm.description} onChange={e => setMenuForm({ ...menuForm, description: e.target.value })} type="textarea" maxLength={500} />
+                        <Input label="PRICE (IDR)" type="number" value={menuForm.price} onChange={e => setMenuForm({ ...menuForm, price: e.target.value })} required max={100000000} />
 
                         <div style={{ display: 'flex', gap: '15px', marginTop: '30px' }}>
                             <Button type="button" onClick={() => setIsMenuModalOpen(false)} variant="secondary" style={{ flex: 1 }}>CANCEL</Button>
@@ -414,7 +414,7 @@ export default function MenuPage({ user }) {
                         <div>
                             {isManager ? (
                                 <>
-                                    <Input label="NAME" value={menuForm.name} onChange={e => setMenuForm({ ...menuForm, name: e.target.value })} />
+                                    <Input label="NAME" value={menuForm.name} onChange={e => setMenuForm({ ...menuForm, name: e.target.value })} maxLength={50} />
                                     <Select
                                         label="CATEGORY"
                                         value={menuForm.category}
@@ -425,8 +425,8 @@ export default function MenuPage({ user }) {
                                             { value: 'Uncategorized', label: 'Uncategorized' }
                                         ]}
                                     />
-                                    <Input label="DESCRIPTION" value={menuForm.description} onChange={e => setMenuForm({ ...menuForm, description: e.target.value })} type="textarea" />
-                                    <Input label="PRICE" type="number" value={menuForm.price} onChange={e => setMenuForm({ ...menuForm, price: e.target.value })} />
+                                    <Input label="DESCRIPTION" value={menuForm.description} onChange={e => setMenuForm({ ...menuForm, description: e.target.value })} type="textarea" maxLength={500} />
+                                    <Input label="PRICE" type="number" value={menuForm.price} onChange={e => setMenuForm({ ...menuForm, price: e.target.value })} max={100000000} />
                                     <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
                                         <Button onClick={handleDetailSave} variant="primary" style={{ flex: 1 }}>SAVE CHANGES</Button>
                                         <Button onClick={() => handleDeleteMenu(viewingMenu.id)} variant="danger" style={{ flex: 1 }}>DELETE</Button>
@@ -446,7 +446,7 @@ export default function MenuPage({ user }) {
 
             <Modal isOpen={isCategoryModalOpen} onClose={() => setIsCategoryModalOpen(false)} title="ADD CATEGORY">
                 <form onSubmit={handleCategorySubmit}>
-                    <Input label="CATEGORY NAME" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} required />
+                    <Input label="CATEGORY NAME" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} required maxLength={50} />
                     <div style={{ display: 'flex', gap: '15px', marginTop: '20px' }}>
                         <Button type="button" onClick={() => setIsCategoryModalOpen(false)} variant="secondary" style={{ flex: 1 }}>CANCEL</Button>
                         <Button type="submit" variant="primary" style={{ flex: 1 }}>ADD</Button>

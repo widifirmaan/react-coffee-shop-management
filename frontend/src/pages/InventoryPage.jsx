@@ -181,10 +181,10 @@ export default function InventoryPage() {
             {/* Modal */}
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingId ? "UPDATE STOCK" : "ADD NEW STOCK"}>
                 <form onSubmit={handleAdd}>
-                    <Input label="ITEM NAME" value={newItem.name} onChange={e => setNewItem({ ...newItem, name: e.target.value })} required />
+                    <Input label="ITEM NAME" value={newItem.name} onChange={e => setNewItem({ ...newItem, name: e.target.value })} required maxLength={50} />
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                         <Input label="QUANTITY" type="number" value={newItem.quantity} onChange={e => setNewItem({ ...newItem, quantity: e.target.value })} required />
-                        <Input label="UNIT (kg, pcs)" value={newItem.unit} onChange={e => setNewItem({ ...newItem, unit: e.target.value })} required />
+                        <Input label="UNIT (kg, pcs)" value={newItem.unit} onChange={e => setNewItem({ ...newItem, unit: e.target.value })} required maxLength={20} />
                     </div>
                     <Input label="MIN THRESHOLD" type="number" value={newItem.minThreshold} onChange={e => setNewItem({ ...newItem, minThreshold: e.target.value })} required />
 

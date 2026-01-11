@@ -259,7 +259,7 @@ export default function EmployeePage() {
                 <form onSubmit={handleSubmit}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                         <Input label="EMPLOYEE ID" value={formData.employeeId} readOnly={true} placeholder="Auto-generated" />
-                        <Input label="FULL NAME" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
+                        <Input label="FULL NAME" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required maxLength={50} />
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
@@ -268,18 +268,18 @@ export default function EmployeePage() {
                         <Input label="SALARY (IDR)" type="number" value={formData.salary} onChange={e => setFormData({ ...formData, salary: e.target.value })} required />
                     </div>
 
-                    <Input label="EMAIL" type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
-                    <Input label="PHONE" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+                    <Input label="EMAIL" type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} maxLength={100} />
+                    <Input label="PHONE" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} maxLength={20} />
 
                     {editingId && (
                         <div style={{ marginBottom: '20px', padding: '10px', background: '#ffe4e6', border: '1px solid red' }}>
                             <small style={{ fontWeight: 'bold', color: 'red' }}>LEAVE PASSWORD BLANK TO KEEP CURRENT PASSWORD</small>
-                            <Input label="NEW PASSWORD" type="password" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} placeholder="Enter new password to change..." />
+                            <Input label="NEW PASSWORD" type="password" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} placeholder="Enter new password to change..." maxLength={100} />
                         </div>
                     )}
 
                     {!editingId && (
-                        <Input label="PASSWORD" type="password" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} required />
+                        <Input label="PASSWORD" type="password" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} required maxLength={100} />
                     )}
 
                     <div style={{ display: 'flex', gap: '15px', marginTop: '20px' }}>

@@ -207,6 +207,7 @@ export default function PostManagementPage({ user }) {
                         value={formData.title}
                         onChange={handleChange}
                         required
+                        maxLength={100}
                     />
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
@@ -248,6 +249,7 @@ export default function PostManagementPage({ user }) {
                         value={formData.imageUrl}
                         onChange={handleChange}
                         placeholder="https://..."
+                        maxLength={500}
                     />
 
                     <Input
@@ -257,6 +259,7 @@ export default function PostManagementPage({ user }) {
                         onChange={handleChange}
                         type="textarea"
                         style={{ input: { rows: 3 } }}
+                        maxLength={200}
                     />
 
                     <Input
@@ -266,6 +269,7 @@ export default function PostManagementPage({ user }) {
                         onChange={handleChange}
                         type="textarea"
                         style={{ input: { rows: 10, fontFamily: 'monospace' } }}
+                        maxLength={10000}
                     />
 
                     <div style={{ display: 'flex', gap: '20px' }}>
