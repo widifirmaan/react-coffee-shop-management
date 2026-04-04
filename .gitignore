@@ -3,3 +3,7 @@ backend/target/
 frontend/node_modules/
 .DS_Store
 .env
+jdk-21/
+mongodb_data/
+*.log
+mvn_output*

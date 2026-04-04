@@ -81,22 +81,37 @@ export default function ShiftPage() {
     };
 
     const handleSave = async () => {
-        // Validate Requirements: 1 Barista, 1 Cashier, 1 Waiter, 1 Kitchen Staff (Baker/Kitchen) PER SHIFT
+        // Validate Requirements: 1 Manager, 1 Barista, 1 Cashier, 1 Waiter, 1 Kitchen Staff (Baker/Kitchen) PER SHIFT
         for (const day of DAYS) {
-            for (const shiftType of SHIFTS) {
-                const shiftStaff = shifts.filter(s => s.dayOfWeek === day && s.shiftType === shiftType);
-                if (shiftStaff.length === 0) continue; // Skip empty slots
+            if (day === 'SUNDAY') continue;
 
+            for (const shiftType of SHIFTS) {
+                const shiftStaff = getShiftsFor(day, shiftType);
+
+                const hasManager = shiftStaff.some(s => s.position === 'Manager');
                 const hasBarista = shiftStaff.some(s => s.position === 'Barista');
                 const hasCashier = shiftStaff.some(s => s.position === 'Cashier');
                 const hasWaiter = shiftStaff.some(s => s.position === 'Waiter');
                 const hasKitchen = shiftStaff.some(s => ['Baker', 'Kitchen Staff', 'Chef'].includes(s.position));
 
-                if (!hasBarista || !hasCashier || !hasWaiter || !hasKitchen) {
-                    setAlertMsg({
-                        type: 'error',
-                        message: `INVALID ${day} ${shiftType}: NEED 1 BARISTA, 1 CASHIER, 1 WAITER, 1 KITCHEN`
-                    });
+                if (!hasManager) {
+                    setAlertMsg({ type: 'error', message: `Kurang staff Manager pada shift ${shiftType} hari ${day}` });
+                    return;
+                }
+                if (!hasBarista) {
+                    setAlertMsg({ type: 'error', message: `Kurang staff Barista pada shift ${shiftType} hari ${day}` });
+                    return;
+                }
+                if (!hasCashier) {
+                    setAlertMsg({ type: 'error', message: `Kurang staff Cashier pada shift ${shiftType} hari ${day}` });
+                    return;
+                }
+                if (!hasKitchen) {
+                    setAlertMsg({ type: 'error', message: `Kurang staff Kitchen pada shift ${shiftType} hari ${day}` });
+                    return;
+                }
+                if (!hasWaiter) {
+                    setAlertMsg({ type: 'error', message: `Kurang staff Waiter pada shift ${shiftType} hari ${day}` });
                     return;
                 }
             }
@@ -228,7 +243,7 @@ export default function ShiftPage() {
                                                                 boxShadow: '1px 1px 0 0 #bfdbfe'
                                                             }}>
                                                                 <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                                    <strong>{s.employeeName}</strong>
+                                                                    <strong>{s.employeeName} ({s.position})</strong>
                                                                 </div>
                                                                 <div
                                                                     onClick={() => handleRemove(s)}

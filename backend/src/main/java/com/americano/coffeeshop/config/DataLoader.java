@@ -289,24 +289,41 @@ public class DataLoader implements CommandLineRunner {
         private void seedEmployees() {
                 String defaultPassword = passwordEncoder.encode("password123");
                 List<Employee> employees = Arrays.asList(
+                                // Manager (1)
                                 createEmployee("EMP001", "Sarah Johnson", "Manager", "manager", "sarah@americano.com",
-                                                "081", "manager",
-                                                defaultPassword, 15000000),
+                                                "0811223344", "manager", defaultPassword, 15000000),
+
+                                // Barista (3)
                                 createEmployee("EMP002", "Michael Chen", "Barista", "barista", "michael@americano.com",
-                                                "082",
-                                                "barista", defaultPassword, 6500000),
+                                                "0811223345", "barista", defaultPassword, 6500000),
                                 createEmployee("EMP003", "Emma Williams", "Barista", "barista2", "emma@americano.com",
-                                                "083", "barista",
-                                                defaultPassword, 6500000),
+                                                "0811223346", "barista", defaultPassword, 6500000),
+                                createEmployee("EMP011", "David Smith", "Barista", "barista3", "david@americano.com",
+                                                "0811223347", "barista", defaultPassword, 6500000),
+
+                                // Cashier (3)
                                 createEmployee("EMP005", "Lisa Anderson", "Cashier", "cashier", "lisa@americano.com",
-                                                "084", "cashier",
-                                                defaultPassword, 5500000),
+                                                "0811223348", "cashier", defaultPassword, 5500000),
+                                createEmployee("EMP012", "Kevin Brown", "Cashier", "cashier2", "kevin@americano.com",
+                                                "0811223349", "cashier", defaultPassword, 5500000),
+                                createEmployee("EMP013", "Maria Garcia", "Cashier", "cashier3", "maria@americano.com",
+                                                "0811223350", "cashier", defaultPassword, 5500000),
+
+                                // Kitchen Staff (3)
                                 createEmployee("EMP007", "Sofia Rodriguez", "Kitchen Staff", "kitchen",
-                                                "sofia@americano.com", "085",
-                                                "kitchen", defaultPassword, 6000000),
-                                createEmployee("EMP010", "Ryan Davis", "Waiter", "waiter", "ryan@americano.com", "086",
-                                                "waiter",
-                                                defaultPassword, 5000000));
+                                                "sofia@americano.com", "0811223351", "kitchen", defaultPassword, 6000000),
+                                createEmployee("EMP014", "James Wilson", "Kitchen Staff", "kitchen2",
+                                                "james@americano.com", "0811223352", "kitchen", defaultPassword, 6000000),
+                                createEmployee("EMP015", "Linda Taylor", "Kitchen Staff", "kitchen3",
+                                                "linda@americano.com", "0811223353", "kitchen", defaultPassword, 6000000),
+
+                                // Waiter (3)
+                                createEmployee("EMP010", "Ryan Davis", "Waiter", "waiter", "ryan@americano.com",
+                                                "0811223354", "waiter", defaultPassword, 5000000),
+                                createEmployee("EMP016", "Jessica Lee", "Waiter", "waiter2", "jessica@americano.com",
+                                                "0811223355", "waiter", defaultPassword, 5000000),
+                                createEmployee("EMP017", "Robert Martinez", "Waiter", "waiter3", "robert@americano.com",
+                                                "0811223356", "waiter", defaultPassword, 5000000));
 
                 employeeRepository.saveAll(employees);
                 System.out.println("✓ Employees seeded (" + employees.size() + " staff members)");
@@ -331,38 +348,65 @@ public class DataLoader implements CommandLineRunner {
 
         private void seedShifts() {
                 shiftScheduleRepository.deleteAll();
-                List<Employee> employees = employeeRepository.findAll();
+                List<Employee> allEmployees = employeeRepository.findAll();
                 List<ShiftSchedule> schedules = new ArrayList<>();
 
-                for (Employee emp : employees) {
-                        int empIdx = employees.indexOf(emp);
-                        for (DayOfWeek day : DayOfWeek.values()) {
-                                ShiftSchedule s = new ShiftSchedule();
-                                s.setEmployeeId(emp.getEmployeeId());
-                                s.setEmployeeName(emp.getName());
-                                s.setPosition(emp.getPosition());
-                                s.setDayOfWeek(day);
+                // Helper to get employees by position
+                java.util.function.Function<String, List<Employee>> getByPos = (pos) -> allEmployees.stream()
+                                .filter(e -> e.getPosition().equalsIgnoreCase(pos))
+                                .toList();
 
-                                if (day == DayOfWeek.SUNDAY) {
-                                        s.setShiftType(ShiftSchedule.ShiftType.OFF);
-                                } else {
-                                        if (emp.getPosition().equalsIgnoreCase("Manager")) {
-                                                s.setShiftType(ShiftSchedule.ShiftType.MORNING);
-                                        } else {
-                                                int pattern = (day.getValue() + empIdx) % 3;
-                                                if (pattern == 0)
-                                                        s.setShiftType(ShiftSchedule.ShiftType.MORNING);
-                                                else if (pattern == 1)
-                                                        s.setShiftType(ShiftSchedule.ShiftType.AFTERNOON);
-                                                else
-                                                        s.setShiftType(ShiftSchedule.ShiftType.EVENING);
-                                        }
-                                }
-                                schedules.add(s);
+                List<Employee> managers = getByPos.apply("Manager");
+                List<Employee> baristas = getByPos.apply("Barista");
+                List<Employee> cashiers = getByPos.apply("Cashier");
+                List<Employee> kitchenStaff = getByPos.apply("Kitchen Staff");
+                List<Employee> waiters = getByPos.apply("Waiter");
+
+                for (DayOfWeek day : DayOfWeek.values()) {
+                        if (day == DayOfWeek.SUNDAY) {
+                                // Everyone is OFF on Sunday
+                                allEmployees.forEach(emp -> schedules.add(createShiftRecord(emp, day, ShiftSchedule.ShiftType.OFF)));
+                                continue;
                         }
+
+                        // 1. Assign Manager to ALL 3 SHIFTS
+                        if (!managers.isEmpty()) {
+                                Employee mgr = managers.get(0);
+                                schedules.add(createShiftRecord(mgr, day, ShiftSchedule.ShiftType.MORNING));
+                                schedules.add(createShiftRecord(mgr, day, ShiftSchedule.ShiftType.AFTERNOON));
+                                schedules.add(createShiftRecord(mgr, day, ShiftSchedule.ShiftType.EVENING));
+                        }
+
+                        // 2. Assign other roles (Fixed rotation: 1 per shift)
+                        assignRotation(baristas, day, schedules);
+                        assignRotation(cashiers, day, schedules);
+                        assignRotation(kitchenStaff, day, schedules);
+                        assignRotation(waiters, day, schedules);
                 }
+
                 shiftScheduleRepository.saveAll(schedules);
                 System.out.println("✓ Shift Schedules seeded (" + schedules.size() + " records)");
+        }
+
+        private void assignRotation(List<Employee> list, DayOfWeek day, List<ShiftSchedule> target) {
+                if (list.size() >= 3) {
+                        target.add(createShiftRecord(list.get(0), day, ShiftSchedule.ShiftType.MORNING));
+                        target.add(createShiftRecord(list.get(1), day, ShiftSchedule.ShiftType.AFTERNOON));
+                        target.add(createShiftRecord(list.get(2), day, ShiftSchedule.ShiftType.EVENING));
+                } else if (!list.isEmpty()) {
+                        // Fallback for smaller staff counts
+                        target.add(createShiftRecord(list.get(0), day, ShiftSchedule.ShiftType.MORNING));
+                }
+        }
+
+        private ShiftSchedule createShiftRecord(Employee emp, DayOfWeek day, ShiftSchedule.ShiftType type) {
+                ShiftSchedule s = new ShiftSchedule();
+                s.setEmployeeId(emp.getEmployeeId());
+                s.setEmployeeName(emp.getName());
+                s.setPosition(emp.getPosition());
+                s.setDayOfWeek(day);
+                s.setShiftType(type);
+                return s;
         }
 
         private void seedOrders() {

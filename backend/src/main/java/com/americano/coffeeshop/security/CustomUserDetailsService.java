@@ -16,13 +16,16 @@ public class CustomUserDetailsService implements UserDetailsService {
     private EmployeeRepository employeeRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        System.out.println("DEBUG: Attempting to load user: " + username);
-        Employee employee = employeeRepository.findByUsername(username)
-                .orElseThrow(() -> {
-                    System.out.println("DEBUG: User not found: " + username);
-                    return new UsernameNotFoundException("User not found with username: " + username);
-                });
+    public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
+        System.out.println("DEBUG: Attempting to load user: " + usernameOrEmail);
+
+        Employee employee = employeeRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with identifier: " + usernameOrEmail));
+
+        // Business Rule: If the user provided a username (no @), they MUST be a manager
+        if (!usernameOrEmail.contains("@") && !"manager".equalsIgnoreCase(employee.getRole())) {
+            throw new UsernameNotFoundException("Non-manager staff must login with Email.");
+        }
 
         System.out.println("DEBUG: User found: " + employee.getUsername());
         System.out.println("DEBUG: Stored Encoded Password: " + employee.getPassword());

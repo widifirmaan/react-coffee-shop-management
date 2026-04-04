@@ -95,7 +95,7 @@ function LoginPage({ onLogin }) {
                             type="text"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            placeholder="USERNAME"
+                            placeholder="EMAIL OR USERNAME"
                             required
                         />
                     </div>
@@ -116,7 +116,7 @@ function LoginPage({ onLogin }) {
 
                 <div style={{ marginTop: '30px', borderTop: '2px solid black', paddingTop: '15px' }}>
                     <p style={{ fontWeight: 700, margin: '5px 0' }}>MANAGER: manager / password123</p>
-                    <p style={{ fontWeight: 700, margin: '5px 0' }}>BARISTA: barista / password123</p>
+                    <p style={{ fontWeight: 700, margin: '5px 0' }}>BARISTA: michael@americano.com / password123</p>
                 </div>
             </div>
 

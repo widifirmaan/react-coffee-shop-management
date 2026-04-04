@@ -86,25 +86,43 @@ Explore the comprehensive features of **Siap Nyafe** through our gallery.
 
 ## 📦 Getting Started
 
-### Prerequisites
-*   **Java JDK 17+** (JDK 21 Recommended)
-*   **Node.js 18+**
-*   **MongoDB**
+### 1. Database (MongoDB)
+Start the local MongoDB instance using the provided data directory:
+```bash
+/usr/bin/mongod --dbpath ./mongodb_data --port 27017 --fork --logpath ./mongodb.log --bind_ip 127.0.0.1
+```
 
-### 1. Backend Setup
+### 2. Backend Server (Spring Boot)
+Ensure you have **JDK 21** installed. Navigate to the backend directory and run:
 ```bash
 cd backend
 ./mvnw spring-boot:run
 ```
 *Server runs on `http://localhost:8080`*
 
-### 2. Frontend Setup
+### 3. Frontend Client (React + Vite)
+Navigate to the frontend directory, install dependencies, and start the development server:
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-*Client runs on `http://localhost:3000`*
+*Client runs on `http://localhost:8085`*
+
+---
+
+## 🔑 Access & Credentials
+
+| Role | Access URL | Identifier | Password |
+| :--- | :--- | :--- | :--- |
+| **Manager** | `http://localhost:8085/login` | `manager` | `password123` |
+| **Staff** | `http://localhost:8085/login` | *Employee Email* | `password123` |
+| **Customer** | `http://localhost:8085/order` | N/A | N/A |
+
+> [!TIP]
+> - **Default Staff Email**: You can use `michael@americano.com` for testing.
+> - **Data Reset**: To reset or re-seed the database with dummy data, visit `http://localhost:8080/api/seeder/run` while the backend is running.
+
 
 ---
 

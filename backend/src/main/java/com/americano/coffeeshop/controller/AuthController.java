@@ -61,7 +61,8 @@ public class AuthController {
 
         securityContextRepository.saveContext(context, request, response);
 
-        Employee employee = employeeRepository.findByUsername(loginRequest.getUsername()).orElseThrow();
+        Employee employee = employeeRepository.findByUsernameOrEmail(loginRequest.getUsername(), loginRequest.getUsername())
+                .orElseThrow(() -> new RuntimeException("Logged in user not found in database"));
 
         // Treat null as true (legacy users)
         if (Boolean.FALSE.equals(employee.getActive())) {
