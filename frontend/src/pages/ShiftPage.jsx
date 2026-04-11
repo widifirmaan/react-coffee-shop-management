@@ -16,6 +16,7 @@ export default function ShiftPage() {
     const [shifts, setShifts] = useState([]);
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
     const [alertMsg, setAlertMsg] = useState(null);
     const [selectedSlot, setSelectedSlot] = useState(null); // { day, shift }
 
@@ -82,6 +83,7 @@ export default function ShiftPage() {
     };
 
     const handleSave = async () => {
+        setIsSaving(true);
         // Validation: Every shift must have at least one staff member
         for (const day of DAYS) {
             for (const shiftType of SHIFTS) {
@@ -97,6 +99,7 @@ export default function ShiftPage() {
                         type: 'error', 
                         message: `Shift ${shiftType} pada ${day} kekurangan: ${missingRoles.join(', ')}` 
                     });
+                    setIsSaving(false);
                     return;
                 }
             }
@@ -109,6 +112,8 @@ export default function ShiftPage() {
             console.error(e);
             const errMsg = e.response?.data?.message || 'SAVE FAILED';
             setAlertMsg({ type: 'error', message: errMsg });
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -165,8 +170,8 @@ export default function ShiftPage() {
                 icon={Calendar}
                 color="#c4b5fd"
                 action={
-                    <Button onClick={handleSave} variant="primary" style={{ padding: '15px 30px', fontSize: '1.2rem' }}>
-                        <Save size={20} /> SAVE SCHEDULE
+                    <Button onClick={handleSave} disabled={isSaving} variant="primary" style={{ padding: '15px 30px', fontSize: '1.2rem' }}>
+                        <Save size={20} /> {isSaving ? 'SAVING...' : 'SAVE SCHEDULE'}
                     </Button>
                 }
             />
