@@ -140,4 +140,15 @@ router.post('/run', async (req, res) => {
     }
 });
 
+// Also allow GET request so it can be easily triggered from the browser URL bar
+router.get('/run', async (req, res) => {
+    try {
+        await seedDatabase();
+        res.json({ message: "Seeding completed successfully via GET" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
 module.exports = { router, seedDatabase };

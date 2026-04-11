@@ -2,7 +2,6 @@ version: '3.8'
 
 services:
   # Service 'mongo' DIHAPUS karena kita menggunakan yang sudah ada
-
   backend:
     build: ./backend
     container_name: americano-backend
