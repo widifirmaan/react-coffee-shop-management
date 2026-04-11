@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowRight, Star, Coffee, Zap, X, ChevronLeft, ChevronRight, ArrowUp } from 'lucide-react';
+import { ArrowRight, Star, Coffee, Zap, X, ChevronLeft, ChevronRight, ArrowUp, Instagram, Facebook, Twitter, Youtube, Globe, Mail, Phone, Linkedin, Github } from 'lucide-react';
 import ImageModal from '../components/ui/ImageModal';
 import MenuDetailModal from '../components/ui/MenuDetailModal';
 import CategorySelector from '../components/ui/CategorySelector';
@@ -173,7 +173,8 @@ export default function CMSPage() {
             background: '#FCD34D', // Yellow background for Info Layer
             color: '#000',
             minHeight: '100vh',
-            overflow: 'hidden',
+            overflowX: 'hidden',
+            overflowY: 'auto',
             fontFamily: "'Inter', sans-serif",
             position: 'relative',
         }}>
@@ -388,7 +389,7 @@ export default function CMSPage() {
                 </div>
             </div>
 
-            <div style={{ position: 'relative', height: isMobile ? 'auto' : 'calc(100vh - 160px)', overflow: isMobile ? 'auto' : 'hidden' }}>
+            <div style={{ position: 'relative', height: '91vh', overflow: isMobile ? 'auto' : 'hidden' }}>
 
                 {/* INFO LAYER (Background) */}
                 <div style={{
@@ -581,7 +582,7 @@ export default function CMSPage() {
                                     {[...(shopConfig?.galleryImages || []), ...(shopConfig?.galleryImages || [])].map((img, i) => (
                                         <div key={i} style={{ width: '100%', padding: '0', borderBottom: '4px solid black' }}>
                                             <img
-                                                src={`${img}?auto=format&fit=crop&w=400&q=80`}
+                                                src={img.startsWith('data:') ? img : `${img}?auto=format&fit=crop&w=400&q=80`}
                                                 alt="Cafe Vibe"
                                                 onClick={() => setExpandedImage(img)}
                                                 style={{
@@ -620,6 +621,69 @@ export default function CMSPage() {
                                     LATEST DROP
                                 </button>
                             </div>
+                        </div>
+
+                        {/* Social Links */}
+                        <div style={{ zIndex: 10, marginTop: '40px', display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+                            {(() => {
+                                const iconMap = {
+                                    Instagram: Instagram,
+                                    Facebook: Facebook,
+                                    Twitter: Twitter,
+                                    Youtube: Youtube,
+                                    Globe: Globe,
+                                    Mail: Mail,
+                                    Phone: Phone,
+                                    Linkedin: Linkedin,
+                                    Github: Github
+                                };
+
+                                return (
+                                    <>
+                                        {(shopConfig?.socialLinks || []).map((link, i) => {
+                                            const IconComponent = iconMap[link.icon] || Globe;
+                                            return (
+                                                <a key={i} href={link.url} target="_blank" rel="noreferrer"
+                                                    style={{
+                                                        color: 'black', padding: '10px', border: '3px solid black',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        background: '#FCD34D', boxShadow: '4px 4px 0 0 black',
+                                                        transition: 'all 0.2s', pointerEvents: 'auto'
+                                                    }}
+                                                    title={link.platform}
+                                                    onMouseEnter={e => { e.currentTarget.style.transform = 'translate(-2px, -2px)'; e.currentTarget.style.boxShadow = '6px 6px 0 0 black'; }}
+                                                    onMouseLeave={e => { e.currentTarget.style.transform = 'translate(0, 0)'; e.currentTarget.style.boxShadow = '4px 4px 0 0 black'; }}
+                                                >
+                                                    <IconComponent size={20} />
+                                                </a>
+                                            );
+                                        })}
+                                        {/* Fallback for legacy fields if socialLinks is empty */}
+                                        {(!shopConfig?.socialLinks || shopConfig.socialLinks.length === 0) && (
+                                            <>
+                                                {shopConfig?.instagramUrl && (
+                                                    <a href={shopConfig.instagramUrl} target="_blank" rel="noreferrer"
+                                                        style={{ color: 'black', padding: '10px', border: '3px solid black', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FCD34D', boxShadow: '4px 4px 0 0 black', transition: 'all 0.2s', pointerEvents: 'auto' }}
+                                                        onMouseEnter={e => { e.currentTarget.style.transform = 'translate(-2px, -2px)'; e.currentTarget.style.boxShadow = '6px 6px 0 0 black'; }}
+                                                        onMouseLeave={e => { e.currentTarget.style.transform = 'translate(0, 0)'; e.currentTarget.style.boxShadow = '4px 4px 0 0 black'; }}
+                                                    >
+                                                        <Instagram size={20} />
+                                                    </a>
+                                                )}
+                                                {shopConfig?.facebookUrl && (
+                                                    <a href={shopConfig.facebookUrl} target="_blank" rel="noreferrer"
+                                                        style={{ color: 'black', padding: '10px', border: '3px solid black', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FCD34D', boxShadow: '4px 4px 0 0 black', transition: 'all 0.2s', pointerEvents: 'auto' }}
+                                                        onMouseEnter={e => { e.currentTarget.style.transform = 'translate(-2px, -2px)'; e.currentTarget.style.boxShadow = '6px 6px 0 0 black'; }}
+                                                        onMouseLeave={e => { e.currentTarget.style.transform = 'translate(0, 0)'; e.currentTarget.style.boxShadow = '4px 4px 0 0 black'; }}
+                                                    >
+                                                        <Facebook size={20} />
+                                                    </a>
+                                                )}
+                                            </>
+                                        )}
+                                    </>
+                                );
+                            })()}
                         </div>
                     </div>
                 </div>
@@ -745,16 +809,16 @@ export default function CMSPage() {
             {/* Mobile Sticky Action Button */}
             {isMobile && (
                 <a href="https://wa.me/628123456789" target="_blank" rel="noopener noreferrer" style={{
-                    position: 'fixed', bottom: '40px', right: '20px', left: 'auto',
+                    position: 'fixed', bottom: '20px', right: '20px', left: 'auto',
                     background: '#FCD34D', color: 'black',
                     padding: '15px 25px', border: '4px solid black',
                     boxShadow: '6px 6px 0 0 black',
                     textDecoration: 'none', fontWeight: '900', fontSize: '1.2rem',
                     display: 'flex', alignItems: 'center', gap: '10px',
-                    zIndex: 2000,
+                    zIndex: (isInfoOpen || isMenuOpen) ? -1 : 2000,
                     opacity: (isInfoOpen || isMenuOpen) ? 0 : 1,
                     pointerEvents: (isInfoOpen || isMenuOpen) ? 'none' : 'auto',
-                    transition: 'opacity 0.3s'
+                    transition: 'opacity 0.3s, z-index 0.3s'
                 }}>
                     <span>RESERVE</span>
                     <ArrowRight size={20} />
@@ -763,7 +827,7 @@ export default function CMSPage() {
 
             {/* Sticker / Badge */}
             <div style={{
-                position: 'fixed', bottom: '40px',
+                position: 'fixed', bottom: '20px',
                 right: isMobile ? 'auto' : '40px',
                 left: isMobile ? '20px' : 'auto',
                 width: isMobile ? 'auto' : '120px',
@@ -781,8 +845,10 @@ export default function CMSPage() {
                 boxShadow: isMobile ? '8px 8px 0 0 black' : '0 0 0 4px #000',
                 cursor: 'pointer',
                 animation: isMobile ? 'none' : 'float 4s ease-in-out infinite reverse',
-                zIndex: 100,
-                opacity: (isInfoOpen || isMenuOpen) ? 0 : 1, transition: 'opacity 0.5s'
+                zIndex: (isInfoOpen || isMenuOpen) ? -1 : 100,
+                opacity: (isInfoOpen || isMenuOpen) ? 0 : 1,
+                pointerEvents: (isInfoOpen || isMenuOpen) ? 'none' : 'auto',
+                transition: 'opacity 0.5s, z-index 0.5s'
             }}>
                 {isMobile ? (
                     <div style={{ lineHeight: 1, whiteSpace: 'nowrap', textTransform: 'uppercase' }}>
@@ -791,22 +857,6 @@ export default function CMSPage() {
                 ) : (
                     <>{shopConfig?.badgeText1 || 'EST 2024'}<br />{shopConfig?.badgeText2 || 'JAKARTA'}</>
                 )}
-            </div>
-            {/* Bottom Marquee (Checkerboard Pattern) */}
-            <div className="marquee-container" style={{ position: 'relative', width: '100%', zIndex: 10, padding: 0, height: '50px', background: 'white', borderTop: '4px solid black', borderBottom: 'none' }}>
-                <div className="marquee-content" style={{ animationName: 'marquee-reverse', animationDuration: '4s' }}>
-                    {/* Repeat blocks to ensure seamless loop */}
-                    {[...Array(20)].map((_, groupIndex) => (
-                        <div key={groupIndex} style={{ display: 'flex' }}>
-                            {[...Array(4)].map((_, i) => (
-                                <div key={i} style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <div style={{ width: '50px', height: '25px', background: i % 2 === 0 ? 'black' : 'white' }} />
-                                    <div style={{ width: '50px', height: '25px', background: i % 2 === 0 ? 'white' : 'black' }} />
-                                </div>
-                            ))}
-                        </div>
-                    ))}
-                </div>
             </div>
 
             {/* PROMO & NEWS SECTION (Fixed Overlay Gate) */}

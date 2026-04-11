@@ -139,7 +139,7 @@ input:focus {
     padding: 0 15px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1367px) {
     .container {
         padding: 0 10px;
     }
@@ -188,6 +188,15 @@ input:focus {
 .nav-links {
     display: flex;
     gap: 10px;
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+    padding: 5px 0;
+    max-width: 100%;
+}
+
+.nav-links::-webkit-scrollbar {
+    display: none; /* Chrome/Safari/Webkit */
 }
 
 .nav-link {
@@ -197,6 +206,7 @@ input:focus {
     text-transform: uppercase;
     padding: 8px;
     border: 3px solid transparent;
+    white-space: nowrap;
 }
 
 .nav-link:hover {
@@ -258,7 +268,7 @@ input:focus {
     border: 1px solid white;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1367px) {
     .hamburger {
         display: flex;
     }
@@ -472,7 +482,7 @@ input:focus {
     font-size: 1.5rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1367px) {
     .card-title {
         font-size: 1.1rem;
     }
@@ -483,7 +493,7 @@ input:focus {
     font-size: 1.4rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1367px) {
     .menu-item-title {
         font-size: 1.1rem;
     }
@@ -494,7 +504,7 @@ input:focus {
     font-size: 2rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1367px) {
     .category-header {
         font-size: 1.5rem;
     }
@@ -506,7 +516,7 @@ input:focus {
     margin-bottom: 50px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1367px) {
     .page-header-container {
         padding: 15px;
         flex-direction: column;
@@ -525,7 +535,7 @@ input:focus {
     font-size: 1.2rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1367px) {
     .page-header-title {
         font-size: 1.8rem;
     }
@@ -543,10 +553,10 @@ input:focus {
 /* Navbar Responsive Styles */
 .navbar-greeting {
     padding: 5px 40px;
-    fontSize: 0.9rem;
+    font-size: 0.9rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1367px) {
     .navbar-brand {
         font-size: 1.5rem;
         padding: 5px 10px;
@@ -568,14 +578,14 @@ input:focus {
     font-size: 3rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1367px) {
     .page-title {
         font-size: 2rem;
     }
 }
 
 /* Responsive Pagination */
-@media (max-width: 768px) {
+@media (max-width: 1367px) {
     .pagination-container {
         flex-direction: column;
         gap: 15px;
@@ -605,7 +615,7 @@ input:focus {
     overflow-x: hidden;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1367px) {
     .kitchen-page-container {
         padding: 20px;
     }
@@ -618,7 +628,7 @@ input:focus {
     overflow-x: hidden;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1367px) {
     .page-container {
         padding: 20px;
     }
@@ -630,7 +640,7 @@ input:focus {
     gap: 30px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1367px) {
     .menu-modal-grid {
         grid-template-columns: 1fr;
     }

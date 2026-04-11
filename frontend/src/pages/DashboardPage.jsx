@@ -57,8 +57,8 @@ export default function DashboardPage({ user }) {
     const weekDates = getWeekDates();
 
     // Helper for case-insensitive role check
-    const isManager = user && (user.role === 'MANAGER' || user.role === 'manager');
-    const isWaiter = user && (['WAITER', 'waiter', 'MANAGER', 'manager'].includes(user.role));
+    const isManager = user && user.role && user.role.toUpperCase() === 'MANAGER';
+    const isWaiter = user?.role && ['WAITER', 'MANAGER'].includes(user.role.toUpperCase());
 
     useEffect(() => {
         fetchDashboardData();

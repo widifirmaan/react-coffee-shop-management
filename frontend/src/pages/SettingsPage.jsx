@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Save, Globe, Phone, MapPin, Image, Hash, Instagram, Facebook, Upload, Star } from 'lucide-react';
+import { Save, Globe, Phone, MapPin, Image, Hash, Instagram, Facebook, Upload, Star, Trash2 } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Input, Select } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
@@ -56,7 +56,7 @@ export default function SettingsPage() {
         }
     };
 
-    const handleFileUpload = async (e, fieldName) => {
+    const handleFileUpload = async (e, fieldName, index = null) => {
         const file = e.target.files[0];
         if (!file) return;
 
@@ -68,7 +68,16 @@ export default function SettingsPage() {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             const newUrl = res.data;
-            setConfig(prev => ({ ...prev, [fieldName]: newUrl }));
+            
+            if (index !== null) {
+                setConfig(prev => {
+                    const newImages = [...(prev.galleryImages || [])];
+                    newImages[index] = newUrl;
+                    return { ...prev, galleryImages: newImages };
+                });
+            } else {
+                setConfig(prev => ({ ...prev, [fieldName]: newUrl }));
+            }
             setAlertMsg({ type: 'success', message: 'IMAGE UPLOADED! CLICK SAVE.' });
         } catch (e) {
             console.error(e);
@@ -79,6 +88,10 @@ export default function SettingsPage() {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setConfig(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleDeleteHeroImage = () => {
+        setConfig(prev => ({ ...prev, heroImageUrl: '' }));
     };
 
     if (loading) return <div style={{ padding: '50px', fontWeight: 'bold' }}>LOADING SETTINGS...</div>;
@@ -163,6 +176,16 @@ export default function SettingsPage() {
                                     </div>
                                     <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleFileUpload(e, 'heroImageUrl')} />
                                 </label>
+                                {config.heroImageUrl && (
+                                    <Button
+                                        type="button"
+                                        variant="danger"
+                                        onClick={handleDeleteHeroImage}
+                                        style={{ padding: '15px' }}
+                                    >
+                                        <Trash2 size={20} />
+                                    </Button>
+                                )}
                             </div>
                             {config.heroImageUrl && (
                                 <img
@@ -220,7 +243,7 @@ export default function SettingsPage() {
 
                                     {url && (
                                         <img
-                                            src={`${url}?auto=format&fit=crop&w=100&q=80`}
+                                            src={url.startsWith('data:') ? url : `${url}?auto=format&fit=crop&w=100&q=80`}
                                             alt={`Preview ${index + 1}`}
                                             style={{ width: '56px', height: '56px', objectFit: 'cover', border: '3px solid black', flexShrink: 0 }}
                                             onError={(e) => { e.target.style.display = 'none'; }}
@@ -232,27 +255,7 @@ export default function SettingsPage() {
                                             type="file"
                                             accept="image/*"
                                             style={{ display: 'none' }}
-                                            onChange={async (e) => {
-                                                const file = e.target.files[0];
-                                                if (!file) return;
-
-                                                const formData = new FormData();
-                                                formData.append('file', file);
-
-                                                try {
-                                                    const res = await axios.post('/api/uploads', formData, {
-                                                        headers: { 'Content-Type': 'multipart/form-data' }
-                                                    });
-                                                    const newUrl = res.data;
-                                                    const newImages = [...(config.galleryImages || [])];
-                                                    newImages[index] = newUrl;
-                                                    setConfig({ ...config, galleryImages: newImages });
-                                                    setAlertMsg({ type: 'success', message: 'GALLERY IMAGE UPLOADED!' });
-                                                } catch (e) {
-                                                    console.error(e);
-                                                    setAlertMsg({ type: 'error', message: 'UPLOAD FAILED' });
-                                                }
-                                            }}
+                                            onChange={(e) => handleFileUpload(e, 'galleryImages', index)}
                                         />
                                         <div
                                             className="brutalist-btn"

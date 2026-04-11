@@ -58,16 +58,17 @@ export default function ShiftPage() {
             return;
         }
 
-        // Limit to 5 staff per shift CHECK REMOVED
+        // Limit to 5 staff per shift
         const currentShifts = shifts.filter(s => s.dayOfWeek === day && s.shiftType === shiftType);
-        // if (currentShifts.length >= 5) {
-        //     setAlertMsg({ type: 'error', message: 'MAX 5 STAFF PER SHIFT!' });
-        //     return;
-        // }
+        if (currentShifts.length >= 5) {
+            setAlertMsg({ type: 'error', message: 'MAX 5 STAFF PER SHIFT!' });
+            return;
+        }
 
         const newShift = {
             employeeId: emp.employeeId,
             employeeName: emp.name,
+            role: emp.role, // Added for validation
             position: emp.position,
             dayOfWeek: day,
             shiftType: shiftType
@@ -81,37 +82,21 @@ export default function ShiftPage() {
     };
 
     const handleSave = async () => {
-        // Validate Requirements: 1 Manager, 1 Barista, 1 Cashier, 1 Waiter, 1 Kitchen Staff (Baker/Kitchen) PER SHIFT
+        // Validation: Every shift must have at least one staff member
         for (const day of DAYS) {
-            if (day === 'SUNDAY') continue;
-
             for (const shiftType of SHIFTS) {
                 const shiftStaff = getShiftsFor(day, shiftType);
+                
+                // Strict 5-Role Validation
+                const requiredRoles = ['MANAGER', 'BARISTA', 'CASHIER', 'KITCHEN STAFF', 'WAITER'];
+                const currentRoles = shiftStaff.map(s => s.role?.toUpperCase());
+                const missingRoles = requiredRoles.filter(role => !currentRoles.includes(role));
 
-                const hasManager = shiftStaff.some(s => s.position === 'Manager');
-                const hasBarista = shiftStaff.some(s => s.position === 'Barista');
-                const hasCashier = shiftStaff.some(s => s.position === 'Cashier');
-                const hasWaiter = shiftStaff.some(s => s.position === 'Waiter');
-                const hasKitchen = shiftStaff.some(s => ['Baker', 'Kitchen Staff', 'Chef'].includes(s.position));
-
-                if (!hasManager) {
-                    setAlertMsg({ type: 'error', message: `Kurang staff Manager pada shift ${shiftType} hari ${day}` });
-                    return;
-                }
-                if (!hasBarista) {
-                    setAlertMsg({ type: 'error', message: `Kurang staff Barista pada shift ${shiftType} hari ${day}` });
-                    return;
-                }
-                if (!hasCashier) {
-                    setAlertMsg({ type: 'error', message: `Kurang staff Cashier pada shift ${shiftType} hari ${day}` });
-                    return;
-                }
-                if (!hasKitchen) {
-                    setAlertMsg({ type: 'error', message: `Kurang staff Kitchen pada shift ${shiftType} hari ${day}` });
-                    return;
-                }
-                if (!hasWaiter) {
-                    setAlertMsg({ type: 'error', message: `Kurang staff Waiter pada shift ${shiftType} hari ${day}` });
+                if (missingRoles.length > 0) {
+                    setAlertMsg({ 
+                        type: 'error', 
+                        message: `Shift ${shiftType} pada ${day} kekurangan: ${missingRoles.join(', ')}` 
+                    });
                     return;
                 }
             }
@@ -122,7 +107,8 @@ export default function ShiftPage() {
             setAlertMsg({ type: 'success', message: 'SCHEDULE SAVED!' });
         } catch (e) {
             console.error(e);
-            setAlertMsg({ type: 'error', message: 'SAVE FAILED' });
+            const errMsg = e.response?.data?.message || 'SAVE FAILED';
+            setAlertMsg({ type: 'error', message: errMsg });
         }
     };
 
@@ -133,8 +119,15 @@ export default function ShiftPage() {
     // Validation
     const validateShift = (day, shiftType) => {
         const currentShifts = getShiftsFor(day, shiftType);
-        if (currentShifts.length === 0) return { type: 'error', msg: 'EMPTY' };
-        return { type: 'ok', msg: `${currentShifts.length} Staff` };
+        if (currentShifts.length === 0) return { type: 'error', msg: 'KOSONG' };
+        
+        const requiredRoles = ['MANAGER', 'BARISTA', 'CASHIER', 'KITCHEN STAFF', 'WAITER'];
+        const currentRoles = currentShifts.map(s => s.role?.toUpperCase());
+        const missingCount = requiredRoles.filter(role => !currentRoles.includes(role)).length;
+        
+        if (missingCount > 0) return { type: 'error', msg: `${missingCount} ROLE KURANG` };
+        
+        return { type: 'ok', msg: 'LENGKAP' };
     };
 
     // DnD Handlers

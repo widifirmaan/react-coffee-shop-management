@@ -1,0 +1,18 @@
+{
+  "name": "siap-nyafe-monolith",
+  "version": "1.0.0",
+  "description": "Monolith Coffee Shop Management System",
+  "main": "api/index.js",
+  "scripts": {
+    "api:install": "cd api && npm install",
+    "frontend:install": "cd frontend && npm install",
+    "frontend:build": "cd frontend && npm run build",
+    "install-all": "npm install && npm run api:install && npm run frontend:install",
+    "build": "npm run frontend:build",
+    "start": "node api/index.js",
+    "dev": "concurrently \"cd api && node index.js\" \"cd frontend && npm run dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

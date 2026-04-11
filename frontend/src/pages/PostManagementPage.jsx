@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Trash, Plus } from 'lucide-react';
+import { Trash, Plus, Upload, Image as ImageIcon } from 'lucide-react';
+import { useRef } from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input, Select } from '../components/ui/Input';
@@ -13,11 +14,14 @@ import SearchBar from '../components/ui/SearchBar';
 import PageHeader from '../components/ui/PageHeader';
 
 export default function PostManagementPage({ user }) {
+    const fileInputRef = useRef(null);
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [modalOpen, setModalOpen] = useState(false);
     const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
     const [alertMsg, setAlertMsg] = useState(null);
+    const [uploading, setUploading] = useState(false);
+    const [saving, setSaving] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 8;
@@ -28,7 +32,7 @@ export default function PostManagementPage({ user }) {
         title: '',
         excerpt: '',
         content: '',
-        imageUrl: '',
+        featuredImage: '',
         category: 'NEWS',
         status: 'DRAFT',
         createdAt: new Date().toISOString().slice(0, 16) // Format for datetime-local
@@ -52,12 +56,12 @@ export default function PostManagementPage({ user }) {
     const handleEdit = (post) => {
         setFormData({
             id: post.id,
-            title: post.title,
-            excerpt: post.excerpt,
-            content: post.content,
-            imageUrl: post.imageUrl,
-            category: post.category,
-            status: post.status,
+            title: post.title || '',
+            excerpt: post.excerpt || '',
+            content: post.content || '',
+            featuredImage: post.featuredImage || '',
+            category: post.category || 'NEWS',
+            status: post.status || 'DRAFT',
             createdAt: post.createdAt ? new Date(post.createdAt).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16)
         });
         setModalOpen(true);
@@ -81,8 +85,36 @@ export default function PostManagementPage({ user }) {
         });
     };
 
+    const handleFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setUploading(true);
+        const fileData = new FormData();
+        fileData.append('file', file);
+
+        try {
+            const res = await axios.post('/api/uploads', fileData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            // The API returns the Base64 Data URI directly
+            setFormData(prev => ({ ...prev, featuredImage: res.data }));
+            setAlertMsg({ type: 'success', message: 'IMAGE UPLOADED!' });
+        } catch (e) {
+            console.error(e);
+            setAlertMsg({ type: 'error', message: 'UPLOAD FAILED!' });
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const handleDeleteImage = () => {
+        setFormData(prev => ({ ...prev, featuredImage: '' }));
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setSaving(true);
         try {
             if (formData.id) {
                 // Update
@@ -92,10 +124,17 @@ export default function PostManagementPage({ user }) {
                 await axios.post('/api/posts', formData);
             }
             setModalOpen(false);
+            
+            // Clear search and reset to page 1 so the new/edited post is visible
+            setSearchTerm('');
+            setCurrentPage(1);
+            
             fetchPosts();
             setAlertMsg({ type: 'success', message: 'POST SAVED!' });
         } catch (e) {
             setAlertMsg({ type: 'error', message: 'FAILED TO SAVE!' });
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -109,7 +148,7 @@ export default function PostManagementPage({ user }) {
             title: '',
             excerpt: '',
             content: '',
-            imageUrl: '',
+            featuredImage: '',
             category: 'NEWS',
             status: 'DRAFT',
             createdAt: new Date().toISOString().slice(0, 16) // Today's date
@@ -118,8 +157,8 @@ export default function PostManagementPage({ user }) {
     };
 
     const filteredPosts = posts.filter(p =>
-        p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.category.toLowerCase().includes(searchTerm.toLowerCase())
+        (p.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (p.category || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const totalPages = Math.ceil(filteredPosts.length / itemsPerPage);
@@ -152,8 +191,8 @@ export default function PostManagementPage({ user }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '30px' }}>
                 {paginatedPosts.map(post => (
                     <Card key={post.id} style={{ display: 'flex', flexDirection: 'column' }}>
-                        {post.imageUrl && (
-                            <img src={post.imageUrl} style={{ width: '100%', height: '200px', objectFit: 'cover', border: '2px solid black', marginBottom: '15px' }} onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }} />
+                        {post.featuredImage && (
+                            <img src={post.featuredImage} style={{ width: '100%', height: '200px', objectFit: 'cover', border: '2px solid black', marginBottom: '15px' }} onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }} />
                         )}
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                             <span style={{ background: post.status === 'PUBLISHED' ? '#86efac' : '#e5e7eb', padding: '5px 10px', fontWeight: 'bold', fontSize: '0.8rem', border: '2px solid black' }}>{post.status}</span>
@@ -243,14 +282,47 @@ export default function PostManagementPage({ user }) {
                         required
                     />
 
-                    <Input
-                        label="IMAGE URL"
-                        name="imageUrl"
-                        value={formData.imageUrl}
-                        onChange={handleChange}
-                        placeholder="https://..."
-                        maxLength={500}
-                    />
+                    <div style={{ marginBottom: '20px' }}>
+                        <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '10px', fontSize: '0.8rem' }}>POST IMAGE</label>
+                        <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
+                            <div style={{ flex: 1 }}>
+                                <Input
+                                    label="IMAGE URL"
+                                    name="featuredImage"
+                                    value={formData.featuredImage}
+                                    onChange={handleChange}
+                                    placeholder="https://..."
+                                    maxLength={2000} // Increased for Base64
+                                />
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <Button type="button" onClick={() => fileInputRef.current?.click()} variant="secondary" disabled={uploading} style={{ fontSize: '0.8rem', padding: '10px' }}>
+                                        <Upload size={16} style={{ marginRight: '8px' }} /> {uploading ? 'UPLOADING...' : 'UPLOAD FILE'}
+                                    </Button>
+                                    {formData.featuredImage && (
+                                        <Button type="button" onClick={handleDeleteImage} variant="danger" style={{ fontSize: '0.8rem', padding: '10px' }}>
+                                            <Trash size={16} />
+                                        </Button>
+                                    )}
+                                </div>
+                                <input 
+                                    type="file" 
+                                    ref={fileInputRef} 
+                                    onChange={handleFileUpload} 
+                                    hidden 
+                                    accept="image/*" 
+                                />
+                            </div>
+                            {formData.featuredImage ? (
+                                <div style={{ width: '120px', height: '120px', border: '3px solid black', shadow: '4px 4px 0 0 black', overflow: 'hidden', background: '#f3f4f6' }}>
+                                    <img src={formData.featuredImage} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                </div>
+                            ) : (
+                                <div style={{ width: '120px', height: '120px', border: '3px dashed #ccc', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ccc' }}>
+                                    <ImageIcon size={40} />
+                                </div>
+                            )}
+                        </div>
+                    </div>
 
                     <Input
                         label="EXCERPT (Short Summary)"
@@ -274,7 +346,9 @@ export default function PostManagementPage({ user }) {
 
                     <div style={{ display: 'flex', gap: '20px' }}>
                         <Button onClick={() => setModalOpen(false)} variant="secondary" style={{ flex: 1 }}>CANCEL</Button>
-                        <Button type="submit" variant="primary" style={{ flex: 1 }}>SAVE POST</Button>
+                        <Button type="submit" variant="primary" style={{ flex: 1 }} disabled={saving}>
+                            {saving ? 'SAVING...' : 'SAVE POST'}
+                        </Button>
                     </div>
                 </form>
             </Modal>

@@ -93,7 +93,7 @@ export default function ImageModal({ imageUrl, onClose, alt = 'Expanded view' })
                     onClick={e => e.stopPropagation()}
                 >
                     <img
-                        src={`${imageUrl}?auto=format&fit=crop&w=1200&q=90`}
+                        src={imageUrl && imageUrl.startsWith('data:') ? imageUrl : `${imageUrl}?auto=format&fit=crop&w=1200&q=90`}
                         alt={alt}
                         style={{
                             maxWidth: '100%',

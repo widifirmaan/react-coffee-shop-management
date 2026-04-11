@@ -4,7 +4,8 @@ import { Button } from './Button';
 
 export const NotificationCard = ({ notification, onDismiss }) => {
     // Format timestamp
-    const timeString = new Date(notification.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const timestamp = notification.timestamp || notification.createdAt;
+    const timeString = timestamp ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--';
 
     const isPayment = notification.message?.toLowerCase().includes('bill') || notification.message?.toLowerCase().includes('payment');
     const isAssistance = notification.message?.toLowerCase().includes('assistance');

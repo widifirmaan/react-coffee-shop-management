@@ -1,9 +1,10 @@
 # ☕ Siap Nyafe - Modern Coffee Shop Management System
 
-**Siap Nyafe** is a state-of-the-art, web-based Point of Sale (POS) and Management System designed specifically for modern coffee shops. Built with a high-performance **Spring Boot** backend and a dynamic **React** frontend, it features a distinctive **Neo-Brutalist** design language that sets it apart from generic management tools.
+**Siap Nyafe** is a state-of-the-art, web-based Point of Sale (POS) and Management System designed specifically for modern coffee shops. Built with a high-performance **Node.js (Express)** backend and a dynamic **React** frontend, it features a distinctive **Neo-Brutalist** design language that sets it apart from generic management tools.
 
 ![Status](https://img.shields.io/badge/Status-Active_Development-success?style=for-the-badge)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.2.1-green?style=for-the-badge&logo=spring)
+![Node.js](https://img.shields.io/badge/Node.js-20.x-green?style=for-the-badge&logo=node.js)
+![Express](https://img.shields.io/badge/Express-4.18-black?style=for-the-badge&logo=express)
 ![React](https://img.shields.io/badge/React-18-blue?style=for-the-badge&logo=react)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Latest-forestgreen?style=for-the-badge&logo=mongodb)
 
@@ -53,10 +54,10 @@ Explore the comprehensive features of **Siap Nyafe** through our gallery.
 ## 🛠 Tech Stack
 
 ### Backend (API Server)
-*   **Framework**: Java 21 + Spring Boot 3.2.1
-*   **Database**: MongoDB
-*   **Security**: Spring Security (JWT/Session)
-*   **Build Tool**: Maven
+*   **Framework**: Node.js + Express.js
+*   **Database**: MongoDB (Mongoose)
+*   **Security**: JWT (JSON Web Tokens) & Bcryptjs
+*   **Runtime**: Node 18+ or 20+
 
 ### Frontend (Client App)
 *   **Framework**: React.js 18
@@ -70,44 +71,54 @@ Explore the comprehensive features of **Siap Nyafe** through our gallery.
 
 ```bash
 /
-├── backend/                 # Spring Boot Server
-│   ├── src/main/java/...   # Controllers, Services, Models
-│   └── src/main/resources/ # Application Config
+├── api/                   # Node.js Express Server (Primary Backend)
+│   ├── models/            # Mongoose Schemas
+│   ├── routes/            # API Endpoints
+│   └── index.js           # Server Entry Point
 │
-└── frontend/                # React Vite Client
-    ├── src/
-    │   ├── components/     # Reusable UI components
-    │   ├── pages/          # Full page views
-    │   └── assets/         # Images and global styles
-    └── screenshots/        # Project display images
+├── frontend/              # React Vite Client (Frontend App)
+│   ├── src/               # Application Source
+│   └── assets/            # Global Styles & Assets
+│
+└── screenshots/           # Application Preview Images
 ```
 
 ---
 
-## 📦 Getting Started
+## 📦 Getting Started (Monolith Mode)
+
+The project is now a monolith. You can manage everything from the root directory.
 
 ### 1. Database (MongoDB)
-Start the local MongoDB instance using the provided data directory:
+Ensure MongoDB is installed and running on your local machine. Recommendation:
 ```bash
-/usr/bin/mongod --dbpath ./mongodb_data --port 27017 --fork --logpath ./mongodb.log --bind_ip 127.0.0.1
+mongod --dbpath ./mongodb_data
 ```
 
-### 2. Backend Server (Spring Boot)
-Ensure you have **JDK 21** installed. Navigate to the backend directory and run:
+### 2. One-Time Setup
+Install all dependencies for root, backend, and frontend with one command:
 ```bash
-cd backend
-./mvnw spring-boot:run
+npm run install-all
 ```
-*Server runs on `http://localhost:8080`*
 
-### 3. Frontend Client (React + Vite)
-Navigate to the frontend directory, install dependencies, and start the development server:
+### 3. Build & Run (Production/Monolith)
+To run the application as a single unit (API + Frontend):
+1. **Build the frontend**:
+   ```bash
+   npm run build
+   ```
+2. **Start the monolith server**:
+   ```bash
+   npm start
+   ```
+*Access the full app at `http://localhost:3000`*
+
+### 4. Development Mode
+To run both backend and frontend concurrently with Hot Module Replacement (HMR):
 ```bash
-cd frontend
-npm install
 npm run dev
 ```
-*Client runs on `http://localhost:8085`*
+*API runs on `http://localhost:3000`, Frontend runs on `http://localhost:8085`*
 
 ---
 
@@ -120,8 +131,8 @@ npm run dev
 | **Customer** | `http://localhost:8085/order` | N/A | N/A |
 
 > [!TIP]
-> - **Default Staff Email**: You can use `michael@americano.com` for testing.
-> - **Data Reset**: To reset or re-seed the database with dummy data, visit `http://localhost:8080/api/seeder/run` while the backend is running.
+> - **Default Staff Email**: You can use `manager` or `michael@americano.com` for testing.
+> - **Data Reset**: To reset or re-seed the database with dummy data, visit `http://localhost:3000/api/seeder/run` while the backend is running.
 
 
 ---

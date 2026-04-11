@@ -38,7 +38,7 @@ export default function KitchenPage() {
             const activeOrders = res.data.filter(o => o.status !== 'COMPLETED' && o.status !== 'CANCELLED');
             const completedList = res.data.filter(o => o.status === 'COMPLETED');
             setOrders(activeOrders.reverse());
-            setCompletedOrders(completedList.reverse());
+            setCompletedOrders(completedList);
         } catch (e) {
             console.error("Fetch orders failed", e);
         }

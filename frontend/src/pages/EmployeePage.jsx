@@ -218,12 +218,12 @@ export default function EmployeePage() {
                                 </Button>
                                 <Button
                                     onClick={() => handleFreeze(emp)}
-                                    disabled={emp.role === 'MANAGER'}
+                                    disabled={emp.role && emp.role.toUpperCase() === 'MANAGER'}
                                     style={{
                                         width: '100%',
-                                        background: emp.role === 'MANAGER' ? '#e5e7eb' : (emp.active ? '#9ca3af' : '#22c55e'),
-                                        color: emp.role === 'MANAGER' ? '#9ca3af' : 'white',
-                                        cursor: emp.role === 'MANAGER' ? 'not-allowed' : 'pointer'
+                                        background: (emp.role && emp.role.toUpperCase() === 'MANAGER') ? '#e5e7eb' : (emp.active ? '#9ca3af' : '#22c55e'),
+                                        color: (emp.role && emp.role.toUpperCase() === 'MANAGER') ? '#9ca3af' : 'white',
+                                        cursor: (emp.role && emp.role.toUpperCase() === 'MANAGER') ? 'not-allowed' : 'pointer'
                                     }}
                                 >
                                     {emp.active ? <><Lock size={16} /> FREEZE</> : <><Unlock size={16} /> ACTIVATE</>}

@@ -115,7 +115,7 @@ export default function MenuPage({ user }) {
     const [alertMsg, setAlertMsg] = useState(null);
     const [confirmDialog, setConfirmDialog] = useState({ isOpen: false });
 
-    const isManager = user && (user.role === 'MANAGER' || user.role === 'manager');
+    const isManager = user?.role?.toUpperCase() === 'MANAGER';
 
     useEffect(() => {
         fetchMenus();
