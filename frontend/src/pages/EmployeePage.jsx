@@ -318,9 +318,9 @@ export default function EmployeePage() {
                                                 <Td>
                                                     <span style={{
                                                         fontWeight: 'bold',
-                                                        color: log.checkInStatus === 'LATE' ? 'red' : 'green'
+                                                        color: (log.status === 'LATE' || log.checkInStatus === 'LATE') ? 'red' : 'green'
                                                     }}>
-                                                        {log.checkInStatus || log.status}
+                                                        {log.status || log.checkInStatus || '-'}
                                                     </span>
                                                 </Td>
                                                 <Td>{log.hoursWorked ? log.hoursWorked.toFixed(1) : '-'}</Td>

@@ -217,8 +217,7 @@ export default function DashboardPage({ user }) {
                     } else {
                         setAttendance(res.data);
 
-                        // Check status
-                        if (res.data.checkInStatus === 'LATE') {
+                        if (res.data.status === 'LATE') {
                             setLateModal({
                                 type: 'late',
                                 message: 'LATE ARRIVAL DETECTED!',
@@ -256,13 +255,15 @@ export default function DashboardPage({ user }) {
 
                     const res = await axios.post('/api/attendance/clock-out', { employeeId: currentEmployee.employeeId });
 
-                    if (res.data && res.data.checkInStatus === 'TOO_EARLY') {
+                    if (res.data && res.data.status_alert === 'TOO_EARLY') {
                         setLateModal({
                             type: 'early',
                             message: 'TOO EARLY!',
                             details: 'YOU CANNOT CLOCK OUT BEFORE YOUR SHIFT ENDS!'
                         });
                         setAlertMsg({ type: 'error', message: 'SHIFT INCOMPLETE!' });
+                        setAttendance(res.data);
+                        fetchShiftData();
                     } else {
                         setAttendance(res.data);
                         setAlertMsg({ type: 'success', message: 'CLOCKED OUT SUCCESSFULLY!' });

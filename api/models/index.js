@@ -19,7 +19,12 @@ mongoose.plugin(renameIdPlugin);
 const AttendanceSchema = new mongoose.Schema({
     date: { type: Date, required: true },
     present: { type: Boolean, default: false },
-    notes: { type: String }
+    notes: { type: String },
+    clockInTime: { type: Date },
+    clockOutTime: { type: Date },
+    shiftType: { type: String, enum: ['MORNING', 'AFTERNOON', 'EVENING', 'UNSCHEDULED'] },
+    status: { type: String, enum: ['ON_TIME', 'LATE', 'UNSCHEDULED'] },
+    minutesLate: { type: Number, default: 0 }
 });
 
 const EmployeeSchema = new mongoose.Schema({
