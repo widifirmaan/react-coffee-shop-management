@@ -581,23 +581,23 @@ export default function CMSPage() {
                                     {/* Double the array for seamless loop */}
                                     {[...(shopConfig?.galleryImages || []), ...(shopConfig?.galleryImages || [])].map((img, i) => (
                                         <div key={i} style={{ width: '100%', padding: '0', borderBottom: '4px solid black' }}>
-                                            <img
-                                                src={img.startsWith('data:') ? img : `${img}?auto=format&fit=crop&w=400&q=80`}
-                                                alt="Cafe Vibe"
-                                                onClick={() => setExpandedImage(img)}
-                                                style={{
-                                                    display: 'block',
-                                                    width: '100%',
-                                                    height: '280px',
-                                                    objectFit: 'cover',
-                                                    filter: 'grayscale(100%)',
-                                                    cursor: 'pointer',
-                                                    transition: 'filter 0.3s, transform 0.3s'
-                                                }}
-                                                onMouseEnter={(e) => { e.currentTarget.style.filter = 'grayscale(0%)'; e.currentTarget.style.transform = 'scale(1.05)'; }}
-                                                onMouseLeave={(e) => { e.currentTarget.style.filter = 'grayscale(100%)'; e.currentTarget.style.transform = 'scale(1)'; }}
-                                                onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
-                                            />
+                                             <img
+                                                 src={img}
+                                                 alt="Cafe Vibe"
+                                                 onClick={() => setExpandedImage(img)}
+                                                 style={{
+                                                     display: 'block',
+                                                     width: '100%',
+                                                     height: '280px',
+                                                     objectFit: 'cover',
+                                                     filter: 'grayscale(100%)',
+                                                     cursor: 'pointer',
+                                                     transition: 'filter 0.3s, transform 0.3s'
+                                                 }}
+                                                 onMouseEnter={(e) => { e.currentTarget.style.filter = 'grayscale(0%)'; e.currentTarget.style.transform = 'scale(1.05)'; }}
+                                                 onMouseLeave={(e) => { e.currentTarget.style.filter = 'grayscale(100%)'; e.currentTarget.style.transform = 'scale(1)'; }}
+                                                 onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
+                                             />
                                         </div>
                                     ))}
                                 </div>

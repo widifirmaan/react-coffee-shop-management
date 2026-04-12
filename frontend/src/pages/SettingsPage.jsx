@@ -242,12 +242,12 @@ export default function SettingsPage() {
                                     </div>
 
                                     {url && (
-                                        <img
-                                            src={url.startsWith('data:') ? url : `${url}?auto=format&fit=crop&w=100&q=80`}
-                                            alt={`Preview ${index + 1}`}
-                                            style={{ width: '56px', height: '56px', objectFit: 'cover', border: '3px solid black', flexShrink: 0 }}
-                                            onError={(e) => { e.target.style.display = 'none'; }}
-                                        />
+                                     <img
+                                         src={url}
+                                         alt={`Preview ${index + 1}`}
+                                         style={{ width: '56px', height: '56px', objectFit: 'cover', border: '3px solid black', flexShrink: 0 }}
+                                         onError={(e) => { e.target.style.display = 'none'; }}
+                                     />
                                     )}
 
                                     <label style={{ cursor: 'pointer', margin: 0, display: 'flex' }}>
