@@ -90,9 +90,9 @@ Explore the comprehensive features of **Siap Nyafe** through our gallery.
 The project is now a monolith. You can manage everything from the root directory.
 
 ### 1. Database (MongoDB)
-Ensure MongoDB is installed and running on your local machine. Recommendation:
+Ensure MongoDB is installed and running on your local machine. We successfully started it with:
 ```bash
-mongod --dbpath ./mongodb_data
+mongod --dbpath ./data/db
 ```
 
 ### 2. One-Time Setup
