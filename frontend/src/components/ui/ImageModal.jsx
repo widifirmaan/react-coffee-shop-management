@@ -92,17 +92,17 @@ export default function ImageModal({ imageUrl, onClose, alt = 'Expanded view' })
                     }}
                     onClick={e => e.stopPropagation()}
                 >
-                    <img
-                        src={imageUrl && imageUrl.startsWith('data:') ? imageUrl : `${imageUrl}?auto=format&fit=crop&w=1200&q=90`}
-                        alt={alt}
-                        style={{
-                            maxWidth: '100%',
-                            maxHeight: '90vh',
-                            objectFit: 'contain',
-                            border: '6px solid white',
-                            boxShadow: '0 0 40px rgba(0,0,0,0.8)'
-                        }}
-                    />
+                     <img
+                         src={imageUrl && (imageUrl.startsWith('data:') || imageUrl.includes('base64')) ? imageUrl : `${imageUrl}?auto=format&fit=crop&w=1200&q=90`}
+                         alt={alt}
+                         style={{
+                             maxWidth: '100%',
+                             maxHeight: '90vh',
+                             objectFit: 'contain',
+                             border: '6px solid white',
+                             boxShadow: '0 0 40px rgba(0,0,0,0.8)'
+                         }}
+                     />
                     <button
                         onClick={handleClose}
                         style={{
