@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React - Coffee Shop Management Brutalist | Portfolio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --yellow: #FCD34D;
+            --black: #000000;
+            --white: #FFFFFF;
+            --border-width: 6px;
+            --shadow-offset: 10px;
+            --red: #FB7185;
+            --blue: #60A5FA;
+            --green: #34D399;
+            --purple: #A78BFA;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        @page {
+            size: A4 landscape;
+            margin: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #222;
+            color: var(--black);
+            line-height: 1.1;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .page {
+            width: 297mm;
+            height: 210mm;
+            padding: 20mm;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            background-color: var(--white);
+            margin: 40px auto;
+            border: 4px solid var(--black);
+            page-break-after: always;
+            box-shadow: 20px 20px 0 0 rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            font-size: 5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            line-height: 0.9;
+            letter-spacing: -2px;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 3rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            background: var(--yellow);
+            display: inline-block;
+            padding: 10px 20px;
+            border: var(--border-width) solid var(--black);
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 var(--black);
+        }
+
+        h3 {
+            font-size: 1.8rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 1.3rem;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        .brutal-box {
+            border: var(--border-width) solid var(--black);
+            background: var(--white);
+            padding: 25px;
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 var(--black);
+        }
+
+        .screenshot-container {
+            border: var(--border-width) solid var(--black);
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 var(--black);
+            display: flex;
+            width: fit-content;
+            max-width: 100%;
+            overflow: hidden;
+            background: none;
+        }
+
+        .screenshot-container img {
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 140mm;
+            display: block;
+        }
+
+        .page-num {
+            position: absolute;
+            bottom: 10mm;
+            right: 10mm;
+            font-weight: 900;
+            font-size: 1.5rem;
+            background: var(--black);
+            color: var(--white);
+            padding: 5px 15px;
+            z-index: 100;
+        }
+
+        /* Layout Variants */
+        .layout-hero {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .layout-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+            height: 100%;
+        }
+
+        .layout-boxed {
+            padding: 40mm 20mm;
+        }
+
+        .boxed-content {
+            position: absolute;
+            top: 20mm;
+            left: 20mm;
+            z-index: 10;
+        }
+
+        .deco-shape {
+            position: absolute;
+            z-index: -1;
+            opacity: 0.8;
+        }
+
+        @media print {
+            body {
+                background: white !important;
+            }
+
+            .page {
+                margin: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
+                width: 297mm !important;
+                height: 210mm !important;
+                page-break-after: always;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .brutal-box,
+            h2,
+            .stat-item,
+            .page-num {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- PAGE 01: COVER -->
+    <section class="page layout-hero yellow-bg">
+        <div class="brutal-box" style="background: black; color: white; margin-bottom: 40px;">
+            <h3 style="margin: 0;">2026 PRODUCT SHOWCASE</h3>
+        </div>
+        <h1>REACT - COFFEE SHOP<br>MANAGEMENT BRUTALIST</h1>
+        <div class="brutal-box" style="margin-top: 40px;">
+            <p>A BOLD, HIGH-PERFORMANCE OPERATIONS SYSTEM FOR MODERN CAFFEINE CRAFTSMEN.</p>
+        </div>
+        <div class="page-num">01</div>
+    </section>
+
+    <!-- PAGE 02: DESKTOP LANDING -->
+    <section class="page" style="background: var(--blue);">
+        <div class="layout-split">
+            <div class="brutal-box">
+                <h2>01. THE FRONT DOOR</h2>
+                <p>The Desktop Landing Page features a high-impact greeting with dynamic parallax elements. It's
+                    designed to captivate customers the moment they arrive, combining aesthetic flair with essential
+                    information.</p>
+            </div>
+            <div class="screenshot-container" style="">
+                <img src="screenshots/Desktop%20Page.png" alt="Desktop Page">
+            </div>
+        </div>
+        <div class="page-num">02</div>
+    </section>
+
+    <!-- PAGE 03: DASHBOARD HUB -->
+    <section class="page">
+        <div class="deco-shape"
+            style="width: 500px; height: 500px; background: var(--yellow); top: -250px; left: -250px; transform: rotate(15deg);">
+        </div>
+        <div class="layout-split" style="grid-template-columns: 1.2fr 0.8fr;">
+            <div class="screenshot-container" style="transform: rotate(-1deg);">
+                <img src="screenshots/Dashboard%20Page.png" alt="Dashboard Page">
+            </div>
+            <div class="brutal-box" style="background: var(--yellow);">
+                <h2>02. CONTROL CENTER</h2>
+                <p>The Management Dashboard provides at-a-glance metrics for sales, inventory status, and team
+                    communication via a sticky-note system. It's the central nervous system for shop operations.</p>
+            </div>
+        </div>
+        <div class="page-num">03</div>
+    </section>
+
+    <!-- PAGE 04: ABOUT US -->
+    <section class="page" style="background: var(--black); color: white;">
+        <div class="layout-split">
+            <div class="brutal-box" style="color: black; transform: translateX(20mm);">
+                <h2>03. THE STORY</h2>
+                <p>An immersive "Info Layer" that slides over the main interface to tell the brand's story. This module
+                    focuses on connection and philosophy, moving beyond simple transactions.</p>
+            </div>
+            <div class="screenshot-container" style="border-color: white;">
+                <img src="screenshots/About%20Page.png" alt="About Page">
+            </div>
+        </div>
+        <div class="page-num">04</div>
+    </section>
+
+    <!-- PAGE 05: CUSTOMER ORDERING -->
+    <section class="page" style="background: var(--green);">
+        <div style="display: flex; flex-direction: column; height: 100%;">
+            <div class="screenshot-container" style="margin-bottom: 20px;">
+                <img src="screenshots/Customer%20Order%20Page.png" alt="Customer Order">
+            </div>
+            <div class="brutal-box">
+                <h2>04. SELF-SERVICE KIOSK</h2>
+                <p>The digital ordering interface allows customers to browse the menu, customize their drinks, and input
+                    table details directly. A friction-less path from craving to coffee.</p>
+            </div>
+        </div>
+        <div class="page-num">05</div>
+    </section>
+
+    <!-- PAGE 06: BLOG CMS -->
+    <section class="page">
+        <div class="layout-split" style="grid-template-columns: 0.8fr 1.2fr;">
+            <div class="brutal-box" style="background: var(--purple);">
+                <h2>05. CONTENT ENGINE</h2>
+                <p>A full-featured Blog CMS that handles news, events, and promotions. The list view provides high
+                    visibility for all published and draft content with categorized filtering.</p>
+            </div>
+            <div class="screenshot-container" style="box-shadow: -15px 15px 0 0 black;">
+                <img src="screenshots/Blog%20CMS%20Page.png" alt="Blog CMS">
+            </div>
+        </div>
+        <div class="page-num">06</div>
+    </section>
+
+    <!-- PAGE 07: BLOG POST -->
+    <section class="page" style="background: #eee;">
+        <div style="display: flex; flex-direction: column; height: 100%; align-items: center;">
+            <div class="brutal-box yellow-bg" style="margin-bottom: 20px; width: 100%;">
+                <h2>06. READABLE DESIGN</h2>
+                <p>The Blog Post Reader prioritizes typography and whitespace, ensuring that shop news is delivered in a
+                    beautiful, distraction-free environment.</p>
+            </div>
+            <div class="screenshot-container" style="width: 80%; flex: none;">
+                <img src="screenshots/Blog%20Post%20Page.png" alt="Blog Post">
+            </div>
+        </div>
+        <div class="page-num">07</div>
+    </section>
+
+    <!-- PAGE 08: ALERT MODAL -->
+    <section class="page" style="background: var(--red);">
+        <div class="layout-split">
+            <div class="screenshot-container" style="">
+                <img src="screenshots/Alert%20Modal.png" alt="Alert Modal">
+            </div>
+            <div class="brutal-box">
+                <h2>07. BOLD FEEDBACK</h2>
+                <p>System alerts are designed with Neo-Brutalist intensity to ensure critical information is never
+                    missed. High-contrast colors and thick borders drive immediate user attention.</p>
+            </div>
+        </div>
+        <div class="page-num">08</div>
+    </section>
+
+    <!-- PAGE 09: CALL WAITER -->
+    <section class="page">
+        <div class="deco-shape" style="bottom: 0; left: 0; width: 100%; background: var(--blue);"></div>
+        <div class="layout-split">
+            <div class="brutal-box" style="z-index: 10;">
+                <h2>08. INSTANT SERVICE</h2>
+                <p>The "Call Waiter" module bridges the gap between digital and physical service. One tap notifies the
+                    staff exactly where assistance is needed, streamlining the customer experience.</p>
+            </div>
+            <div class="screenshot-container" style="transform: rotate(2deg);">
+                <img src="screenshots/Call%20Waiter%20Modal.png" alt="Call Waiter">
+            </div>
+        </div>
+        <div class="page-num">09</div>
+    </section>
+
+    <!-- PAGE 10: CHART MODAL -->
+    <section class="page" style="background: var(--yellow);">
+        <div class="layout-split" style="grid-template-columns: 1.3fr 0.7fr;">
+            <div class="screenshot-container" style="">
+                <img src="screenshots/Chart%20Modal.png" alt="Chart Modal">
+            </div>
+            <div class="brutal-box" style="background: white;">
+                <h2>09. DATA AT A GLANCE</h2>
+                <p>Visualizing sales trends and revenue through integrated charting modals. The design keeps data
+                    interpretation simple and fast for busy managers.</p>
+            </div>
+        </div>
+        <div class="page-num">10</div>
+    </section>
+
+    <!-- PAGE 11: CHECKOUT MODAL -->
+    <section class="page">
+        <div style="display: flex; gap: 40px; height: 100%;">
+            <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+                <div class="brutal-box" style="background: var(--green);">
+                    <h2>10. SECURE CHECKOUT</h2>
+                    <p>The payment interface handles multiple methods while maintaining the signature brutalist look. It
+                        provides clear transaction summaries before final processing.</p>
+                </div>
+            </div>
+            <div class="screenshot-container" style="flex: 1.5; transform: skewY(-2deg);">
+                <img src="screenshots/Checkout%20Modal.png" alt="Checkout Modal">
+            </div>
+        </div>
+        <div class="page-num">11</div>
+    </section>
+
+    <!-- PAGE 12: CONFIRMATION MODAL -->
+    <section class="page" style="background: var(--purple);">
+        <div class="layout-split">
+            <div class="screenshot-container">
+                <img src="screenshots/Confirmation%20Modal.png" alt="Confirmation Modal">
+            </div>
+            <div class="brutal-box">
+                <h2>11. SAFETY FIRST</h2>
+                <p>Confirmation modals provide an extra layer of security for destructive actions, using clear,
+                    unambiguous messaging to prevent accidental data loss.</p>
+            </div>
+        </div>
+        <div class="page-num">12</div>
+    </section>
+
+    <!-- PAGE 13: EDIT EMPLOYEE -->
+    <section class="page">
+        <div class="layout-split" style="grid-template-columns: 0.7fr 1.3fr;">
+            <div class="brutal-box" style="background: var(--blue); color: white;">
+                <h2>12. STAFF DATA</h2>
+                <p>A detailed staff editor that manages roles, access levels, and personal profiles. The interface
+                    remains clean despite the complexity of the data fields.</p>
+            </div>
+            <div class="screenshot-container" style="transform: rotate(-1deg);">
+                <img src="screenshots/Edit%20Employee%20Modal.png" alt="Edit Employee">
+            </div>
+        </div>
+        <div class="page-num">13</div>
+    </section>
+
+    <!-- PAGE 14: FEEDBACK PAGE -->
+    <section class="page" style="background: var(--yellow);">
+        <div style="display: flex; flex-direction: column; height: 100%;">
+            <div class="brutal-box" style="margin-bottom: 30px;">
+                <h2>13. VOICE OF CUSTOMER</h2>
+                <p>The feedback interface collects qualitative data from patrons, allowing the management to
+                    continuously improve service quality based on real reviews.</p>
+            </div>
+            <div class="screenshot-container" style="border-color: black;">
+                <img src="screenshots/Feedback%20Page.png" alt="Feedback">
+            </div>
+        </div>
+        <div class="page-num">14</div>
+    </section>
+
+    <!-- PAGE 15: FOOTER FEEDBACK -->
+    <section class="page" style="background: var(--black);">
+        <div class="layout-split">
+            <div class="screenshot-container">
+                <img src="screenshots/Footer%20with%20Feedback%20Page.png" alt="Footer Feedback">
+            </div>
+            <div class="brutal-box" style="background: var(--red);">
+                <h2>14. ACCESSIBLE INPUT</h2>
+                <p>Integrating feedback triggers directly into the footer ensures that the bridge between customers and
+                    management is always just one click away on any page.</p>
+            </div>
+        </div>
+        <div class="page-num">15</div>
+    </section>
+
+    <!-- PAGE 16: INVENTORY -->
+    <section class="page">
+        <div class="deco-shape" style="top: 0; right: 0; width: 100mm; height: 100%; background: var(--green);"></div>
+        <div class="layout-split">
+            <div class="brutal-box">
+                <h2>15. STOCK CONTROL</h2>
+                <p>The inventory management page tracks ingredient levels and units. Automated thresholds alert staff
+                    when supplies are running low, preventing stockouts.</p>
+            </div>
+            <div class="screenshot-container" style="box-shadow: -15px 15px 0 0 black;">
+                <img src="screenshots/Inventory%20Page.png" alt="Inventory">
+            </div>
+        </div>
+        <div class="page-num">16</div>
+    </section>
+
+    <!-- PAGE 17: KITCHEN QUEUE -->
+    <section class="page" style="background: #222; color: white;">
+        <div style="display: flex; flex-direction: column; height: 100%;">
+            <div class="screenshot-container" style="border-color: var(--yellow);">
+                <img src="screenshots/Kitchen%20Queue%20Page.png" alt="Kitchen Queue">
+            </div>
+            <div class="brutal-box" style="margin-top: 20px; color: black; background: var(--yellow);">
+                <h2>16. KITCHEN COMMAND</h2>
+                <p>A high-visibility Kitchen Display System (KDS) that manages order flow in real-time. Orders move from
+                    PENDING to SERVED with a clear, color-coded status hierarchy.</p>
+            </div>
+        </div>
+        <div class="page-num">17</div>
+    </section>
+
+    <!-- PAGE 18: LOGIN PAGE -->
+    <section class="page" style="background: var(--purple);">
+        <div class="layout-split" style="grid-template-columns: 0.8fr 1.2fr;">
+            <div class="brutal-box">
+                <h2>17. GATEKEEPER</h2>
+                <p>The login interface provides secure access for different roles (Manager vs Staff). It sets the tone
+                    with a clean, centered layout and bold interactive elements.</p>
+            </div>
+            <div class="screenshot-container" style="">
+                <img src="screenshots/Login%20Page.png" alt="Login Page">
+            </div>
+        </div>
+        <div class="page-num">18</div>
+    </section>
+
+    <!-- PAGE 19: MENU GRID -->
+    <section class="page">
+        <div class="layout-split" style="grid-template-columns: 1.3fr 0.7fr;">
+            <div class="screenshot-container" style="transform: rotate(-1deg);">
+                <img src="screenshots/Menu%20Grid%20Page.png" alt="Menu Grid">
+            </div>
+            <div class="brutal-box" style="background: var(--blue); color: white;">
+                <h2>18. VISUAL MENU</h2>
+                <p>A grid-based menu catalogue optimized for visual appeal. Large imagery and clear pricing labels make
+                    browsing easy for both customers and staff.</p>
+            </div>
+        </div>
+        <div class="page-num">19</div>
+    </section>
+
+    <!-- PAGE 20: MENU MANAGEMENT -->
+    <section class="page" style="background: var(--yellow);">
+        <div class="layout-split">
+            <div class="brutal-box">
+                <h2>19. PRODUCT CRUD</h2>
+                <p>Managing the product line-up is effortless with a dedicated CMS. Managers can update prices,
+                    availability, and categories with real-time sync across the platform.</p>
+            </div>
+            <div class="screenshot-container" style="box-shadow: 15px 15px 0 0 black;">
+                <img src="screenshots/Menu%20Management%20Page.png" alt="Menu Management">
+            </div>
+        </div>
+        <div class="page-num">20</div>
+    </section>
+
+    <!-- PAGE 21: ORDER HISTORY -->
+    <section class="page">
+        <div style="display: flex; flex-direction: column; height: 100%;">
+            <div class="screenshot-container">
+                <img src="screenshots/Order%20History%20Page.png" alt="Order History">
+            </div>
+            <div class="brutal-box" style="margin-top: 20px; background: var(--black); color: white;">
+                <h2>20. AUDIT TRAIL</h2>
+                <p>Comprehensive logging of all transactions. Staff can revisit past orders to handle disputes or verify
+                    details, ensuring transparency in every sale.</p>
+            </div>
+        </div>
+        <div class="page-num">21</div>
+    </section>
+
+    <!-- PAGE 22: SHIFT MANAGEMENT -->
+    <section class="page" style="background: var(--green);">
+        <div class="layout-split" style="grid-template-columns: 0.7fr 1.3fr;">
+            <div class="brutal-box">
+                <h2>21. WORKFORCE SCHEDULER</h2>
+                <p>A drag-and-drop interface for managing weekly staff shifts. It includes built-in role validation to
+                    ensure every shift has the necessary staff types (Barista, Manager, etc.).</p>
+            </div>
+            <div class="screenshot-container" style="">
+                <img src="screenshots/Shift%20Management%20Page.png" alt="Shift Management">
+            </div>
+        </div>
+        <div class="page-num">22</div>
+    </section>
+
+    <!-- PAGE 23: SITE SETTINGS -->
+    <section class="page">
+        <div class="deco-shape" style="top: 0; left: 0; width: 100%; background: var(--red);"></div>
+        <div class="layout-split" style="grid-template-columns: 1.2fr 0.8fr;">
+            <div class="screenshot-container" style="">
+                <img src="screenshots/Site%20Settings%20Page.png" alt="Site Settings">
+            </div>
+            <div class="brutal-box" style="background: var(--yellow);">
+                <h2>22. GLOBAL CONFIG</h2>
+                <p>Control the shop's identity from one place. Update social links, visual themes, and technical
+                    configurations without touching a single line of code.</p>
+            </div>
+        </div>
+        <div class="page-num">23</div>
+    </section>
+
+    <!-- PAGE 24: STAFF MANAGEMENT -->
+    <section class="page" style="background: var(--blue);">
+        <div class="layout-split">
+            <div class="brutal-box" style="background: white;">
+                <h2>23. TEAM DIRECTORY</h2>
+                <p>Centralized database for all employees. It manages active status, contact info, and internal
+                    credentials to keep the team organized and secure.</p>
+            </div>
+            <div class="screenshot-container" style="box-shadow: -15px 15px 0 0 black;">
+                <img src="screenshots/Staff%20Management%20Page.png" alt="Staff Management">
+            </div>
+        </div>
+        <div class="page-num">24</div>
+    </section>
+
+    <!-- PAGE 25: TRANSACTION PAGE -->
+    <section class="page">
+        <div style="display: flex; flex-direction: column; height: 100%;">
+            <div class="screenshot-container" style="border-color: var(--green);">
+                <img src="screenshots/Transaction%20Page.png" alt="Transaction">
+            </div>
+            <div class="brutal-box" style="margin-top: 20px; background: var(--green); color: white;">
+                <h2>24. FINANCIAL PERFORMANCE</h2>
+                <p>Deep dive into daily, weekly, and monthly revenue. The interface provides the clarity needed to make
+                    data-driven decisions for business growth.</p>
+            </div>
+        </div>
+        <div class="page-num">25</div>
+    </section>
+
+    <!-- PAGE 26: WAITER PAGE -->
+    <section class="page" style="background: var(--red);">
+        <div class="layout-split" style="grid-template-columns: 0.8fr 1.2fr;">
+            <div class="brutal-box" style="background: white;">
+                <h2>25. SERVICE QUEUE</h2>
+                <p>A specialized view for service staff to track customer requests. It ensures no "Waiter Call" goes
+                    unanswered, improving overall floor efficiency.</p>
+            </div>
+            <div class="screenshot-container" style="transform: rotate(-2deg);">
+                <img src="screenshots/Waiter%20Page.png" alt="Waiter Page">
+            </div>
+        </div>
+        <div class="page-num">26</div>
+    </section>
+
+    <!-- PAGE 27: MOBILE LANDING -->
+    <section class="page" style="background: var(--black);">
+        <div class="layout-split">
+            <div class="screenshot-container" style="border-color: var(--yellow);">
+                <img src="screenshots/Mobile%20Landing%20Page.png" alt="Mobile Landing">
+            </div>
+            <div class="brutal-box" style="background: var(--yellow);">
+                <h2>26. POCKET-SIZED POWER</h2>
+                <p>The mobile version of the landing page adapts the neo-brutalist aesthetic for smaller screens,
+                    maintaining visual impact and usability on the go.</p>
+            </div>
+        </div>
+        <div class="page-num">27</div>
+    </section>
+
+    <!-- PAGE 28: MOBILE ABOUT -->
+    <section class="page" style="background: var(--yellow);">
+        <div class="layout-split" style="grid-template-columns: 1.2fr 0.8fr;">
+            <div class="brutal-box">
+                <h2>27. RESPONSIVE STORY</h2>
+                <p>Even complex overlays like the "Info Layer" are optimized for mobile touch, ensuring the brand
+                    narrative is accessible to every user, everywhere.</p>
+            </div>
+            <div class="screenshot-container" style="">
+                <img src="screenshots/Mobile%20About%20Page.png" alt="Mobile About">
+            </div>
+        </div>
+        <div class="page-num">28</div>
+    </section>
+
+    <!-- PAGE 29: TECH STACK -->
+    <section class="page yellow-bg">
+        <div style="margin: auto; width: 100%;">
+            <h2>THE TECHNOLOGY STACK</h2>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin-top: 40px;">
+                <div class="brutal-box">
+                    <h3>FRONTEND</h3>
+                    <p>React 18, Vite 5, Vanilla CSS, Lucide Icons, Axios.</p>
+                </div>
+                <div class="brutal-box">
+                    <h3>BACKEND</h3>
+                    <p>Node.js, Express.js, MongoDB, JWT, Bcrypt.</p>
+                </div>
+                <div class="brutal-box">
+                    <h3>OPERATIONS</h3>
+                    <p>Docker, Vercel, Monolith Architecture.</p>
+                </div>
+            </div>
+        </div>
+        <div class="page-num">29</div>
+    </section>
+
+    <!-- PAGE 30: FINAL THANKS -->
+    <section class="page"
+        style="background: var(--black); color: white; justify-content: center; align-items: center; text-align: center;">
+        <h1 style="font-size: 12rem; color: white;">THANKS!</h1>
+        <div class="brutal-box yellow-bg" style="color: black;">
+            <p style="font-size: 2rem; margin: 0;">WIDI FIRMAAN | LEAD DEVELOPER</p>
+        </div>
+        <div class="page-num">30</div>
+    </section>
+
+</body>
+
+</html>
