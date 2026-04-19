@@ -1,6 +1,6 @@
-# ☕ Siap Nyafe - Modern Coffee Shop Management System
+# ☕ React - Coffee Shop Management Brutalist
 
-**Siap Nyafe** is a state-of-the-art, web-based Point of Sale (POS) and Management System designed specifically for modern coffee shops. Built with a high-performance **Node.js (Express)** backend and a dynamic **React** frontend, it features a distinctive **Neo-Brutalist** design language that sets it apart from generic management tools.
+**React - Coffee Shop Management Brutalist** is a state-of-the-art, web-based Point of Sale (POS) and Management System designed specifically for modern coffee shops. Built with a high-performance **Node.js (Express)** backend and a dynamic **React** frontend, it features a distinctive **Neo-Brutalist** design language that sets it apart from generic management tools. It is built to streamline daily operations in a coffee shop. The project focused on delivering a visually appealing interface with modern styling and practical functionality. The Brutalist design emphasized clean typography, intuitive navigation, and a warm color palette to reflect the cozy atmosphere.
 
 ![Status](https://img.shields.io/badge/Status-Active_Development-success?style=for-the-badge)
 ![Node.js](https://img.shields.io/badge/Node.js-20.x-green?style=for-the-badge&logo=node.js)
@@ -12,42 +12,52 @@
 
 ## 📸 Application Showcase
 
-Explore the comprehensive features of **Siap Nyafe** through our gallery.
+Explore the comprehensive features of **React - Coffee Shop Management Brutalist** through our gallery.
 
 | | |
 |:---:|:---:|
-| ![Screenshot 1](screenshots/shot_01.png)<br>**Dashboard** | ![Screenshot 2](screenshots/shot_02.png)<br>**Confirmation Modal** |
-| ![Screenshot 3](screenshots/shot_03.png)<br>**Alert** | ![Screenshot 4](screenshots/shot_04.png)<br>**Table** |
-| ![Screenshot 5](screenshots/shot_05.png)<br>**Modal Edit Menu** | ![Screenshot 6](screenshots/shot_06.png)<br>**Queue Manager** |
-| ![Screenshot 7](screenshots/shot_07.png)<br>**Order History** | ![Screenshot 8](screenshots/shot_08.png)<br>**Edit Stock Modal** |
-| ![Screenshot 9](screenshots/shot_09.png)<br>**Edit Staff Modal** | ![Screenshot 10](screenshots/shot_10.png)<br>**Finance & Transactions** |
-| ![Screenshot 11](screenshots/shot_11.png)<br>**Blog CMS Post Edit Modal** | ![Screenshot 12](screenshots/shot_12.png)<br>**Store Settings** |
-| ![Screenshot 13](screenshots/shot_13.png)<br>**Homepage** | ![Screenshot 14](screenshots/shot_14.png)<br>**Blog Post Page** |
-| ![Screenshot 15](screenshots/shot_15.png)<br>**About View** | ![Screenshot 16](screenshots/shot_16.png)<br>**Menu List & Details** |
-| ![Screenshot 17](screenshots/shot_17.png)<br>**Cart System** | ![Screenshot 18](screenshots/shot_18.png)<br>**Checkout** |
-| ![Screenshot 19](screenshots/shot_19.png)<br>**Call Waiter** | **Coming Soon** |
+| ![Desktop Page](screenshots/Desktop%20Page.png)<br>**Desktop Page** | ![Dashboard Page](screenshots/Dashboard%20Page.png)<br>**Dashboard Page** |
+| ![About Page](screenshots/About%20Page.png)<br>**About Page** | ![Alert Modal](screenshots/Alert%20Modal.png)<br>**Alert Modal** |
+| ![Blog CMS Page](screenshots/Blog%20CMS%20Page.png)<br>**Blog CMS Page** | ![Blog Post Page](screenshots/Blog%20Post%20Page.png)<br>**Blog Post Page** |
+| ![Call Waiter Modal](screenshots/Call%20Waiter%20Modal.png)<br>**Call Waiter Modal** | ![Chart Modal](screenshots/Chart%20Modal.png)<br>**Chart Modal** |
+| ![Checkout Modal](screenshots/Checkout%20Modal.png)<br>**Checkout Modal** | ![Confirmation Modal](screenshots/Confirmation%20Modal.png)<br>**Confirmation Modal** |
+| ![Customer Order Page](screenshots/Customer%20Order%20Page.png)<br>**Customer Order Page** | ![Edit Employee Modal](screenshots/Edit%20Employee%20Modal.png)<br>**Edit Employee Modal** |
+| ![Feedback Page](screenshots/Feedback%20Page.png)<br>**Feedback Page** | ![Footer with Feedback Page](screenshots/Footer%20with%20Feedback%20Page.png)<br>**Footer with Feedback Page** |
+| ![Inventory Page](screenshots/Inventory%20Page.png)<br>**Inventory Page** | ![Kitchen Queue Page](screenshots/Kitchen%20Queue%20Page.png)<br>**Kitchen Queue Page** |
+| ![Login Page](screenshots/Login%20Page.png)<br>**Login Page** | ![Menu Grid Page](screenshots/Menu%20Grid%20Page.png)<br>**Menu Grid Page** |
+| ![Menu Management Page](screenshots/Menu%20Management%20Page.png)<br>**Menu Management Page** | ![Order History Page](screenshots/Order%20History%20Page.png)<br>**Order History Page** |
+| ![Shift Management Page](screenshots/Shift%20Management%20Page.png)<br>**Shift Management Page** | ![Site Settings Page](screenshots/Site%20Settings%20Page.png)<br>**Site Settings Page** |
+| ![Staff Management Page](screenshots/Staff%20Management%20Page.png)<br>**Staff Management Page** | ![Transaction Page](screenshots/Transaction%20Page.png)<br>**Transaction Page** |
+| ![Waiter Page](screenshots/Waiter%20Page.png)<br>**Waiter Page** | **Coming Soon** |
+| ![Mobile Landing Page](screenshots/Mobile%20Landing%20Page.png)<br>**Mobile View: Landing** | ![Mobile About Page](screenshots/Mobile%20About%20Page.png)<br>**Mobile View: About** |
 
 ---
 
 ## 🚀 Features Overview
 
-### 🛒 Customer Experience (Ordering)
-*   **Visual Menu**: Beautiful card-based layout with category filtering (Coffee, Non-Coffee, Snacks).
-*   **Smart Cart**: Easy-to-use cart with quantity adjustments and special instruction fields.
-*   **Self-Service**: Customers can input their name and table number directly.
-*   **Payment Integration**: Options for Cash, QRIS, and Card payments.
+### 🌐 Public & Customer Experience
+*   **Dynamic Landing Page**: A high-impact, Neo-Brutalist designed homepage with interactive parallax elements.
+*   **About & Story**: Engaging "Info Layer" showcasing the coffee shop's philosophy and history.
+*   **Blog & News**: Integrated CMS-driven blog for latest updates, promos, and events.
+*   **Digital Ordering**: 
+    *   **Visual Menu**: Beautiful card-based layout with category filtering.
+    *   **Smart Cart**: Effortless cart management with special instruction support.
+    *   **Self-Checkout**: Guest name and table selection for seamless service.
+    *   **Waiter Call**: Instant digital assistance trigger for customers.
 
-### 👨‍🍳 Kitchen Display System (KDS)
-*   **Real-Time Workflow**: Orders appear instantly with status states: `PENDING` ➔ `PREPARING` ➔ `READY` ➔ `SERVED`.
-*   **Digital Tickets**: Replaces paper tickets with clear, readable digital cards showing items, table, and notes.
-*   **Staff Assignment**: Tracks which shift member is handling specific orders.
-
-### 📊 Admin & Management Dashboard
-*   **Dashboard Hub**: A central view with sticky notes for team communication and quick stats.
-*   **Inventory Management**: Track ingredient levels, units, and low-stock alerts.
-*   **Finance & Transactions**: Detailed logs of all sales and revenue tracking.
-*   **Employee Hub**: Manage staff profiles, roles, and shift schedules.
-*   **Menu CMS**: Effortless addition/editing of menu items, prices, and images.
+### 📊 Management Dashboard (Manager & Staff)
+*   **Operations Hub**: Real-time stats, team sticky notes, and live clock.
+*   **Attendance System**: Integrated **Clock In/Out** with lateness tracking and shift alerts.
+*   **Kitchen Display System (KDS)**: Real-time queue management (Pending ➔ Preparing ➔ Ready ➔ Served).
+*   **Menu Management**: Full CRUD capabilities for products, categories, and pricing.
+*   **Inventory Tracking**: Digital warehouse management with automated low-stock indicators.
+*   **Finance & Sales**: Detailed transaction logs and revenue performance tracking.
+*   **Staff & Shift Center**:
+    *   **Employee Management**: Manage staff profiles, roles, and access.
+    *   **Shift Scheduling**: Drag-and-drop weekly scheduler with role-based validation.
+*   **CMS & Content Control**: Dedicated panel for managing blog posts and published media.
+*   **Customer Feedback**: Centralized view for managing customer reviews and ratings.
+*   **Site Settings**: Global configuration for shop identity, social links, and visual themes.
 
 ---
 
@@ -138,4 +148,4 @@ npm run dev
 ---
 
 ## 👥 Authors
-Developed by **Widi Firmaan** and the **Siap Nyafe Team**.
+Developed by **Widi Firmaan** and the **Project Team**.
