@@ -120,20 +120,31 @@ export default function PostManagementPage({ user }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSaving(true);
+
+        const body = {
+            title: formData.title,
+            excerpt: formData.excerpt,
+            content: formData.content,
+            featuredImage: formData.featuredImage,
+            category: formData.category,
+            status: formData.status
+        };
+
+        if (formData.createdAt) {
+            body.createdAt = formData.createdAt;
+        }
+
         try {
             if (formData.id) {
-                // Update
-                await axios.put(`/api/posts/${formData.id}`, formData);
+                await axios.put(`/api/posts/${formData.id}`, body);
             } else {
-                // Create
-                await axios.post('/api/posts', formData);
+                await axios.post('/api/posts', body);
             }
             setModalOpen(false);
-            
-            // Clear search and reset to page 1 so the new/edited post is visible
+
             setSearchTerm('');
             setCurrentPage(1);
-            
+
             fetchPosts();
             setAlertMsg({ type: 'success', message: 'POST SAVED!' });
         } catch (e) {
@@ -351,8 +362,8 @@ export default function PostManagementPage({ user }) {
 
                     <div style={{ display: 'flex', gap: '20px' }}>
                         <Button onClick={() => setModalOpen(false)} variant="secondary" style={{ flex: 1 }}>CANCEL</Button>
-                        <Button type="submit" variant="primary" style={{ flex: 1 }} disabled={saving}>
-                            {saving ? 'SAVING...' : 'SAVE POST'}
+                        <Button type="submit" variant="primary" style={{ flex: 1 }} disabled={saving || uploading}>
+                            {saving ? 'SAVING...' : uploading ? 'UPLOADING...' : 'SAVE POST'}
                         </Button>
                     </div>
                 </form>
