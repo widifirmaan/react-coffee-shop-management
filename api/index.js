@@ -55,7 +55,7 @@ app.use('/api', attendanceRoutes);
 app.use('/api', feedbackRoutes);
 app.use('/api/seeder', seederRoutes);
 
-// --- Static File Serving (Monolith) ---
+// --- Static File Serving ---
 // Serve static files from the React frontend/dist directory
 app.use(express.static(path.join(__dirname, '../frontend/dist')));
 

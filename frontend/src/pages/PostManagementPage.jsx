@@ -93,11 +93,16 @@ export default function PostManagementPage({ user }) {
         const fileData = new FormData();
         fileData.append('file', file);
 
+        // Pass old file URL so server can delete it
+        if (formData.featuredImage) {
+            fileData.append('oldFile', formData.featuredImage);
+        }
+
         try {
             const res = await axios.post('/api/uploads', fileData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            // The API returns the Base64 Data URI directly
+            // The API returns the file URL path
             setFormData(prev => ({ ...prev, featuredImage: res.data }));
             setAlertMsg({ type: 'success', message: 'IMAGE UPLOADED!' });
         } catch (e) {
@@ -292,7 +297,7 @@ export default function PostManagementPage({ user }) {
                                     value={formData.featuredImage}
                                     onChange={handleChange}
                                     placeholder="https://..."
-                                    maxLength={2000} // Increased for Base64
+                                    maxLength={500}
                                 />
                                 <div style={{ display: 'flex', gap: '10px' }}>
                                     <Button type="button" onClick={() => fileInputRef.current?.click()} variant="secondary" disabled={uploading} style={{ fontSize: '0.8rem', padding: '10px' }}>

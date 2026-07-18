@@ -63,6 +63,15 @@ export default function SettingsPage() {
         const formData = new FormData();
         formData.append('file', file);
 
+        // Pass old file URL so server can delete it
+        if (index !== null) {
+            const oldUrl = (config.galleryImages || [])[index] || '';
+            if (oldUrl) formData.append('oldFile', oldUrl);
+        } else {
+            const oldUrl = config[fieldName] || '';
+            if (oldUrl) formData.append('oldFile', oldUrl);
+        }
+
         try {
             const res = await axios.post('/api/uploads', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }

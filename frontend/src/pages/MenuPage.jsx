@@ -149,6 +149,14 @@ export default function MenuPage({ user }) {
         const formData = new FormData();
         formData.append('file', file);
 
+        // Pass old file URL so server can delete it
+        if (index === -1 && menuForm.imageUrl) {
+            formData.append('oldFile', menuForm.imageUrl);
+        } else if (index >= 0) {
+            const oldUrl = (menuForm.gallery || [])[index] || '';
+            if (oldUrl) formData.append('oldFile', oldUrl);
+        }
+
         try {
             const res = await axios.post('/api/uploads', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }

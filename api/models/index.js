@@ -212,6 +212,18 @@ const PostSchema = new mongoose.Schema({
 PostSchema.set('toJSON', { virtuals: true, transform: (doc, ret) => { delete ret._id; delete ret.__v; }});
 
 // ============================================
+// 9. Image (BSON Binary — not base64)
+// ============================================
+const ImageSchema = new mongoose.Schema({
+  data: { type: Buffer, required: true },
+  mimetype: { type: String, required: true },
+  originalName: { type: String },
+  size: { type: Number },
+  createdAt: { type: Date, default: Date.now }
+});
+ImageSchema.set('toJSON', { virtuals: true, transform: (doc, ret) => { delete ret._id; delete ret.__v; delete ret.data; }});
+
+// ============================================
 // EXPORTS
 // ============================================
 module.exports = {
@@ -226,5 +238,6 @@ module.exports = {
     Feedback: mongoose.models.Feedback || mongoose.model('Feedback', FeedbackSchema, 'feedbacks'),
     Note: mongoose.models.Note || mongoose.model('Note', NoteSchema, 'notes'),
     Notification: mongoose.models.Notification || mongoose.model('Notification', NotificationSchema, 'notifications'),
-    Post: mongoose.models.Post || mongoose.model('Post', PostSchema, 'posts')
+    Post: mongoose.models.Post || mongoose.model('Post', PostSchema, 'posts'),
+    Image: mongoose.models.Image || mongoose.model('Image', ImageSchema, 'images')
 };

@@ -1,6 +1,8 @@
 backend/uploads/
 backend/target/
 frontend/node_modules/
+api/uploads/*
+!api/uploads/.gitkeep
 .DS_Store
 .env
 jdk-21/
