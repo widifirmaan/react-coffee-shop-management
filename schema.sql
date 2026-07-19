@@ -1,14 +1,16 @@
 CREATE TABLE IF NOT EXISTS employees (
   id TEXT PRIMARY KEY,
   employeeId TEXT UNIQUE NOT NULL,
-  username TEXT UNIQUE NOT NULL,
+  username TEXT,
   email TEXT,
   password TEXT NOT NULL,
   name TEXT NOT NULL,
+  phone TEXT,
   position TEXT,
-  contact TEXT,
+  salary REAL,
   role TEXT NOT NULL DEFAULT 'Cashier',
   image TEXT,
+  contact TEXT,
   active INTEGER NOT NULL DEFAULT 1,
   createdAt TEXT DEFAULT (datetime('now')),
   updatedAt TEXT DEFAULT (datetime('now'))
@@ -17,16 +19,19 @@ CREATE TABLE IF NOT EXISTS employees (
 CREATE TABLE IF NOT EXISTS attendance_records (
   id TEXT PRIMARY KEY,
   employee_id TEXT NOT NULL,
+  employeeName TEXT,
   date TEXT NOT NULL,
   present INTEGER DEFAULT 1,
   clockInTime TEXT,
   clockOutTime TEXT,
   shiftType TEXT,
   status TEXT,
+  checkInStatus TEXT,
   minutesLate INTEGER DEFAULT 0,
   status_alert TEXT,
   hoursWorked REAL,
   notes TEXT DEFAULT '',
+  debugInfo TEXT,
   FOREIGN KEY (employee_id) REFERENCES employees(id)
 );
 
@@ -37,7 +42,9 @@ CREATE TABLE IF NOT EXISTS menus (
   price REAL NOT NULL,
   description TEXT,
   image TEXT,
+  imageUrl TEXT,
   available INTEGER DEFAULT 1,
+  gallery TEXT,
   createdAt TEXT DEFAULT (datetime('now')),
   updatedAt TEXT DEFAULT (datetime('now'))
 );
@@ -52,11 +59,25 @@ CREATE TABLE IF NOT EXISTS shop_config (
   id TEXT PRIMARY KEY,
   shopName TEXT,
   websiteTitle TEXT,
+  faviconUrl TEXT,
+  address TEXT,
+  phoneNumber TEXT,
+  instagramUrl TEXT,
+  facebookUrl TEXT,
+  twitterUrl TEXT,
+  socialLinks TEXT,
+  heroImageUrl TEXT,
+  badgeText1 TEXT,
+  badgeText2 TEXT,
   marqueeText TEXT,
+  galleryImages TEXT,
   infoTitle TEXT,
   infoContent TEXT,
   infoFooter1 TEXT,
-  infoFooter2 TEXT
+  infoFooter2 TEXT,
+  techSpec1 TEXT,
+  techSpec2 TEXT,
+  techSpec3 TEXT
 );
 
 CREATE TABLE IF NOT EXISTS orders (
@@ -64,6 +85,7 @@ CREATE TABLE IF NOT EXISTS orders (
   orderNumber TEXT,
   items TEXT,
   totalPrice REAL DEFAULT 0,
+  totalAmount REAL DEFAULT 0,
   tax REAL DEFAULT 0,
   grandTotal REAL DEFAULT 0,
   status TEXT DEFAULT 'PENDING',
@@ -75,6 +97,7 @@ CREATE TABLE IF NOT EXISTS orders (
   orderType TEXT,
   notes TEXT,
   customerName TEXT,
+  shiftStaff TEXT,
   createdAt TEXT,
   updatedAt TEXT
 );
@@ -88,6 +111,7 @@ CREATE TABLE IF NOT EXISTS posts (
   author TEXT,
   status TEXT DEFAULT 'DRAFT',
   image TEXT,
+  featuredImage TEXT,
   category TEXT,
   tags TEXT,
   publishedAt TEXT,
@@ -121,8 +145,10 @@ CREATE TABLE IF NOT EXISTS ingredients (
   name TEXT,
   category TEXT,
   stock REAL DEFAULT 0,
+  quantity REAL DEFAULT 0,
   unit TEXT,
   minStock REAL DEFAULT 0,
+  minThreshold REAL DEFAULT 0,
   price REAL,
   supplier TEXT,
   createdAt TEXT DEFAULT (datetime('now')),
@@ -134,6 +160,7 @@ CREATE TABLE IF NOT EXISTS notes (
   title TEXT,
   content TEXT,
   lastUpdatedBy TEXT,
+  updatedBy TEXT,
   updatedAt TEXT,
   createdAt TEXT DEFAULT (datetime('now'))
 );
@@ -143,6 +170,7 @@ CREATE TABLE IF NOT EXISTS notifications (
   title TEXT,
   message TEXT,
   type TEXT,
+  tableNumber TEXT,
   read INTEGER DEFAULT 0,
   timestamp TEXT,
   createdAt TEXT DEFAULT (datetime('now'))

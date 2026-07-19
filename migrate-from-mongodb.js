@@ -12,7 +12,7 @@ function uid() {
 
 function esc(val) {
   if (val === null || val === undefined) return 'NULL';
-  if (typeof val === 'number') return val.toString();
+  if (typeof val === 'number' && !Number.isNaN(val)) return val.toString();
   if (typeof val === 'boolean') return val ? '1' : '0';
   const s = String(val).replace(/'/g, "''");
   return `'${s}'`;
@@ -24,6 +24,121 @@ function toISO(val) {
   return new Date(val).toISOString();
 }
 
+function jsonStr(val) {
+  if (!val) return null;
+  return typeof val === 'string' ? val : JSON.stringify(val);
+}
+
+// Field mapping: MongoDB field -> D1 field (or null to skip)
+const FIELD_MAP = {
+  employees: {
+    'phoneNumber': 'phone',
+    'phone': 'phone',
+    'salary': 'salary',
+    'contact': 'contact',
+    '_id': null,
+    '__v': null,
+    'attendanceRecord': null,
+    'createdAt': 'createdAt',
+    'updatedAt': 'updatedAt',
+  },
+  menus: {
+    'imageUrl': 'imageUrl',
+    'image': 'image',
+    'gallery': 'gallery',
+    '_id': null,
+    '__v': null,
+    'createdAt': 'createdAt',
+    'updatedAt': 'updatedAt',
+  },
+  shop_config: {
+    'faviconUrl': 'faviconUrl',
+    'address': 'address',
+    'phoneNumber': 'phoneNumber',
+    'instagramUrl': 'instagramUrl',
+    'facebookUrl': 'facebookUrl',
+    'twitterUrl': 'twitterUrl',
+    'socialLinks': 'socialLinks',
+    'heroImageUrl': 'heroImageUrl',
+    'badgeText1': 'badgeText1',
+    'badgeText2': 'badgeText2',
+    'galleryImages': 'galleryImages',
+    'techSpec1': 'techSpec1',
+    'techSpec2': 'techSpec2',
+    'techSpec3': 'techSpec3',
+    '_id': null,
+    '__v': null,
+  },
+  orders: {
+    'totalAmount': 'totalAmount',
+    'totalPrice': 'totalPrice',
+    'shiftStaff': 'shiftStaff',
+    '_id': null,
+    '__v': null,
+  },
+  posts: {
+    'featuredImage': 'featuredImage',
+    'image': 'image',
+    '_id': null,
+    '__v': null,
+  },
+  ingredients: {
+    'quantity': 'quantity',
+    'minThreshold': 'minThreshold',
+    'stock': 'stock',
+    'minStock': 'minStock',
+    '_id': null,
+    '__v': null,
+  },
+  notes: {
+    'updatedBy': 'updatedBy',
+    'lastUpdatedBy': 'lastUpdatedBy',
+    '_id': null,
+    '__v': null,
+  },
+  notifications: {
+    'tableNumber': 'tableNumber',
+    '_id': null,
+    '__v': null,
+  },
+  feedbacks: {
+    'shiftEmployees': 'shiftEmployees',
+    '_id': null,
+    '__v': null,
+  },
+};
+
+function mapFields(collection, doc) {
+  const mapped = {};
+  const map = FIELD_MAP[collection] || {};
+  for (const [key, value] of Object.entries(doc)) {
+    if (key === '_id' || key === '__v') continue;
+    if (map[key] === null) continue;
+    const targetKey = map[key] || key;
+    mapped[targetKey] = value;
+  }
+  return mapped;
+}
+
+function isDateField(key) {
+  return ['createdAt', 'updatedAt', 'publishedAt', 'date', 'timestamp', 'clockInTime', 'clockOutTime'].includes(key);
+}
+
+function needsJson(key) {
+  return ['items', 'gallery', 'galleryImages', 'socialLinks', 'tags', 'shiftEmployees', 'shiftStaff'].includes(key);
+}
+
+function makeInsert(table, data) {
+  const keys = Object.keys(data);
+  const vals = keys.map(k => {
+    const v = data[k];
+    if (isDateField(k)) return esc(toISO(v));
+    if (needsJson(k)) return esc(jsonStr(v));
+    return esc(v);
+  });
+  return `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${vals.join(', ')});\n`;
+}
+
 async function main() {
   const client = new MongoClient(MONGO_URI);
   await client.connect();
@@ -31,267 +146,195 @@ async function main() {
 
   let sql = `-- Migration from MongoDB to D1\n-- Generated: ${new Date().toISOString()}\n\n`;
 
-  // 1. Migrate employees (without attendanceRecord)
+  // 1. EMPLOYEES
   const employees = await db.collection('employees').find({}).toArray();
+  const empMap = new Map();
   sql += `-- Employees (${employees.length})\n`;
-  for (const emp of employees) {
-    const id = uid();
-    const { _id, __v, attendanceRecord, createdAt, updatedAt, ...rest } = emp;
-    const cols = ['id', ...Object.keys(rest)];
-    const vals = [esc(id), ...Object.keys(rest).map(k => {
-      if (k === 'createdAt' || k === 'updatedAt') return esc(toISO(rest[k]));
-      if (k === 'active') return rest[k] ? '1' : '0';
-      return esc(rest[k]);
-    })];
-    sql += `INSERT INTO employees (${cols.join(', ')}) VALUES (${vals.join(', ')});\n`;
-  }
-  sql += '\n';
-
-  // 2. Migrate attendance records (from embedded array)
-  sql += `-- Attendance Records\n`;
-  let attCount = 0;
-  for (const emp of employees) {
-    const empId = emp.employeeId || emp._id.toString();
-    const existing = employees.find(e => e.employeeId === empId || e._id.toString() === empId);
-    if (!existing) {
-      // Find the employee by the imported ID - we use the same employeeId mapping
-      continue;
-    }
-    // We need to map the old _id to our new UUID for attendance foreign key
-    // Actually we don't have that mapping yet. Let's store the employee id mapping.
-  }
-  // Actually, let's do a two-pass approach: first assign UUIDs to all employees, then process attendance
-  const empMap = new Map(); // old _id string -> new UUID
-  const empIdMap = new Map(); // employeeId string -> new UUID
-
-  // Restart: collect all employees with new UUIDs
   for (const emp of employees) {
     const newId = uid();
     empMap.set(emp._id.toString(), newId);
-    if (emp.employeeId) empIdMap.set(emp.employeeId, newId);
-  }
-
-  // Now generate employee SQL with deterministic UUIDs
-  sql = `-- Migration from MongoDB to D1\n-- Generated: ${new Date().toISOString()}\n\n`;
-  sql += `-- Employees (${employees.length})\n`;
-  for (const emp of employees) {
-    const newId = empMap.get(emp._id.toString());
-    const { _id, __v, attendanceRecord, createdAt, updatedAt, ...rest } = emp;
-    const restKeys = Object.keys(rest);
-    const cols = ['id', ...restKeys];
-    const vals = [esc(newId), ...restKeys.map(k => {
-      if (k === 'createdAt' || k === 'updatedAt') return esc(toISO(rest[k]));
-      if (k === 'active') return rest[k] ? '1' : '0';
-      return esc(rest[k]);
-    })];
-    sql += `INSERT INTO employees (${cols.join(', ')}) VALUES (${vals.join(', ')});\n`;
+    const data = mapFields('employees', emp);
+    data.id = newId;
+    if (data.active !== undefined) data.active = data.active ? 1 : 0;
+    sql += makeInsert('employees', data);
   }
   sql += '\n';
 
-  // 3. Attendance records
+  // 2. ATTENDANCE RECORDS
+  let attCount = 0;
   sql += `-- Attendance Records\n`;
   for (const emp of employees) {
     const newEmpId = empMap.get(emp._id.toString());
+    if (!newEmpId) continue;
     const records = emp.attendanceRecord || [];
     for (const rec of records) {
-      const recId = uid();
-      const date = rec.date ? (rec.date instanceof Date ? rec.date.toISOString().slice(0, 10) : String(rec.date).slice(0, 10)) : '';
-      const clockIn = rec.clockInTime ? toISO(rec.clockInTime) : null;
-      const clockOut = rec.clockOutTime ? toISO(rec.clockOutTime) : null;
-      sql += `INSERT INTO attendance_records (id, employee_id, date, present, clockInTime, clockOutTime, shiftType, status, minutesLate, status_alert, hoursWorked, notes) VALUES (${esc(recId)}, ${esc(newEmpId)}, ${esc(date)}, ${rec.present ? '1' : '0'}, ${esc(clockIn)}, ${esc(clockOut)}, ${esc(rec.shiftType || null)}, ${esc(rec.status || null)}, ${rec.minutesLate || 0}, ${esc(rec.status_alert || null)}, ${rec.hoursWorked || 'NULL'}, ${esc(rec.notes || '')});\n`;
+      const data = mapFields('attendance_records', rec);
+      data.id = uid();
+      data.employee_id = newEmpId;
+      if (rec.date) data.date = rec.date instanceof Date ? rec.date.toISOString().slice(0, 10) : String(rec.date).slice(0, 10);
+      if (data.present !== undefined) data.present = data.present ? 1 : 0;
+      sql += makeInsert('attendance_records', data);
       attCount++;
     }
   }
   sql += `-- Total attendance records: ${attCount}\n\n`;
 
-  // 4. Menus
+  // 3. MENUS
   const menus = await db.collection('menus').find({}).toArray();
   sql += `-- Menus (${menus.length})\n`;
-  for (const menu of menus) {
-    const id = uid();
-    const { _id, __v, createdAt, updatedAt, ...rest } = menu;
-    const restKeys = Object.keys(rest);
-    const cols = ['id', ...restKeys];
-    const vals = [esc(id), ...restKeys.map(k => {
-      if (k === 'createdAt' || k === 'updatedAt') return esc(toISO(rest[k]));
-      if (k === 'available') return rest[k] ? '1' : '0';
-      return esc(rest[k]);
-    })];
-    sql += `INSERT INTO menus (${cols.join(', ')}) VALUES (${vals.join(', ')});\n`;
+  for (const doc of menus) {
+    const data = mapFields('menus', doc);
+    data.id = uid();
+    if (data.available !== undefined) data.available = data.available ? 1 : 0;
+    if (data.gallery && Array.isArray(data.gallery)) data.gallery = JSON.stringify(data.gallery);
+    sql += makeInsert('menus', data);
   }
   sql += '\n';
 
-  // 5. Categories
+  // 4. CATEGORIES
   const categories = await db.collection('categories').find({}).toArray();
   sql += `-- Categories (${categories.length})\n`;
-  for (const cat of categories) {
-    const id = uid();
-    const { _id, __v, ...rest } = cat;
-    const restKeys = Object.keys(rest);
-    const cols = ['id', ...restKeys];
-    const vals = [esc(id), ...restKeys.map(k => esc(rest[k]))];
-    sql += `INSERT INTO categories (${cols.join(', ')}) VALUES (${vals.join(', ')});\n`;
+  for (const doc of categories) {
+    const data = mapFields('categories', doc);
+    data.id = uid();
+    sql += makeInsert('categories', data);
   }
   sql += '\n';
 
-  // 6. Shop config
+  // 5. SHOP CONFIG
   const configs = await db.collection('shop_config').find({}).toArray();
   sql += `-- Shop Config (${configs.length})\n`;
-  for (const cfg of configs) {
-    const id = uid();
-    const { _id, __v, ...rest } = cfg;
-    const restKeys = Object.keys(rest);
-    const cols = ['id', ...restKeys];
-    const vals = [esc(id), ...restKeys.map(k => esc(rest[k]))];
-    sql += `INSERT INTO shop_config (${cols.join(', ')}) VALUES (${vals.join(', ')});\n`;
+  for (const doc of configs) {
+    const data = mapFields('shop_config', doc);
+    data.id = uid();
+    if (data.socialLinks && typeof data.socialLinks !== 'string') data.socialLinks = JSON.stringify(data.socialLinks);
+    if (data.galleryImages && typeof data.galleryImages !== 'string') data.galleryImages = JSON.stringify(data.galleryImages);
+    sql += makeInsert('shop_config', data);
   }
   sql += '\n';
 
-  // 7. Orders
+  // 6. ORDERS
   const orders = await db.collection('orders').find({}).toArray();
   sql += `-- Orders (${orders.length})\n`;
-  for (const order of orders) {
-    const id = uid();
-    const { _id, __v, createdAt, updatedAt, items, ...rest } = order;
-    const data = { ...rest };
-    if (items) data.items = JSON.stringify(items);
-    if (createdAt) data.createdAt = toISO(createdAt);
-    if (updatedAt) data.updatedAt = toISO(updatedAt);
-    const restKeys = Object.keys(data);
-    const cols = ['id', ...restKeys];
-    const vals = [esc(id), ...restKeys.map(k => esc(data[k]))];
-    sql += `INSERT INTO orders (${cols.join(', ')}) VALUES (${vals.join(', ')});\n`;
+  for (const doc of orders) {
+    const data = mapFields('orders', doc);
+    data.id = uid();
+    if (data.items && typeof data.items !== 'string') data.items = JSON.stringify(data.items);
+    if (data.shiftStaff && typeof data.shiftStaff !== 'string') data.shiftStaff = JSON.stringify(data.shiftStaff);
+    sql += makeInsert('orders', data);
   }
   sql += '\n';
 
-  // 8. Posts
+  // 7. POSTS
   const posts = await db.collection('posts').find({}).toArray();
   sql += `-- Posts (${posts.length})\n`;
-  for (const post of posts) {
-    const id = uid();
-    const { _id, __v, createdAt, updatedAt, publishedAt, ...rest } = post;
-    const data = { ...rest };
-    if (createdAt) data.createdAt = toISO(createdAt);
-    if (updatedAt) data.updatedAt = toISO(updatedAt);
-    if (publishedAt) data.publishedAt = toISO(publishedAt);
+  for (const doc of posts) {
+    const data = mapFields('posts', doc);
+    data.id = uid();
     if (data.tags && Array.isArray(data.tags)) data.tags = JSON.stringify(data.tags);
-    const restKeys = Object.keys(data);
-    const cols = ['id', ...restKeys];
-    const vals = [esc(id), ...restKeys.map(k => esc(data[k]))];
-    sql += `INSERT INTO posts (${cols.join(', ')}) VALUES (${vals.join(', ')});\n`;
+    sql += makeInsert('posts', data);
   }
   sql += '\n';
 
-  // 9. Shift schedules
+  // 8. SHIFT SCHEDULES
   const shifts = await db.collection('shift_schedules').find({}).toArray();
   sql += `-- Shift Schedules (${shifts.length})\n`;
-  for (const s of shifts) {
-    const id = uid();
-    const { _id, __v, ...rest } = s;
-    const restKeys = Object.keys(rest);
-    const cols = ['id', ...restKeys];
-    const vals = [esc(id), ...restKeys.map(k => esc(rest[k]))];
-    sql += `INSERT INTO shift_schedules (${cols.join(', ')}) VALUES (${vals.join(', ')});\n`;
+  for (const doc of shifts) {
+    const data = mapFields('shift_schedules', doc);
+    data.id = uid();
+    sql += makeInsert('shift_schedules', data);
   }
   sql += '\n';
 
-  // 10. Transactions
+  // 9. TRANSACTIONS
   const transactions = await db.collection('transactions').find({}).toArray();
   sql += `-- Transactions (${transactions.length})\n`;
-  for (const t of transactions) {
-    const id = uid();
-    const { _id, __v, createdAt, date, ...rest } = t;
-    const data = { ...rest };
-    if (date) data.date = toISO(date);
-    if (createdAt) data.createdAt = toISO(createdAt);
-    const restKeys = Object.keys(data);
-    const cols = ['id', ...restKeys];
-    const vals = [esc(id), ...restKeys.map(k => esc(data[k]))];
-    sql += `INSERT INTO transactions (${cols.join(', ')}) VALUES (${vals.join(', ')});\n`;
+  for (const doc of transactions) {
+    const data = mapFields('transactions', doc);
+    data.id = uid();
+    sql += makeInsert('transactions', data);
   }
   sql += '\n';
 
-  // 11. Ingredients
+  // 10. INGREDIENTS
   const ingredients = await db.collection('ingredients').find({}).toArray();
   sql += `-- Ingredients (${ingredients.length})\n`;
-  for (const ing of ingredients) {
-    const id = uid();
-    const { _id, __v, createdAt, updatedAt, ...rest } = ing;
-    const data = { ...rest };
-    if (createdAt) data.createdAt = toISO(createdAt);
-    if (updatedAt) data.updatedAt = toISO(updatedAt);
-    const restKeys = Object.keys(data);
-    const cols = ['id', ...restKeys];
-    const vals = [esc(id), ...restKeys.map(k => esc(data[k]))];
-    sql += `INSERT INTO ingredients (${cols.join(', ')}) VALUES (${vals.join(', ')});\n`;
+  for (const doc of ingredients) {
+    const data = mapFields('ingredients', doc);
+    data.id = uid();
+    if (data.quantity !== undefined) data.quantity = Number(data.quantity);
+    if (data.minThreshold !== undefined) data.minThreshold = Number(data.minThreshold);
+    sql += makeInsert('ingredients', data);
   }
   sql += '\n';
 
-  // 12. Notes
+  // 11. NOTES
   const notes = await db.collection('notes').find({}).toArray();
   sql += `-- Notes (${notes.length})\n`;
-  for (const note of notes) {
-    const id = uid();
-    const { _id, __v, createdAt, updatedAt, ...rest } = note;
-    const data = { ...rest };
-    if (createdAt) data.createdAt = toISO(createdAt);
-    if (updatedAt) data.updatedAt = toISO(updatedAt);
-    const restKeys = Object.keys(data);
-    const cols = ['id', ...restKeys];
-    const vals = [esc(id), ...restKeys.map(k => esc(data[k]))];
-    sql += `INSERT INTO notes (${cols.join(', ')}) VALUES (${vals.join(', ')});\n`;
+  for (const doc of notes) {
+    const data = mapFields('notes', doc);
+    if (Object.keys(data).length === 0) continue;
+    data.id = uid();
+    sql += makeInsert('notes', data);
   }
   sql += '\n';
 
-  // 13. Notifications
+  // 12. NOTIFICATIONS
   const notifications = await db.collection('notifications').find({}).toArray();
   sql += `-- Notifications (${notifications.length})\n`;
-  for (const n of notifications) {
-    const id = uid();
-    const { _id, __v, createdAt, timestamp, read, ...rest } = n;
-    const data = { ...rest };
-    if (timestamp) data.timestamp = toISO(timestamp);
-    if (createdAt) data.createdAt = toISO(createdAt);
-    data.read = read ? 1 : 0;
-    const restKeys = Object.keys(data);
-    const cols = ['id', ...restKeys];
-    const vals = [esc(id), ...restKeys.map(k => esc(data[k]))];
-    sql += `INSERT INTO notifications (${cols.join(', ')}) VALUES (${vals.join(', ')});\n`;
+  for (const doc of notifications) {
+    const data = mapFields('notifications', doc);
+    data.id = uid();
+    if (data.read !== undefined) data.read = data.read ? 1 : 0;
+    sql += makeInsert('notifications', data);
   }
   sql += '\n';
 
-  // 14. Feedbacks
+  // 13. FEEDBACKS
   const feedbacks = await db.collection('feedbacks').find({}).toArray();
   sql += `-- Feedbacks (${feedbacks.length})\n`;
-  for (const fb of feedbacks) {
-    const id = uid();
-    const { _id, __v, createdAt, timestamp, shiftEmployees, ...rest } = fb;
-    const data = { ...rest };
-    if (timestamp) data.timestamp = toISO(timestamp);
-    if (createdAt) data.createdAt = toISO(createdAt);
-    if (shiftEmployees) data.shiftEmployees = JSON.stringify(shiftEmployees);
-    const restKeys = Object.keys(data);
-    const cols = ['id', ...restKeys];
-    const vals = [esc(id), ...restKeys.map(k => esc(data[k]))];
-    sql += `INSERT INTO feedbacks (${cols.join(', ')}) VALUES (${vals.join(', ')});\n`;
+  for (const doc of feedbacks) {
+    const data = mapFields('feedbacks', doc);
+    data.id = uid();
+    if (data.shiftEmployees && Array.isArray(data.shiftEmployees)) data.shiftEmployees = JSON.stringify(data.shiftEmployees);
+    sql += makeInsert('feedbacks', data);
   }
   sql += '\n';
 
-  // 15. Images (metadata only, actual data needs R2 migration separately)
+  // 14. IMAGES (metadata only)
   const images = await db.collection('images').find({}).toArray();
-  sql += `-- Images (${images.length}) - metadata only, actual files need manual R2 upload\n`;
-  for (const img of images) {
+  sql += `-- Images (${images.length}) - metadata only\n`;
+  for (const doc of images) {
+    if (!doc.mimetype && !doc.originalName) continue;
     const id = uid();
-    const { _id, __v, data, mimetype, originalName, size, createdAt } = img;
-    if (!mimetype && !originalName) continue; // skip if no useful metadata
-    const r2Key = `${id}-${originalName || 'unknown'}`;
-    sql += `INSERT INTO images (id, filename, mimetype, originalName, size, r2Key) VALUES (${esc(id)}, ${esc(originalName || 'unknown')}, ${esc(mimetype || 'image/webp')}, ${esc(originalName || 'unknown')}, ${size || 0}, ${esc(r2Key)});\n`;
-    sql += `-- NOTE: Image ${id} (${originalName}) needs manual upload to R2 bucket 'siapnyafe-images' with key: ${r2Key}\n`;
+    const r2Key = `${id}-${doc.originalName || 'unknown'}`;
+    const mime = doc.mimetype || 'image/webp';
+    const name = doc.originalName || 'unknown';
+    const size = doc.size || 0;
+    sql += `INSERT INTO images (id, filename, mimetype, originalName, size, r2Key) VALUES (${esc(id)}, ${esc(name)}, ${esc(mime)}, ${esc(name)}, ${size}, ${esc(r2Key)});\n`;
+    sql += `-- NOTE: Upload this file manually: npx wrangler r2 object put siapnyafe-images/${r2Key} --file=<path>\n`;
   }
 
   writeFileSync(OUTPUT_FILE, sql);
   console.log(`Migration SQL written to ${OUTPUT_FILE}`);
-  console.log(`Total records: ${employees.length} employees, ${attCount} attendance, ${menus.length} menus, ${categories.length} categories, ${configs.length} configs, ${orders.length} orders, ${posts.length} posts, ${shifts.length} shifts, ${transactions.length} transactions, ${ingredients.length} ingredients, ${notes.length} notes, ${notifications.length} notifications, ${feedbacks.length} feedbacks, ${images.length} images`);
+
+  const counts = {
+    employees: employees.length,
+    attendance: attCount,
+    menus: menus.length,
+    categories: categories.length,
+    configs: configs.length,
+    orders: orders.length,
+    posts: posts.length,
+    shifts: shifts.length,
+    transactions: transactions.length,
+    ingredients: ingredients.length,
+    notes: notes.length,
+    notifications: notifications.length,
+    feedbacks: feedbacks.length,
+    images: images.length,
+  };
+  console.log('Records:', counts);
 
   await client.close();
 }

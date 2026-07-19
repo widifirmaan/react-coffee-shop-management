@@ -842,23 +842,24 @@ async function handleApi(request, env) {
     const empId = uid();
     const hash = await bcrypt.hash('manager123', SALT_ROUNDS);
     await DB.prepare(
-      'INSERT INTO employees (id, employeeId, username, email, password, name, position, role, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    ).bind(empId, 'EMP-MAN-001', 'manager', 'manager@americano.com', hash, 'Manager', 'Manager', 'Manager', 1).run();
+      'INSERT INTO employees (id, employeeId, username, email, password, name, phone, position, salary, role, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).bind(empId, 'EMP-MAN-001', 'manager', 'manager@americano.com', hash, 'Manager', '08123456789', 'Manager', 5000000, 'Manager', 1).run();
 
     const cashierId = uid();
     const cashierHash = await bcrypt.hash('cashier123', SALT_ROUNDS);
     await DB.prepare(
-      'INSERT INTO employees (id, employeeId, username, email, password, name, position, role, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    ).bind(cashierId, 'EMP-CSH-001', 'cashier', 'cashier@americano.com', cashierHash, 'Cashier', 'Cashier', 'Cashier', 1).run();
+      'INSERT INTO employees (id, employeeId, username, email, password, name, phone, position, salary, role, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).bind(cashierId, 'EMP-CSH-001', 'cashier', 'cashier@americano.com', cashierHash, 'Cashier', '08123456788', 'Cashier', 3000000, 'Cashier', 1).run();
 
     const configId = uid();
     await DB.prepare(
-      'INSERT INTO shop_config (id, shopName, websiteTitle, marqueeText, infoTitle, infoContent, infoFooter1, infoFooter2) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-    ).bind(configId, 'Siap Nyafe', 'Siap Nyafe - Excellent Coffee', 'Welcome to Siap Nyafe Coffee Shop!',
-      'Our Story', 'Born in Jakarta, brewed for the bold.', 'EST. 2024', 'JAKARTA'
+      'INSERT INTO shop_config (id, shopName, websiteTitle, faviconUrl, address, phoneNumber, marqueeText, heroImageUrl, badgeText1, badgeText2, infoTitle, infoContent, infoFooter1, infoFooter2, techSpec1, techSpec2, techSpec3) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).bind(configId, 'Siap Nyafe', 'Siap Nyafe - Excellent Coffee', '', 'Jakarta, Indonesia', '021-12345678', 'Welcome to Siap Nyafe Coffee Shop!',
+      '', 'EST 2024', 'JAKARTA', 'Our Story', 'Born in Jakarta, brewed for the bold.', 'EST. 2024', 'JAKARTA',
+      '// EST 2024', '// JKT_ID', '// V.1.0'
     ).run();
 
-    const categories = ['Coffee', 'Non-Coffee', 'Snack', 'Food'];
+    const categories = ['Coffee', 'Non-Coffee', 'Featured', 'Snack', 'Food'];
     for (const cat of categories) {
       await DB.prepare('INSERT INTO categories (id, name) VALUES (?, ?)').bind(uid(), cat).run();
     }
