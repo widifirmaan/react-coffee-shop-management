@@ -830,6 +830,43 @@ async function handleApi(request, env) {
   }
 
   // ===================================================================
+  // SEEDER
+  // ===================================================================
+  if (path === '/api/seed' && method === 'POST') {
+    const { secret } = body;
+    if (secret !== 'siap-nyafe-seed-2024') return error('Invalid secret', 401);
+
+    const existing = await DB.prepare('SELECT * FROM employees LIMIT 1').first();
+    if (existing) return error('Database already seeded', 400);
+
+    const empId = uid();
+    const hash = await bcrypt.hash('manager123', SALT_ROUNDS);
+    await DB.prepare(
+      'INSERT INTO employees (id, employeeId, username, email, password, name, position, role, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).bind(empId, 'EMP-MAN-001', 'manager', 'manager@americano.com', hash, 'Manager', 'Manager', 'Manager', 1).run();
+
+    const cashierId = uid();
+    const cashierHash = await bcrypt.hash('cashier123', SALT_ROUNDS);
+    await DB.prepare(
+      'INSERT INTO employees (id, employeeId, username, email, password, name, position, role, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).bind(cashierId, 'EMP-CSH-001', 'cashier', 'cashier@americano.com', cashierHash, 'Cashier', 'Cashier', 'Cashier', 1).run();
+
+    const configId = uid();
+    await DB.prepare(
+      'INSERT INTO shop_config (id, shopName, websiteTitle, marqueeText, infoTitle, infoContent, infoFooter1, infoFooter2) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+    ).bind(configId, 'Siap Nyafe', 'Siap Nyafe - Excellent Coffee', 'Welcome to Siap Nyafe Coffee Shop!',
+      'Our Story', 'Born in Jakarta, brewed for the bold.', 'EST. 2024', 'JAKARTA'
+    ).run();
+
+    const categories = ['Coffee', 'Non-Coffee', 'Snack', 'Food'];
+    for (const cat of categories) {
+      await DB.prepare('INSERT INTO categories (id, name) VALUES (?, ?)').bind(uid(), cat).run();
+    }
+
+    return json({ message: 'Database seeded successfully. Login: manager / manager123' });
+  }
+
+  // ===================================================================
   // PING
   // ===================================================================
   if (path === '/api/ping') {
