@@ -115,8 +115,8 @@ function LoginPage({ onLogin }) {
                 </form>
 
                 <div style={{ marginTop: '30px', borderTop: '2px solid black', paddingTop: '15px' }}>
-                    <p style={{ fontWeight: 700, margin: '5px 0' }}>MANAGER: manager / password123</p>
-                    <p style={{ fontWeight: 700, margin: '5px 0' }}>BARISTA: michael@americano.com / password123</p>
+                    <p style={{ fontWeight: 700, margin: '5px 0' }}>MANAGER: manager / manager123</p>
+                    <p style={{ fontWeight: 700, margin: '5px 0' }}>CASHIER: cashier / cashier123</p>
                 </div>
             </div>
 
