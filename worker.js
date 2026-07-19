@@ -1,33 +1,16 @@
-import { MongoClient, ObjectId } from 'mongodb';
 import bcrypt from 'bcryptjs';
 
 const SALT_ROUNDS = 10;
 const JWT_SECRET_KEY = 'siap-nyafe-jwt-secret-2024';
 
-let cachedClient = null;
-let cachedDb = null;
-
-async function getDb(uri) {
-  if (cachedDb) return cachedDb;
-  const client = new MongoClient(uri);
-  await client.connect();
-  cachedClient = client;
-  cachedDb = client.db('coffeeshop');
-  return cachedDb;
+function uid() {
+  return crypto.randomUUID();
 }
 
-function docId(id) {
-  return new ObjectId(id);
-}
-
-function fromDoc(doc) {
-  if (!doc) return null;
-  const { _id, __v, password, ...rest } = doc;
-  return { id: _id.toString(), ...rest };
-}
-
-function fromDocList(docs) {
-  return (docs || []).map(fromDoc);
+function stripPassword(row) {
+  if (!row) return null;
+  const { password, ...rest } = row;
+  return rest;
 }
 
 function json(data, status = 200) {
@@ -115,12 +98,17 @@ function getDayOfWeek() {
   return DAY_MAP[days[j.getUTCDay()]];
 }
 
-async function handleApi(request, db) {
+function nowISO() {
+  return new Date().toISOString();
+}
+
+async function handleApi(request, env) {
   const url = new URL(request.url);
   const method = request.method;
   const path = url.pathname;
   const searchParams = url.searchParams;
   const user = await authenticate(request);
+  const DB = env.DB;
 
   let body = {};
   if (['POST', 'PUT', 'PATCH'].includes(method)) {
@@ -136,17 +124,18 @@ async function handleApi(request, db) {
   if (path === '/api/auth/login' && method === 'POST') {
     const { username, email, password } = body;
     if (!password) return error('Password is required');
-    const filter = {};
-    if (username) filter.username = username;
-    else if (email) filter.email = email;
-    else return error('Username or email is required');
-
-    const emp = await db.collection('employees').findOne(filter);
+    let emp;
+    if (username) {
+      emp = await DB.prepare('SELECT * FROM employees WHERE username = ?').bind(username).first();
+    } else if (email) {
+      emp = await DB.prepare('SELECT * FROM employees WHERE email = ?').bind(email).first();
+    } else {
+      return error('Username or email is required');
+    }
     if (!emp) return error('Invalid credentials', 401);
     const pwdValid = await bcrypt.compare(password, emp.password);
     if (!pwdValid) return error('Invalid credentials', 401);
-
-    const userObj = fromDoc(emp);
+    const userObj = stripPassword(emp);
     const token = await signJwt({
       id: userObj.id, username: userObj.username,
       email: userObj.email, role: userObj.role, employeeId: userObj.employeeId,
@@ -164,9 +153,9 @@ async function handleApi(request, db) {
 
   if (path === '/api/auth/me' && method === 'GET') {
     if (!user) return error('Unauthorized', 401);
-    const emp = await db.collection('employees').findOne({ _id: docId(user.id) });
+    const emp = await DB.prepare('SELECT * FROM employees WHERE id = ?').bind(user.id).first();
     if (!emp) return error('User not found', 404);
-    return json(fromDoc(emp));
+    return json(stripPassword(emp));
   }
 
   // ===================================================================
@@ -174,22 +163,37 @@ async function handleApi(request, db) {
   // ===================================================================
   if (path === '/api/employees' && method === 'GET') {
     if (!user) return error('Unauthorized', 401);
-    const filter = {};
-    if (searchParams.get('role')) filter.role = searchParams.get('role');
-    if (searchParams.get('active') !== null) filter.active = searchParams.get('active') === 'true';
+    let sql = 'SELECT * FROM employees WHERE 1=1';
+    const params = [];
+    if (searchParams.get('role')) {
+      sql += ' AND role = ?';
+      params.push(searchParams.get('role'));
+    }
+    if (searchParams.get('active') !== null) {
+      sql += ' AND active = ?';
+      params.push(searchParams.get('active') === 'true' ? 1 : 0);
+    }
     if (searchParams.get('search')) {
       const s = searchParams.get('search');
-      filter.$or = [{ name: { $regex: s, $options: 'i' } }, { employeeId: { $regex: s, $options: 'i' } }];
+      sql += ' AND (name LIKE ? OR employeeId LIKE ?)';
+      params.push(`%${s}%`, `%${s}%`);
     }
-    const docs = await db.collection('employees').find(filter).sort({ name: 1 }).toArray();
-    return json(fromDocList(docs));
+    sql += ' ORDER BY name ASC';
+    const { results } = await DB.prepare(sql).bind(...params).all();
+    return json(results.map(stripPassword));
   }
 
   if (path === '/api/employees' && method === 'POST') {
     if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403);
+    const id = uid();
     body.password = await bcrypt.hash(body.password, SALT_ROUNDS);
-    const result = await db.collection('employees').insertOne(body);
-    return json({ id: result.insertedId.toString(), ...body }, 201);
+    const { password, ...rest } = body;
+    const cols = ['id', ...Object.keys(rest)];
+    const vals = ['?', ...Object.keys(rest).map(() => '?')];
+    const sql = `INSERT INTO employees (${cols.join(',')}) VALUES (${vals.join(',')})`;
+    const params = [id, ...Object.values(rest)];
+    await DB.prepare(sql).bind(...params).run();
+    return json({ id, ...body }, 201);
   }
 
   const empMatch = path.match(/^\/api\/employees\/([^/]+)$/);
@@ -199,12 +203,14 @@ async function handleApi(request, db) {
       if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403);
       if (body.password) body.password = await bcrypt.hash(body.password, SALT_ROUNDS);
       else delete body.password;
-      await db.collection('employees').updateOne({ _id: docId(empId) }, { $set: body });
+      const setClauses = Object.keys(body).map(k => `${k} = ?`).join(', ');
+      const params = [...Object.values(body), empId];
+      await DB.prepare(`UPDATE employees SET ${setClauses} WHERE id = ?`).bind(...params).run();
       return json({ message: 'Updated' });
     }
     if (method === 'DELETE') {
       if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403);
-      await db.collection('employees').deleteOne({ _id: docId(empId) });
+      await DB.prepare('DELETE FROM employees WHERE id = ?').bind(empId).run();
       return json({ message: 'Deleted' });
     }
   }
@@ -212,48 +218,57 @@ async function handleApi(request, db) {
   const empStatusMatch = path.match(/^\/api\/employees\/([^/]+)\/status$/);
   if (empStatusMatch && method === 'PATCH') {
     if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403);
-    const emp = await db.collection('employees').findOne({ _id: docId(empStatusMatch[1]) });
+    const emp = await DB.prepare('SELECT * FROM employees WHERE id = ?').bind(empStatusMatch[1]).first();
     if (!emp) return error('Not found', 404);
-    await db.collection('employees').updateOne(
-      { _id: docId(empStatusMatch[1]) },
-      { $set: { active: !emp.active } }
-    );
-    return json({ message: 'Status toggled', active: !emp.active });
+    const newActive = emp.active ? 0 : 1;
+    await DB.prepare('UPDATE employees SET active = ? WHERE id = ?').bind(newActive, empStatusMatch[1]).run();
+    return json({ message: 'Status toggled', active: !!newActive });
   }
 
   // ===================================================================
   // MENUS
   // ===================================================================
   if (path === '/api/menus' && method === 'GET') {
-    const filter = {};
-    if (searchParams.get('category')) filter.category = searchParams.get('category');
-    if (searchParams.get('search')) filter.name = { $regex: searchParams.get('search'), $options: 'i' };
-    const docs = await db.collection('menus').find(filter).toArray();
-    return json(fromDocList(docs));
+    let sql = 'SELECT * FROM menus WHERE 1=1';
+    const params = [];
+    if (searchParams.get('category')) {
+      sql += ' AND category = ?';
+      params.push(searchParams.get('category'));
+    }
+    if (searchParams.get('search')) {
+      sql += ' AND name LIKE ?';
+      params.push(`%${searchParams.get('search')}%`);
+    }
+    const { results } = await DB.prepare(sql).bind(...params).all();
+    return json(results);
   }
 
   if (path === '/api/menus' && method === 'POST') {
     if (!user) return error('Unauthorized', 401);
-    const result = await db.collection('menus').insertOne(body);
-    return json({ id: result.insertedId.toString(), ...body }, 201);
+    const id = uid();
+    const cols = ['id', ...Object.keys(body)];
+    const vals = ['?', ...Object.keys(body).map(() => '?')];
+    await DB.prepare(`INSERT INTO menus (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(id, ...Object.values(body)).run();
+    return json({ id, ...body }, 201);
   }
 
   const menuMatch = path.match(/^\/api\/menus\/([^/]+)$/);
   if (menuMatch) {
     const menuId = menuMatch[1];
     if (method === 'GET') {
-      const doc = await db.collection('menus').findOne({ _id: docId(menuId) });
+      const doc = await DB.prepare('SELECT * FROM menus WHERE id = ?').bind(menuId).first();
       if (!doc) return error('Not found', 404);
-      return json(fromDoc(doc));
+      return json(doc);
     }
     if (method === 'PUT') {
       if (!user) return error('Unauthorized', 401);
-      await db.collection('menus').updateOne({ _id: docId(menuId) }, { $set: body });
+      const setClauses = Object.keys(body).map(k => `${k} = ?`).join(', ');
+      await DB.prepare(`UPDATE menus SET ${setClauses} WHERE id = ?`).bind(...Object.values(body), menuId).run();
       return json({ message: 'Updated' });
     }
     if (method === 'DELETE') {
       if (!user) return error('Unauthorized', 401);
-      await db.collection('menus').deleteOne({ _id: docId(menuId) });
+      await DB.prepare('DELETE FROM menus WHERE id = ?').bind(menuId).run();
       return json({ message: 'Deleted' });
     }
   }
@@ -262,20 +277,21 @@ async function handleApi(request, db) {
   // CATEGORIES
   // ===================================================================
   if (path === '/api/categories' && method === 'GET') {
-    const docs = await db.collection('categories').find().sort({ name: 1 }).toArray();
-    return json(fromDocList(docs));
+    const { results } = await DB.prepare('SELECT * FROM categories ORDER BY name ASC').all();
+    return json(results);
   }
 
   if (path === '/api/categories' && method === 'POST') {
     if (!user) return error('Unauthorized', 401);
-    const result = await db.collection('categories').insertOne(body);
-    return json({ id: result.insertedId.toString(), ...body }, 201);
+    const id = uid();
+    await DB.prepare('INSERT INTO categories (id, name) VALUES (?, ?)').bind(id, body.name).run();
+    return json({ id, name: body.name }, 201);
   }
 
   const catMatch = path.match(/^\/api\/categories\/([^/]+)$/);
   if (catMatch && method === 'DELETE') {
     if (!user) return error('Unauthorized', 401);
-    await db.collection('categories').deleteOne({ _id: docId(catMatch[1]) });
+    await DB.prepare('DELETE FROM categories WHERE id = ?').bind(catMatch[1]).run();
     return json({ message: 'Deleted' });
   }
 
@@ -283,27 +299,29 @@ async function handleApi(request, db) {
   // CONFIG
   // ===================================================================
   if (path === '/api/config' && method === 'GET') {
-    let config = await db.collection('shop_config').findOne({});
+    let config = await DB.prepare('SELECT * FROM shop_config LIMIT 1').first();
     if (!config) {
-      const defaultConfig = {
-        shopName: 'Siap Nyafe', websiteTitle: 'Siap Nyafe - Excellent Coffee',
-        marqueeText: 'Welcome to Siap Nyafe Coffee Shop!',
-        infoTitle: 'Our Story', infoContent: 'Born in Jakarta, brewed for the bold.',
-        infoFooter1: 'EST. 2024', infoFooter2: 'JAKARTA',
-      };
-      const result = await db.collection('shop_config').insertOne(defaultConfig);
-      return json({ id: result.insertedId.toString(), ...defaultConfig });
+      const id = uid();
+      await DB.prepare('INSERT INTO shop_config (id, shopName, websiteTitle, marqueeText, infoTitle, infoContent, infoFooter1, infoFooter2) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').bind(
+        id, 'Siap Nyafe', 'Siap Nyafe - Excellent Coffee', 'Welcome to Siap Nyafe Coffee Shop!',
+        'Our Story', 'Born in Jakarta, brewed for the bold.', 'EST. 2024', 'JAKARTA'
+      ).run();
+      return json({ id, shopName: 'Siap Nyafe', websiteTitle: 'Siap Nyafe - Excellent Coffee', marqueeText: 'Welcome to Siap Nyafe Coffee Shop!', infoTitle: 'Our Story', infoContent: 'Born in Jakarta, brewed for the bold.', infoFooter1: 'EST. 2024', infoFooter2: 'JAKARTA' });
     }
-    return json(fromDoc(config));
+    return json(config);
   }
 
   if (path === '/api/config' && method === 'PUT') {
     if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403);
-    const existing = await db.collection('shop_config').findOne({});
+    const existing = await DB.prepare('SELECT * FROM shop_config LIMIT 1').first();
     if (existing) {
-      await db.collection('shop_config').updateOne({ _id: existing._id }, { $set: body });
+      const setClauses = Object.keys(body).map(k => `${k} = ?`).join(', ');
+      await DB.prepare(`UPDATE shop_config SET ${setClauses} WHERE id = ?`).bind(...Object.values(body), existing.id).run();
     } else {
-      await db.collection('shop_config').insertOne(body);
+      const id = uid();
+      const cols = ['id', ...Object.keys(body)];
+      const vals = ['?', ...Object.keys(body).map(() => '?')];
+      await DB.prepare(`INSERT INTO shop_config (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(id, ...Object.values(body)).run();
     }
     return json({ message: 'Config updated' });
   }
@@ -313,11 +331,19 @@ async function handleApi(request, db) {
   // ===================================================================
   if (path === '/api/orders' && method === 'GET') {
     if (!user) return error('Unauthorized', 401);
-    const filter = {};
-    if (searchParams.get('status')) filter.status = searchParams.get('status').toUpperCase();
-    if (searchParams.get('excludeStatus')) filter.status = { $ne: searchParams.get('excludeStatus').toUpperCase() };
-    const docs = await db.collection('orders').find(filter).sort({ createdAt: -1 }).toArray();
-    return json(fromDocList(docs));
+    let sql = 'SELECT * FROM orders WHERE 1=1';
+    const params = [];
+    if (searchParams.get('status')) {
+      sql += ' AND status = ?';
+      params.push(searchParams.get('status').toUpperCase());
+    }
+    if (searchParams.get('excludeStatus')) {
+      sql += ' AND status != ?';
+      params.push(searchParams.get('excludeStatus').toUpperCase());
+    }
+    sql += ' ORDER BY createdAt DESC';
+    const { results } = await DB.prepare(sql).bind(...params).all();
+    return json(results);
   }
 
   if (path === '/api/orders' && method === 'POST') {
@@ -330,10 +356,13 @@ async function handleApi(request, db) {
     body.totalPrice = totalPrice;
     body.grandTotal = parseFloat(totalPrice) + parseFloat(tax);
     body.status = body.status || 'PENDING';
-    body.createdAt = new Date();
+    body.createdAt = nowISO();
     if (body.totalAmount) delete body.totalAmount;
-    const result = await db.collection('orders').insertOne(body);
-    return json({ id: result.insertedId.toString(), ...body }, 201);
+    const id = uid();
+    const cols = ['id', ...Object.keys(body)];
+    const vals = ['?', ...Object.keys(body).map(() => '?')];
+    await DB.prepare(`INSERT INTO orders (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(id, ...Object.values(body)).run();
+    return json({ id, ...body }, 201);
   }
 
   const orderMatch = path.match(/^\/api\/orders\/([^/]+)$/);
@@ -343,16 +372,18 @@ async function handleApi(request, db) {
       if (!user) return error('Unauthorized', 401);
       if (body.items) {
         body.totalPrice = body.items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 0), 0);
-        const existing = await db.collection('orders').findOne({ _id: docId(orderId) });
+        const existing = await DB.prepare('SELECT * FROM orders WHERE id = ?').bind(orderId).first();
         const tax = existing?.tax || 0;
         body.grandTotal = body.totalPrice + tax;
       }
-      await db.collection('orders').updateOne({ _id: docId(orderId) }, { $set: body });
+      body.updatedAt = nowISO();
+      const setClauses = Object.keys(body).map(k => `${k} = ?`).join(', ');
+      await DB.prepare(`UPDATE orders SET ${setClauses} WHERE id = ?`).bind(...Object.values(body), orderId).run();
       return json({ message: 'Updated' });
     }
     if (method === 'DELETE') {
       if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403);
-      await db.collection('orders').deleteOne({ _id: docId(orderId) });
+      await DB.prepare('DELETE FROM orders WHERE id = ?').bind(orderId).run();
       return json({ message: 'Deleted' });
     }
   }
@@ -361,10 +392,7 @@ async function handleApi(request, db) {
   if (orderStatusMatch && method === 'PATCH') {
     if (!user) return error('Unauthorized', 401);
     const status = searchParams.get('status') || body.status || '';
-    await db.collection('orders').updateOne(
-      { _id: docId(orderStatusMatch[1]) },
-      { $set: { status: status.toUpperCase() } }
-    );
+    await DB.prepare('UPDATE orders SET status = ? WHERE id = ?').bind(status.toUpperCase(), orderStatusMatch[1]).run();
     return json({ message: 'Status updated' });
   }
 
@@ -372,40 +400,45 @@ async function handleApi(request, db) {
   // POSTS
   // ===================================================================
   if (path === '/api/posts' && method === 'GET') {
-    const docs = await db.collection('posts').find().sort({ createdAt: -1 }).toArray();
-    return json(fromDocList(docs));
+    const { results } = await DB.prepare('SELECT * FROM posts ORDER BY createdAt DESC').all();
+    return json(results);
   }
 
   if (path === '/api/posts/published' && method === 'GET') {
-    const docs = await db.collection('posts').find({ status: 'PUBLISHED' }).sort({ publishedAt: -1 }).toArray();
-    return json(fromDocList(docs));
+    const { results } = await DB.prepare('SELECT * FROM posts WHERE status = ? ORDER BY publishedAt DESC').bind('PUBLISHED').all();
+    return json(results);
   }
 
   if (path === '/api/posts' && method === 'POST') {
     if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403);
     if (!body.slug) body.slug = (body.title || 'untitled').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now();
-    if (body.status === 'PUBLISHED') body.publishedAt = new Date();
-    const result = await db.collection('posts').insertOne(body);
-    return json({ id: result.insertedId.toString(), ...body }, 201);
+    if (body.status === 'PUBLISHED') body.publishedAt = nowISO();
+    const id = uid();
+    const cols = ['id', ...Object.keys(body)];
+    const vals = ['?', ...Object.keys(body).map(() => '?')];
+    await DB.prepare(`INSERT INTO posts (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(id, ...Object.values(body)).run();
+    return json({ id, ...body }, 201);
   }
 
   const postMatch = path.match(/^\/api\/posts\/([^/]+)$/);
   if (postMatch) {
     const postId = postMatch[1];
     if (method === 'GET') {
-      const doc = await db.collection('posts').findOne({ _id: docId(postId) });
+      const doc = await DB.prepare('SELECT * FROM posts WHERE id = ?').bind(postId).first();
       if (!doc) return error('Not found', 404);
-      return json(fromDoc(doc));
+      return json(doc);
     }
     if (method === 'PUT') {
       if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403);
-      if (body.status === 'PUBLISHED' && !body.publishedAt) body.publishedAt = new Date();
-      await db.collection('posts').updateOne({ _id: docId(postId) }, { $set: body });
+      if (body.status === 'PUBLISHED' && !body.publishedAt) body.publishedAt = nowISO();
+      body.updatedAt = nowISO();
+      const setClauses = Object.keys(body).map(k => `${k} = ?`).join(', ');
+      await DB.prepare(`UPDATE posts SET ${setClauses} WHERE id = ?`).bind(...Object.values(body), postId).run();
       return json({ message: 'Updated' });
     }
     if (method === 'DELETE') {
       if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403);
-      await db.collection('posts').deleteOne({ _id: docId(postId) });
+      await DB.prepare('DELETE FROM posts WHERE id = ?').bind(postId).run();
       return json({ message: 'Deleted' });
     }
   }
@@ -415,20 +448,20 @@ async function handleApi(request, db) {
   // ===================================================================
   if (path === '/api/shifts' && method === 'GET') {
     if (!user) return error('Unauthorized', 401);
-    const docs = await db.collection('shift_schedules').find().toArray();
-    return json(fromDocList(docs));
+    const { results } = await DB.prepare('SELECT * FROM shift_schedules').all();
+    return json(results);
   }
 
   if (path === '/api/shifts' && method === 'POST') {
     if (!user) return error('Unauthorized', 401);
     const shifts = body.shifts || body;
     if (Array.isArray(shifts)) {
-      await db.collection('shift_schedules').deleteMany({});
-      const cleaned = shifts.map(s => ({
-        employeeId: s.employeeId, employeeName: s.employeeName,
-        role: s.role, position: s.position, dayOfWeek: s.dayOfWeek, shiftType: s.shiftType,
-      }));
-      if (cleaned.length > 0) await db.collection('shift_schedules').insertMany(cleaned);
+      await DB.prepare('DELETE FROM shift_schedules').run();
+      for (const s of shifts) {
+        const id = uid();
+        await DB.prepare('INSERT INTO shift_schedules (id, employeeId, employeeName, role, position, dayOfWeek, shiftType) VALUES (?, ?, ?, ?, ?, ?, ?)')
+          .bind(id, s.employeeId, s.employeeName, s.role, s.position, s.dayOfWeek, s.shiftType).run();
+      }
     }
     return json({ message: 'Shifts saved' });
   }
@@ -438,17 +471,25 @@ async function handleApi(request, db) {
   // ===================================================================
   if (path === '/api/transactions' && method === 'GET') {
     if (!user) return error('Unauthorized', 401);
-    const filter = {};
-    if (searchParams.get('type')) filter.type = searchParams.get('type');
-    const docs = await db.collection('transactions').find(filter).sort({ date: -1 }).toArray();
-    return json(fromDocList(docs));
+    let sql = 'SELECT * FROM transactions WHERE 1=1';
+    const params = [];
+    if (searchParams.get('type')) {
+      sql += ' AND type = ?';
+      params.push(searchParams.get('type'));
+    }
+    sql += ' ORDER BY date DESC';
+    const { results } = await DB.prepare(sql).bind(...params).all();
+    return json(results);
   }
 
   if (path === '/api/transactions' && method === 'POST') {
     if (!user) return error('Unauthorized', 401);
-    body.date = body.date ? new Date(body.date) : new Date();
-    const result = await db.collection('transactions').insertOne(body);
-    return json({ id: result.insertedId.toString(), ...body }, 201);
+    body.date = body.date || nowISO();
+    const id = uid();
+    const cols = ['id', ...Object.keys(body)];
+    const vals = ['?', ...Object.keys(body).map(() => '?')];
+    await DB.prepare(`INSERT INTO transactions (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(id, ...Object.values(body)).run();
+    return json({ id, ...body }, 201);
   }
 
   // ===================================================================
@@ -456,14 +497,17 @@ async function handleApi(request, db) {
   // ===================================================================
   if (path === '/api/ingredients' && method === 'GET') {
     if (!user) return error('Unauthorized', 401);
-    const docs = await db.collection('ingredients').find().toArray();
-    return json(fromDocList(docs));
+    const { results } = await DB.prepare('SELECT * FROM ingredients').all();
+    return json(results);
   }
 
   if (path === '/api/ingredients' && method === 'POST') {
     if (!user) return error('Unauthorized', 401);
-    const result = await db.collection('ingredients').insertOne(body);
-    return json({ id: result.insertedId.toString(), ...body }, 201);
+    const id = uid();
+    const cols = ['id', ...Object.keys(body)];
+    const vals = ['?', ...Object.keys(body).map(() => '?')];
+    await DB.prepare(`INSERT INTO ingredients (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(id, ...Object.values(body)).run();
+    return json({ id, ...body }, 201);
   }
 
   const ingMatch = path.match(/^\/api\/ingredients\/([^/]+)$/);
@@ -471,12 +515,14 @@ async function handleApi(request, db) {
     const ingId = ingMatch[1];
     if (method === 'PUT') {
       if (!user) return error('Unauthorized', 401);
-      await db.collection('ingredients').updateOne({ _id: docId(ingId) }, { $set: body });
+      body.updatedAt = nowISO();
+      const setClauses = Object.keys(body).map(k => `${k} = ?`).join(', ');
+      await DB.prepare(`UPDATE ingredients SET ${setClauses} WHERE id = ?`).bind(...Object.values(body), ingId).run();
       return json({ message: 'Updated' });
     }
     if (method === 'DELETE') {
       if (!user) return error('Unauthorized', 401);
-      await db.collection('ingredients').deleteOne({ _id: docId(ingId) });
+      await DB.prepare('DELETE FROM ingredients WHERE id = ?').bind(ingId).run();
       return json({ message: 'Deleted' });
     }
   }
@@ -486,36 +532,45 @@ async function handleApi(request, db) {
   // ===================================================================
   if (path === '/api/notes' && method === 'GET') {
     if (!user) return error('Unauthorized', 401);
-    const docs = await db.collection('notes').find().toArray();
-    return json(fromDocList(docs));
+    const { results } = await DB.prepare('SELECT * FROM notes').all();
+    return json(results);
   }
 
   if (path === '/api/notes/dashboard' && method === 'GET') {
     if (!user) return error('Unauthorized', 401);
-    const existing = await db.collection('notes').findOne({ content: { $exists: true } });
-    if (existing) return json(fromDoc(existing));
-    const result = await db.collection('notes').insertOne({ content: 'Welcome to Siap Nyafe!', lastUpdatedBy: 'system', updatedAt: new Date() });
-    return json({ id: result.insertedId.toString(), content: 'Welcome to Siap Nyafe!', lastUpdatedBy: 'system', updatedAt: new Date() });
+    const existing = await DB.prepare('SELECT * FROM notes LIMIT 1').first();
+    if (existing) return json(existing);
+    const id = uid();
+    await DB.prepare('INSERT INTO notes (id, content, lastUpdatedBy, updatedAt) VALUES (?, ?, ?, ?)')
+      .bind(id, 'Welcome to Siap Nyafe!', 'system', nowISO()).run();
+    return json({ id, content: 'Welcome to Siap Nyafe!', lastUpdatedBy: 'system', updatedAt: nowISO() });
   }
 
   if (path === '/api/notes/dashboard' && method === 'POST') {
     if (!user) return error('Unauthorized', 401);
-    const existing = await db.collection('notes').findOne({ content: { $exists: true } });
-    const noteData = { content: body.content, lastUpdatedBy: user.username || 'unknown', updatedAt: new Date() };
+    const existing = await DB.prepare('SELECT * FROM notes LIMIT 1').first();
+    const noteData = { content: body.content, lastUpdatedBy: user.username || 'unknown', updatedAt: nowISO() };
     if (existing) {
-      await db.collection('notes').updateOne({ _id: existing._id }, { $set: noteData });
+      const setClauses = Object.keys(noteData).map(k => `${k} = ?`).join(', ');
+      await DB.prepare(`UPDATE notes SET ${setClauses} WHERE id = ?`).bind(...Object.values(noteData), existing.id).run();
     } else {
-      await db.collection('notes').insertOne(noteData);
+      const id = uid();
+      const cols = ['id', ...Object.keys(noteData)];
+      const vals = ['?', ...Object.keys(noteData).map(() => '?')];
+      await DB.prepare(`INSERT INTO notes (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(id, ...Object.values(noteData)).run();
     }
     return json({ message: 'Note saved' });
   }
 
   if (path === '/api/notes' && method === 'POST') {
     if (!user) return error('Unauthorized', 401);
+    const id = uid();
     body.lastUpdatedBy = user.username || 'unknown';
-    body.updatedAt = new Date();
-    const result = await db.collection('notes').insertOne(body);
-    return json({ id: result.insertedId.toString(), ...body }, 201);
+    body.updatedAt = nowISO();
+    const cols = ['id', ...Object.keys(body)];
+    const vals = ['?', ...Object.keys(body).map(() => '?')];
+    await DB.prepare(`INSERT INTO notes (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(id, ...Object.values(body)).run();
+    return json({ id, ...body }, 201);
   }
 
   const noteMatch = path.match(/^\/api\/notes\/([^/]+)$/);
@@ -523,14 +578,15 @@ async function handleApi(request, db) {
     const noteId = noteMatch[1];
     if (method === 'PUT') {
       if (!user) return error('Unauthorized', 401);
-      body.updatedAt = new Date();
+      body.updatedAt = nowISO();
       body.lastUpdatedBy = user.username || 'unknown';
-      await db.collection('notes').updateOne({ _id: docId(noteId) }, { $set: body });
+      const setClauses = Object.keys(body).map(k => `${k} = ?`).join(', ');
+      await DB.prepare(`UPDATE notes SET ${setClauses} WHERE id = ?`).bind(...Object.values(body), noteId).run();
       return json({ message: 'Updated' });
     }
     if (method === 'DELETE') {
       if (!user) return error('Unauthorized', 401);
-      await db.collection('notes').deleteOne({ _id: docId(noteId) });
+      await DB.prepare('DELETE FROM notes WHERE id = ?').bind(noteId).run();
       return json({ message: 'Deleted' });
     }
   }
@@ -540,21 +596,24 @@ async function handleApi(request, db) {
   // ===================================================================
   if (path === '/api/notifications' && method === 'GET') {
     if (!user) return error('Unauthorized', 401);
-    const docs = await db.collection('notifications').find({ read: false }).sort({ timestamp: -1 }).limit(50).toArray();
-    return json(fromDocList(docs));
+    const { results } = await DB.prepare('SELECT * FROM notifications WHERE read = 0 ORDER BY timestamp DESC LIMIT 50').all();
+    return json(results);
   }
 
   if (path === '/api/notifications' && method === 'POST') {
-    body.timestamp = new Date();
-    body.read = false;
-    const result = await db.collection('notifications').insertOne(body);
-    return json({ id: result.insertedId.toString(), ...body }, 201);
+    const id = uid();
+    body.timestamp = nowISO();
+    body.read = 0;
+    const cols = ['id', ...Object.keys(body)];
+    const vals = ['?', ...Object.keys(body).map(() => '?')];
+    await DB.prepare(`INSERT INTO notifications (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(id, ...Object.values(body)).run();
+    return json({ id, ...body }, 201);
   }
 
   const notifMatch = path.match(/^\/api\/notifications\/([^/]+)\/read$/);
   if (notifMatch && method === 'PUT') {
     if (!user) return error('Unauthorized', 401);
-    await db.collection('notifications').updateOne({ _id: docId(notifMatch[1]) }, { $set: { read: true } });
+    await DB.prepare('UPDATE notifications SET read = 1 WHERE id = ?').bind(notifMatch[1]).run();
     return json({ message: 'Marked as read' });
   }
 
@@ -562,8 +621,8 @@ async function handleApi(request, db) {
   // FEEDBACKS
   // ===================================================================
   if (path === '/api/feedbacks' && method === 'GET') {
-    const docs = await db.collection('feedbacks').find().sort({ timestamp: -1 }).toArray();
-    return json(fromDocList(docs));
+    const { results } = await DB.prepare('SELECT * FROM feedbacks ORDER BY timestamp DESC').all();
+    return json(results);
   }
 
   if (path === '/api/feedbacks' && method === 'POST') {
@@ -574,17 +633,20 @@ async function handleApi(request, db) {
     let shiftType = 'MORNING';
     if (h >= 15 && h < 22) shiftType = 'AFTERNOON';
     else if (h >= 22 || h < 7) shiftType = 'EVENING';
-    const shiftDocs = await db.collection('shift_schedules').find({ dayOfWeek, shiftType }).toArray();
-    body.shiftEmployees = shiftDocs.map(s => s.employeeName).filter(Boolean);
-    body.timestamp = new Date();
-    const result = await db.collection('feedbacks').insertOne(body);
-    return json({ id: result.insertedId.toString(), ...body }, 201);
+    const { results: shiftDocs } = await DB.prepare('SELECT * FROM shift_schedules WHERE dayOfWeek = ? AND shiftType = ?').bind(dayOfWeek, shiftType).all();
+    body.shiftEmployees = JSON.stringify(shiftDocs.map(s => s.employeeName).filter(Boolean));
+    body.timestamp = nowISO();
+    const id = uid();
+    const cols = ['id', ...Object.keys(body)];
+    const vals = ['?', ...Object.keys(body).map(() => '?')];
+    await DB.prepare(`INSERT INTO feedbacks (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(id, ...Object.values(body)).run();
+    return json({ id, ...body }, 201);
   }
 
   const fbMatch = path.match(/^\/api\/feedbacks\/([^/]+)$/);
   if (fbMatch && method === 'DELETE') {
     if (!user) return error('Unauthorized', 401);
-    await db.collection('feedbacks').deleteOne({ _id: docId(fbMatch[1]) });
+    await DB.prepare('DELETE FROM feedbacks WHERE id = ?').bind(fbMatch[1]).run();
     return json({ message: 'Deleted' });
   }
 
@@ -593,63 +655,55 @@ async function handleApi(request, db) {
   // ===================================================================
   if (path === '/api/attendance' && method === 'GET') {
     if (!user) return error('Unauthorized', 401);
-    const employees = await db.collection('employees').find(
-      {},
-      { projection: { name: 1, employeeId: 1, position: 1, attendanceRecord: 1 } }
-    ).toArray();
-    const allRecords = [];
-    for (const emp of employees) {
-      for (const rec of (emp.attendanceRecord || [])) {
-        allRecords.push({ ...fromDoc(rec), employeeId: emp.employeeId, employeeName: emp.name, position: emp.position });
-      }
-    }
-    allRecords.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
-    return json(allRecords);
+    const { results } = await DB.prepare(`
+      SELECT ar.*, e.employeeId, e.name AS employeeName, e.position
+      FROM attendance_records ar
+      JOIN employees e ON ar.employee_id = e.id
+      ORDER BY ar.date DESC
+    `).all();
+    return json(results);
   }
 
   const attHistoryMatch = path.match(/^\/api\/attendance\/history\/([^/]+)$/);
   if (attHistoryMatch && method === 'GET') {
     if (!user) return error('Unauthorized', 401);
-    const emp = await db.collection('employees').findOne({ employeeId: attHistoryMatch[1] });
+    const emp = await DB.prepare('SELECT * FROM employees WHERE employeeId = ?').bind(attHistoryMatch[1]).first();
     if (!emp) return error('Not found', 404);
-    const records = (emp.attendanceRecord || []).map(r => ({ ...fromDoc(r), employeeId: emp.employeeId, employeeName: emp.name, position: emp.position }));
-    records.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
-    return json(records);
+    const { results } = await DB.prepare(`
+      SELECT ar.*, e.employeeId, e.name AS employeeName, e.position
+      FROM attendance_records ar
+      JOIN employees e ON ar.employee_id = e.id
+      WHERE e.employeeId = ?
+      ORDER BY ar.date DESC
+    `).bind(attHistoryMatch[1]).all();
+    return json(results);
   }
 
   const attTodayMatch = path.match(/^\/api\/attendance\/today\/([^/]+)$/);
   if (attTodayMatch && method === 'GET') {
     if (!user) return error('Unauthorized', 401);
-    const emp = await db.collection('employees').findOne({ employeeId: attTodayMatch[1] });
+    const emp = await DB.prepare('SELECT * FROM employees WHERE employeeId = ?').bind(attTodayMatch[1]).first();
     if (!emp) return json(null);
     const today = getJakartaDateStr();
-    const todayRec = (emp.attendanceRecord || []).find(r => {
-      if (!r.date) return false;
-      const ds = typeof r.date === 'string' ? r.date.slice(0, 10) : new Date(r.date).toISOString().slice(0, 10);
-      return ds === today;
-    });
-    return json(todayRec ? fromDoc(todayRec) : null);
+    const rec = await DB.prepare('SELECT * FROM attendance_records WHERE employee_id = ? AND date = ?').bind(emp.id, today).first();
+    return json(rec || null);
   }
 
   if (path === '/api/attendance/clock-in' && method === 'POST') {
     if (!user) return error('Unauthorized', 401);
     const { employeeId } = body;
     if (!employeeId) return error('employeeId required');
-    const emp = await db.collection('employees').findOne({ employeeId });
+    const emp = await DB.prepare('SELECT * FROM employees WHERE employeeId = ?').bind(employeeId).first();
     if (!emp) return error('Employee not found', 404);
 
     const today = getJakartaDateStr();
-    const existingToday = (emp.attendanceRecord || []).find(r => {
-      if (!r.date) return false;
-      const ds = typeof r.date === 'string' ? r.date.slice(0, 10) : new Date(r.date).toISOString().slice(0, 10);
-      return ds === today;
-    });
+    const existingToday = await DB.prepare('SELECT * FROM attendance_records WHERE employee_id = ? AND date = ?').bind(emp.id, today).first();
     if (existingToday) return error('Already clocked in today', 400);
 
     const jDate = getJakartaDate();
     const totalMin = jDate.getUTCHours() * 60 + jDate.getUTCMinutes();
     const dayOfWeek = getDayOfWeek();
-    const scheduledShift = await db.collection('shift_schedules').findOne({ employeeId, dayOfWeek });
+    const scheduledShift = await DB.prepare('SELECT * FROM shift_schedules WHERE employeeId = ? AND dayOfWeek = ?').bind(employeeId, dayOfWeek).first();
     let shiftType = 'UNSCHEDULED';
     let isLate = false;
     let minutesLate = 0;
@@ -665,64 +719,46 @@ async function handleApi(request, db) {
       }
     }
 
-    const newRecord = {
-      date: new Date(today),
-      present: true,
-      clockInTime: jDate,
-      shiftType,
-      status: isLate ? 'LATE' : (shiftType === 'UNSCHEDULED' ? 'UNSCHEDULED' : 'ON_TIME'),
-      minutesLate,
-      notes: '',
-    };
+    const id = uid();
+    await DB.prepare(
+      'INSERT INTO attendance_records (id, employee_id, date, present, clockInTime, shiftType, status, minutesLate, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).bind(id, emp.id, today, 1, jDate.toISOString(), shiftType, isLate ? 'LATE' : (shiftType === 'UNSCHEDULED' ? 'UNSCHEDULED' : 'ON_TIME'), minutesLate, '').run();
 
-    await db.collection('employees').updateOne(
-      { employeeId },
-      { $push: { attendanceRecord: newRecord } }
-    );
-    return json({ message: 'Clocked in', record: newRecord });
+    return json({ message: 'Clocked in', record: { id, date: today, present: true, clockInTime: jDate.toISOString(), shiftType, status: isLate ? 'LATE' : (shiftType === 'UNSCHEDULED' ? 'UNSCHEDULED' : 'ON_TIME'), minutesLate } });
   }
 
   if (path === '/api/attendance/clock-out' && method === 'POST') {
     if (!user) return error('Unauthorized', 401);
     const { employeeId } = body;
     if (!employeeId) return error('employeeId required');
-    const emp = await db.collection('employees').findOne({ employeeId });
+    const emp = await DB.prepare('SELECT * FROM employees WHERE employeeId = ?').bind(employeeId).first();
     if (!emp) return error('Employee not found', 404);
 
     const today = getJakartaDateStr();
-    const records = emp.attendanceRecord || [];
-    const idx = records.findIndex(r => {
-      if (!r.date) return false;
-      const ds = typeof r.date === 'string' ? r.date.slice(0, 10) : new Date(r.date).toISOString().slice(0, 10);
-      return ds === today;
-    });
-    if (idx === -1) return error('No clock-in record found for today', 400);
+    const record = await DB.prepare('SELECT * FROM attendance_records WHERE employee_id = ? AND date = ?').bind(emp.id, today).first();
+    if (!record) return error('No clock-in record found for today', 400);
 
     const jDate = getJakartaDate();
-    const record = records[idx];
     const clockIn = record.clockInTime;
     if (clockIn) {
       const diffMs = jDate.getTime() - new Date(clockIn).getTime();
-      const hoursWorked = diffMs / (1000 * 60 * 60);
-      const setFields = {
-        [`attendanceRecord.${idx}.clockOutTime`]: jDate,
-        [`attendanceRecord.${idx}.hoursWorked`]: Math.round(hoursWorked * 100) / 100,
-      };
+      const hoursWorked = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100;
+      let statusAlert = null;
       if (hoursWorked < 7.75 && record.status !== 'UNSCHEDULED') {
-        setFields[`attendanceRecord.${idx}.status_alert`] = 'TOO_EARLY';
+        statusAlert = 'TOO_EARLY';
       }
-      await db.collection('employees').updateOne({ employeeId }, { $set: setFields });
+      await DB.prepare('UPDATE attendance_records SET clockOutTime = ?, hoursWorked = ?, status_alert = ? WHERE id = ?')
+        .bind(jDate.toISOString(), hoursWorked, statusAlert, record.id).run();
     }
     return json({ message: 'Clocked out' });
   }
 
   // ===================================================================
-  // IMAGE UPLOAD
+  // IMAGE UPLOAD (R2)
   // ===================================================================
   if (path === '/api/uploads' && method === 'POST') {
     if (!user) return error('Unauthorized', 401);
 
-    // Parse multipart form data
     let fileArrayBuffer = null;
     let fileMime = '';
     let fileName = '';
@@ -742,59 +778,52 @@ async function handleApi(request, db) {
       }
     } catch { /* not multipart */ }
 
-    // Also check JSON body for oldFile
     if (!oldFileId && body.oldFile) {
       oldFileId = body.oldFile;
     }
 
     if (!fileArrayBuffer) return error('No file uploaded', 400);
 
-    // Delete old image if specified
+    // Delete old image from R2 and DB
     if (oldFileId) {
       const cleanId = oldFileId.replace(/^\/api\/images\//, '');
       try {
-        await db.collection('images').deleteOne({ _id: docId(cleanId) });
+        const oldImg = await DB.prepare('SELECT * FROM images WHERE id = ?').bind(cleanId).first();
+        if (oldImg && oldImg.r2Key) {
+          await env.IMAGES.delete(oldImg.r2Key);
+        }
+        await DB.prepare('DELETE FROM images WHERE id = ?').bind(cleanId).run();
       } catch { /* ignore */ }
     }
 
-    const doc = {
-      data: Buffer.from(fileArrayBuffer),
-      mimetype: fileMime || 'image/webp',
-      originalName: fileName || 'upload',
-      size: fileArrayBuffer.byteLength,
-      createdAt: new Date(),
-    };
-    const result = await db.collection('images').insertOne(doc);
-    return json({ url: `/api/images/${result.insertedId.toString()}` }, 201);
+    const id = uid();
+    const r2Key = `${id}-${fileName || 'upload'}`;
+    await env.IMAGES.put(r2Key, fileArrayBuffer, {
+      httpMetadata: { contentType: fileMime || 'image/webp' },
+    });
+
+    await DB.prepare('INSERT INTO images (id, filename, mimetype, originalName, size, r2Key) VALUES (?, ?, ?, ?, ?, ?)')
+      .bind(id, fileName || 'upload', fileMime || 'image/webp', fileName || 'upload', fileArrayBuffer.byteLength, r2Key).run();
+
+    return json({ url: `/api/images/${id}` }, 201);
   }
 
   // ===================================================================
-  // SERVE IMAGE
+  // SERVE IMAGE (from R2)
   // ===================================================================
   const imageMatch = path.match(/^\/api\/images\/([^/]+)$/);
   if (imageMatch && method === 'GET') {
     const imageId = imageMatch[1];
-    const img = await db.collection('images').findOne({ _id: docId(imageId) });
+    const img = await DB.prepare('SELECT * FROM images WHERE id = ?').bind(imageId).first();
     if (!img) return error('Image not found', 404);
 
-    const mimeType = img.mimetype || 'image/webp';
-    let buffer;
+    const obj = await env.IMAGES.get(img.r2Key);
+    if (!obj) return error('Image data not found', 500);
 
-    if (img.data && img.data._bsontype === 'Binary') {
-      buffer = img.data.buffer;
-    } else if (img.data && img.data.buffer) {
-      buffer = img.data.buffer;
-    } else if (img.data && typeof img.data === 'object' && img.data.type === 'Buffer') {
-      buffer = Buffer.from(img.data);
-    } else if (Buffer.isBuffer(img.data)) {
-      buffer = img.data;
-    } else {
-      return error('Invalid image data', 500);
-    }
-
-    return new Response(buffer, {
+    const blob = await obj.blob();
+    return new Response(blob, {
       headers: {
-        'Content-Type': mimeType,
+        'Content-Type': img.mimetype || 'image/webp',
         'Cache-Control': 'public, max-age=31536000, immutable',
       },
     });
@@ -804,7 +833,7 @@ async function handleApi(request, db) {
   // PING
   // ===================================================================
   if (path === '/api/ping') {
-    return json({ message: 'Siap Nyafe API is running (Cloudflare Worker)' });
+    return json({ message: 'Siap Nyafe API is running (Cloudflare Worker + D1)' });
   }
 
   return json({ message: 'API Route Not Found' }, 404);
@@ -816,11 +845,7 @@ export default {
 
     if (url.pathname.startsWith('/api/')) {
       try {
-        if (!env.MONGODB_URI) {
-          return json({ message: 'MONGODB_URI not configured' }, 500);
-        }
-        const db = await getDb(env.MONGODB_URI);
-        return await handleApi(request, db);
+        return await handleApi(request, env);
       } catch (err) {
         console.error('API Error:', err);
         return json({ message: err.message || 'Internal error', stack: err.stack }, 500);
