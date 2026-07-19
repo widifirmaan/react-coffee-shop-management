@@ -816,11 +816,14 @@ export default {
 
     if (url.pathname.startsWith('/api/')) {
       try {
+        if (!env.MONGODB_URI) {
+          return json({ message: 'MONGODB_URI not configured' }, 500);
+        }
         const db = await getDb(env.MONGODB_URI);
         return await handleApi(request, db);
       } catch (err) {
         console.error('API Error:', err);
-        return json({ message: err.message || 'Internal error' }, 500);
+        return json({ message: err.message || 'Internal error', stack: err.stack }, 500);
       }
     }
 
