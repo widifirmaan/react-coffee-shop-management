@@ -296,35 +296,83 @@ export default function PostManagementPage({ user }) {
                         required
                     />
 
-                    <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', fontWeight: '900', marginBottom: '8px' }}>POST IMAGE</label>
-                        <div style={{ display: 'flex', gap: '10px' }}>
-                            <Input
-                                style={{ container: { marginBottom: 0, flex: 1 } }}
-                                name="featuredImage"
-                                value={formData.featuredImage}
-                                onChange={handleChange}
-                                placeholder="https://..."
-                                maxLength={500}
-                            />
-                            <label style={{ cursor: 'pointer', display: 'flex' }}>
-                                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileUpload} />
-                                <div className="brutalist-btn" style={{ background: 'black', color: 'white', padding: '15px', border: '3px solid black', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                    <Upload size={20} /> {uploading ? '...' : 'UPLOAD'}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '20px' }}>
+                        <label style={{ display: 'block', fontWeight: '900', marginBottom: '0', textTransform: 'uppercase' }}>FEATURED IMAGE</label>
+                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', borderBottom: formData.featuredImage ? '2px dashed #ccc' : 'none', paddingBottom: '15px' }}>
+                            <div style={{ flex: 1 }}>
+                                <Input
+                                    placeholder="Image URL (https://...)"
+                                    value={formData.featuredImage || ''}
+                                    onChange={(e) => setFormData({ ...formData, featuredImage: e.target.value })}
+                                    style={{
+                                        container: { marginBottom: 0, height: '56px' },
+                                        input: { height: '100%', padding: '10px 15px' }
+                                    }}
+                                    maxLength={500}
+                                />
+                            </div>
+
+                            {formData.featuredImage && (
+                             <img
+                                 src={formData.featuredImage}
+                                 alt="Preview"
+                                 style={{ width: '56px', height: '56px', objectFit: 'cover', border: '3px solid black', flexShrink: 0 }}
+                                 onError={(e) => { e.target.style.display = 'none'; }}
+                             />
+                            )}
+
+                            <label style={{ cursor: 'pointer', margin: 0, display: 'flex' }}>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    style={{ display: 'none' }}
+                                    onChange={handleFileUpload}
+                                />
+                                <div
+                                    className="brutalist-btn"
+                                    style={{
+                                        background: 'black',
+                                        color: 'white',
+                                        padding: '0',
+                                        width: '56px',
+                                        height: '56px',
+                                        border: '3px solid black',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        transition: 'all 0.1s'
+                                    }}
+                                    onMouseEnter={e => { e.currentTarget.style.transform = 'translate(-2px, -2px)'; e.currentTarget.style.boxShadow = '4px 4px 0 0 black'; }}
+                                    onMouseLeave={e => { e.currentTarget.style.transform = 'translate(0, 0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                                >
+                                    <Upload size={20} />
                                 </div>
                             </label>
+
                             {formData.featuredImage && (
-                                <Button type="button" variant="danger" onClick={handleDeleteImage} style={{ padding: '15px' }}><Trash size={20} /></Button>
+                                <button
+                                    type="button"
+                                    onClick={handleDeleteImage}
+                                    className="brutalist-btn"
+                                    style={{
+                                        background: '#ef4444',
+                                        color: 'white',
+                                        padding: '0',
+                                        width: '56px',
+                                        height: '56px',
+                                        border: '3px solid black',
+                                        cursor: 'pointer',
+                                        fontWeight: 'bold',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '1.2rem'
+                                    }}
+                                >
+                                    ✕
+                                </button>
                             )}
                         </div>
-                        {formData.featuredImage && (
-                            <img
-                                src={formData.featuredImage}
-                                style={{ marginTop: '10px', height: '100px', border: '2px solid black' }}
-                                onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }}
-                                alt="Preview"
-                            />
-                        )}
                     </div>
 
                     <Input
