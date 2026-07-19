@@ -19,9 +19,15 @@ const feedbackRoutes = require('./routes/feedbackRoutes');
 
 const app = express();
 
-// Set up permissive CORS for local dev where Vercel doesn't proxy, but ideally Vercel proxies it
+// Set up permissive CORS for local dev and production frontends
+const allowedOrigins = [
+    'http://localhost:8085',
+    'http://localhost:5173',
+    'https://siapnyafe.widifirmaan.web.id',
+    'https://react-coffee-shop-management.vercel.app',
+];
 app.use(cors({
-    origin: ['http://localhost:8085', 'http://localhost:5173'], // Typical vite ports
+    origin: allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
