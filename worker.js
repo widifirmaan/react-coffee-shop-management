@@ -24,6 +24,25 @@ function error(msg, status = 400) {
   return json({ message: msg }, status);
 }
 
+const PLACEHOLDER_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect fill="#eee" width="200" height="200"/><text fill="#999" font-size="14" text-anchor="middle" x="100" y="105">Image not found</text></svg>';
+function placeholderImage() {
+  return new Response(PLACEHOLDER_SVG, {
+    status: 200,
+    headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'public, max-age=86400' },
+  });
+}
+
+const JSON_FIELDS = ['gallery', 'items', 'shiftStaff', 'galleryImages', 'socialLinks', 'shiftEmployees', 'tags'];
+function parseJsonFields(row) {
+  if (!row) return row;
+  for (const key of JSON_FIELDS) {
+    if (typeof row[key] === 'string') {
+      try { row[key] = JSON.parse(row[key]); } catch {}
+    }
+  }
+  return row;
+}
+
 async function signJwt(payload) {
   const header = { alg: 'HS256', typ: 'JWT' };
   const enc = new TextEncoder();
@@ -240,7 +259,7 @@ async function handleApi(request, env) {
       params.push(`%${searchParams.get('search')}%`);
     }
     const { results } = await DB.prepare(sql).bind(...params).all();
-    return json(results);
+    return json(results.map(parseJsonFields));
   }
 
   if (path === '/api/menus' && method === 'POST') {
@@ -258,7 +277,7 @@ async function handleApi(request, env) {
     if (method === 'GET') {
       const doc = await DB.prepare('SELECT * FROM menus WHERE id = ?').bind(menuId).first();
       if (!doc) return error('Not found', 404);
-      return json(doc);
+      return json(parseJsonFields(doc));
     }
     if (method === 'PUT') {
       if (!user) return error('Unauthorized', 401);
@@ -308,7 +327,7 @@ async function handleApi(request, env) {
       ).run();
       return json({ id, shopName: 'Siap Nyafe', websiteTitle: 'Siap Nyafe - Excellent Coffee', marqueeText: 'Welcome to Siap Nyafe Coffee Shop!', infoTitle: 'Our Story', infoContent: 'Born in Jakarta, brewed for the bold.', infoFooter1: 'EST. 2024', infoFooter2: 'JAKARTA' });
     }
-    return json(config);
+    return json(parseJsonFields(config));
   }
 
   if (path === '/api/config' && method === 'PUT') {
@@ -343,7 +362,7 @@ async function handleApi(request, env) {
     }
     sql += ' ORDER BY createdAt DESC';
     const { results } = await DB.prepare(sql).bind(...params).all();
-    return json(results);
+    return json(results.map(parseJsonFields));
   }
 
   if (path === '/api/orders' && method === 'POST') {
@@ -401,12 +420,12 @@ async function handleApi(request, env) {
   // ===================================================================
   if (path === '/api/posts' && method === 'GET') {
     const { results } = await DB.prepare('SELECT * FROM posts ORDER BY createdAt DESC').all();
-    return json(results);
+    return json(results.map(parseJsonFields));
   }
 
   if (path === '/api/posts/published' && method === 'GET') {
     const { results } = await DB.prepare('SELECT * FROM posts WHERE status = ? ORDER BY publishedAt DESC').bind('PUBLISHED').all();
-    return json(results);
+    return json(results.map(parseJsonFields));
   }
 
   if (path === '/api/posts' && method === 'POST') {
@@ -426,7 +445,7 @@ async function handleApi(request, env) {
     if (method === 'GET') {
       const doc = await DB.prepare('SELECT * FROM posts WHERE id = ?').bind(postId).first();
       if (!doc) return error('Not found', 404);
-      return json(doc);
+      return json(parseJsonFields(doc));
     }
     if (method === 'PUT') {
       if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403);
@@ -622,7 +641,7 @@ async function handleApi(request, env) {
   // ===================================================================
   if (path === '/api/feedbacks' && method === 'GET') {
     const { results } = await DB.prepare('SELECT * FROM feedbacks ORDER BY timestamp DESC').all();
-    return json(results);
+    return json(results.map(parseJsonFields));
   }
 
   if (path === '/api/feedbacks' && method === 'POST') {
@@ -815,10 +834,10 @@ async function handleApi(request, env) {
   if (imageMatch && method === 'GET') {
     const imageId = imageMatch[1];
     const img = await DB.prepare('SELECT * FROM images WHERE id = ?').bind(imageId).first();
-    if (!img) return error('Image not found', 404);
+    if (!img || !img.r2Key) return placeholderImage();
 
     const obj = await env.IMAGES.get(img.r2Key);
-    if (!obj) return error('Image data not found', 500);
+    if (!obj) return placeholderImage();
 
     const blob = await obj.blob();
     return new Response(blob, {

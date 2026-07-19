@@ -76,7 +76,7 @@ export default function SettingsPage() {
             const res = await axios.post('/api/uploads', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            const newUrl = res.data;
+            const newUrl = res.data.url;
             
             if (index !== null) {
                 setConfig(prev => {

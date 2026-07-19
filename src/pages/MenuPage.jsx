@@ -91,7 +91,7 @@ const GalleryGrid = ({ isEditable, menuForm, setMenuForm, handleFileUpload }) =>
                                 formData.append('file', file);
                                 try {
                                     const res = await axios.post('/api/uploads', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-                                    setMenuForm(prev => ({ ...prev, gallery: [...(prev.gallery || []), res.data] }));
+                                    setMenuForm(prev => ({ ...prev, gallery: [...(prev.gallery || []), res.data.url] }));
                                 } catch (err) { console.error('Upload failed', err); }
                             });
                         }} />
@@ -161,7 +161,7 @@ export default function MenuPage({ user }) {
             const res = await axios.post('/api/uploads', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            const url = res.data;
+            const url = res.data.url;
 
             if (index === -1) {
                 // Main Image

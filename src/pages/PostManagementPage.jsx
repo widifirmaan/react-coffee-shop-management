@@ -101,7 +101,7 @@ export default function PostManagementPage({ user }) {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             // The API returns the file URL path
-            setFormData(prev => ({ ...prev, featuredImage: res.data }));
+            setFormData(prev => ({ ...prev, featuredImage: res.data.url }));
             setAlertMsg({ type: 'success', message: 'IMAGE UPLOADED!' });
         } catch (e) {
             console.error(e);
