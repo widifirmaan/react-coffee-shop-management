@@ -19,8 +19,8 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "siapnyafe-db",
-      "database_id": "your-database-id-here"
+      "database_name": "siapnyafe",
+      "database_id": "b10eb25a-0f08-4606-aa09-593e7624c1a8"
     }
   ],
   "r2_buckets": [
