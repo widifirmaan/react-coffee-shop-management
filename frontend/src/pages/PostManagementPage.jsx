@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Trash, Plus, Upload, Image as ImageIcon } from 'lucide-react';
-import { useRef } from 'react';
+import { Trash, Plus, Upload } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input, Select } from '../components/ui/Input';
@@ -14,7 +13,6 @@ import SearchBar from '../components/ui/SearchBar';
 import PageHeader from '../components/ui/PageHeader';
 
 export default function PostManagementPage({ user }) {
-    const fileInputRef = useRef(null);
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [modalOpen, setModalOpen] = useState(false);
@@ -299,45 +297,34 @@ export default function PostManagementPage({ user }) {
                     />
 
                     <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '10px', fontSize: '0.8rem' }}>POST IMAGE</label>
-                        <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
-                            <div style={{ flex: 1 }}>
-                                <Input
-                                    label="IMAGE URL"
-                                    name="featuredImage"
-                                    value={formData.featuredImage}
-                                    onChange={handleChange}
-                                    placeholder="https://..."
-                                    maxLength={500}
-                                />
-                                <div style={{ display: 'flex', gap: '10px' }}>
-                                    <Button type="button" onClick={() => fileInputRef.current?.click()} variant="secondary" disabled={uploading} style={{ fontSize: '0.8rem', padding: '10px' }}>
-                                        <Upload size={16} style={{ marginRight: '8px' }} /> {uploading ? 'UPLOADING...' : 'UPLOAD FILE'}
-                                    </Button>
-                                    {formData.featuredImage && (
-                                        <Button type="button" onClick={handleDeleteImage} variant="danger" style={{ fontSize: '0.8rem', padding: '10px' }}>
-                                            <Trash size={16} />
-                                        </Button>
-                                    )}
+                        <label style={{ display: 'block', fontWeight: '900', marginBottom: '8px' }}>POST IMAGE</label>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            <Input
+                                style={{ container: { marginBottom: 0, flex: 1 } }}
+                                name="featuredImage"
+                                value={formData.featuredImage}
+                                onChange={handleChange}
+                                placeholder="https://..."
+                                maxLength={500}
+                            />
+                            <label style={{ cursor: 'pointer', display: 'flex' }}>
+                                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileUpload} />
+                                <div className="brutalist-btn" style={{ background: 'black', color: 'white', padding: '15px', border: '3px solid black', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                    <Upload size={20} /> {uploading ? '...' : 'UPLOAD'}
                                 </div>
-                                <input 
-                                    type="file" 
-                                    ref={fileInputRef} 
-                                    onChange={handleFileUpload} 
-                                    hidden 
-                                    accept="image/*" 
-                                />
-                            </div>
-                            {formData.featuredImage ? (
-                                <div style={{ width: '120px', height: '120px', border: '3px solid black', shadow: '4px 4px 0 0 black', overflow: 'hidden', background: '#f3f4f6' }}>
-                                    <img src={formData.featuredImage} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                </div>
-                            ) : (
-                                <div style={{ width: '120px', height: '120px', border: '3px dashed #ccc', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ccc' }}>
-                                    <ImageIcon size={40} />
-                                </div>
+                            </label>
+                            {formData.featuredImage && (
+                                <Button type="button" variant="danger" onClick={handleDeleteImage} style={{ padding: '15px' }}><Trash size={20} /></Button>
                             )}
                         </div>
+                        {formData.featuredImage && (
+                            <img
+                                src={formData.featuredImage}
+                                style={{ marginTop: '10px', height: '100px', border: '2px solid black' }}
+                                onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/e0e0e0/000000?text=No+Image" }}
+                                alt="Preview"
+                            />
+                        )}
                     </div>
 
                     <Input
