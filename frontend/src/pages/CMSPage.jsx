@@ -973,7 +973,7 @@ export default function CMSPage() {
                                         onClick={() => setSelectedPost(post)}
                                     >
                                         <div style={{ background: post.category === 'PROMO' ? 'white' : 'black', color: post.category === 'PROMO' ? 'black' : 'white', display: 'inline-block', padding: '5px 15px', fontWeight: 'bold', marginBottom: '20px', fontSize: '0.9rem', alignSelf: 'flex-start' }}>{post.category}</div>
-                                        {post.imageUrl && <img src={post.imageUrl} loading="lazy" style={{ width: '100%', height: '150px', objectFit: 'cover', border: '2px solid black', marginBottom: '15px' }} alt={post.title} />}
+                                        {post.featuredImage && <img src={post.featuredImage} loading="lazy" style={{ width: '100%', height: '150px', objectFit: 'cover', border: '2px solid black', marginBottom: '15px' }} alt={post.title} onError={(e) => { e.target.style.display = 'none'; }} />}
                                         <h3 style={{
                                             fontSize: '1.8rem', // Reduced font size
                                             fontWeight: '900',
@@ -1040,9 +1040,9 @@ export default function CMSPage() {
                         </button>
 
                         {/* Image Header */}
-                        {selectedPost.imageUrl && (
+                        {selectedPost.featuredImage && (
                             <div style={{ width: '100%', height: '350px', borderBottom: '5px solid black' }}>
-                                <img src={selectedPost.imageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                <img src={selectedPost.featuredImage} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.style.display = 'none'; }} />
                             </div>
                         )}
 
