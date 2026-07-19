@@ -1,11 +1,5 @@
-backend/uploads/
-backend/target/
-frontend/node_modules/
-api/uploads/*
-!api/uploads/.gitkeep
+node_modules/
+dist/
 .DS_Store
 .env
-jdk-21/
-mongodb_data/
 *.log
-mvn_output*
