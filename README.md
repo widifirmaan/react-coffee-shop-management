@@ -1,18 +1,15 @@
 # ☕ React - Coffee Shop Management Brutalist
 
-**React - Coffee Shop Management Brutalist** is a state-of-the-art, web-based Point of Sale (POS) and Management System designed specifically for modern coffee shops. Built with a high-performance **Node.js (Express)** backend and a dynamic **React** frontend, it features a distinctive **Neo-Brutalist** design language that sets it apart from generic management tools. It is built to streamline daily operations in a coffee shop. The project focused on delivering a visually appealing interface with modern styling and practical functionality. The Brutalist design emphasized clean typography, intuitive navigation, and a warm color palette to reflect the cozy atmosphere.
+**React - Coffee Shop Management Brutalist** is a web-based Point of Sale (POS) and Management System for coffee shops. Built as a single **Cloudflare Worker** serving both a React frontend and a REST API, with **Cloudflare D1** (SQL) as the database and **R2** for image storage. Features a distinctive **Neo-Brutalist** design language.
 
 ![Status](https://img.shields.io/badge/Status-Active_Development-success?style=for-the-badge)
-![Node.js](https://img.shields.io/badge/Node.js-20.x-green?style=for-the-badge&logo=node.js)
-![Express](https://img.shields.io/badge/Express-4.18-black?style=for-the-badge&logo=express)
+![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?style=for-the-badge&logo=cloudflare)
 ![React](https://img.shields.io/badge/React-18-blue?style=for-the-badge&logo=react)
-![MongoDB](https://img.shields.io/badge/MongoDB-Latest-forestgreen?style=for-the-badge&logo=mongodb)
+![D1](https://img.shields.io/badge/D1-SQL-1C1E24?style=for-the-badge&logo=cloudflare)
 
 ---
 
 ## 📸 Application Showcase
-
-Explore the comprehensive features of **React - Coffee Shop Management Brutalist** through our gallery.
 
 | | |
 |:---:|:---:|
@@ -33,119 +30,126 @@ Explore the comprehensive features of **React - Coffee Shop Management Brutalist
 
 ---
 
-## 🚀 Features Overview
+## 🚀 Features
 
-### 🌐 Public & Customer Experience
-*   **Dynamic Landing Page**: A high-impact, Neo-Brutalist designed homepage with interactive parallax elements.
-*   **About & Story**: Engaging "Info Layer" showcasing the coffee shop's philosophy and history.
-*   **Blog & News**: Integrated CMS-driven blog for latest updates, promos, and events.
-*   **Digital Ordering**: 
-    *   **Visual Menu**: Beautiful card-based layout with category filtering.
-    *   **Smart Cart**: Effortless cart management with special instruction support.
-    *   **Self-Checkout**: Guest name and table selection for seamless service.
-    *   **Waiter Call**: Instant digital assistance trigger for customers.
+### Public & Customer
+- **Dynamic Landing Page** with Neo-Brutalist design
+- **About & Story** section
+- **Blog & News** (CMS-driven)
+- **Digital Ordering**: menu grid, cart, self-checkout, waiter call
+- **Customer Feedback** form
 
-### 📊 Management Dashboard (Manager & Staff)
-*   **Operations Hub**: Real-time stats, team sticky notes, and live clock.
-*   **Attendance System**: Integrated **Clock In/Out** with lateness tracking and shift alerts.
-*   **Kitchen Display System (KDS)**: Real-time queue management (Pending ➔ Preparing ➔ Ready ➔ Served).
-*   **Menu Management**: Full CRUD capabilities for products, categories, and pricing.
-*   **Inventory Tracking**: Digital warehouse management with automated low-stock indicators.
-*   **Finance & Sales**: Detailed transaction logs and revenue performance tracking.
-*   **Staff & Shift Center**:
-    *   **Employee Management**: Manage staff profiles, roles, and access.
-    *   **Shift Scheduling**: Drag-and-drop weekly scheduler with role-based validation.
-*   **CMS & Content Control**: Dedicated panel for managing blog posts and published media.
-*   **Customer Feedback**: Centralized view for managing customer reviews and ratings.
-*   **Site Settings**: Global configuration for shop identity, social links, and visual themes.
+### Management Dashboard
+- **Operations Hub**: real-time stats, sticky notes, live clock
+- **Attendance**: clock in/out with lateness tracking
+- **Kitchen Display**: queue management (Pending → Preparing → Ready → Served)
+- **Menu Management**: CRUD for products, categories, pricing
+- **Inventory**: stock tracking with low-stock alerts
+- **Finance**: transaction logs, revenue tracking
+- **Staff & Shift Center**: employee profiles, role-based access, shift scheduling
+- **CMS**: blog post management
+- **Settings**: shop identity, social links, themes
 
 ---
 
 ## 🛠 Tech Stack
 
-### Backend (API Server)
-*   **Framework**: Node.js + Express.js
-*   **Database**: MongoDB (Mongoose)
-*   **Security**: JWT (JSON Web Tokens) & Bcryptjs
-*   **Runtime**: Node 18+ or 20+
+### Backend (API)
+- **Runtime**: Cloudflare Workers
+- **Database**: Cloudflare D1 (SQLite-compatible)
+- **File Storage**: Cloudflare R2 (images)
+- **Auth**: JWT (Web Crypto API) + Bcryptjs
+- **Framework**: Vanilla JavaScript (no Express)
 
-### Frontend (Client App)
-*   **Framework**: React.js 18
-*   **Build Tool**: Vite 5
-*   **Styling**: **Neo-Brutalist CSS**, Vanilla CSS modules, Lucide React Icons.
-*   **Libraries**: `Axios`, `Swiper`, `React Router 6`.
+### Frontend
+- **Framework**: React 18
+- **Build Tool**: Vite 5
+- **Styling**: Neo-Brutalist CSS, Lucide React Icons
+- **Libraries**: Axios, Swiper, React Router 6
 
 ---
 
 ## 📂 Project Structure
 
-```bash
+```
 /
-├── api/                   # Node.js Express Server (Primary Backend)
-│   ├── models/            # Mongoose Schemas
-│   ├── routes/            # API Endpoints
-│   └── index.js           # Server Entry Point
-│
-├── frontend/              # React Vite Client (Frontend App)
-│   ├── src/               # Application Source
-│   └── assets/            # Global Styles & Assets
-│
-└── screenshots/           # Application Preview Images
+├── worker.js           # Single Cloudflare Worker (API + static assets)
+├── wrangler.jsonc      # Cloudflare Workers config
+├── schema.sql          # D1 database schema
+├── src/                # React app source
+├── public/             # Static assets (images, etc.)
+├── dist/               # Vite build output (auto-generated)
+└── screenshots/        # Preview images
 ```
 
 ---
 
-## 📦 Getting Started (Monolith Mode)
+## 🚀 Deployment (Cloudflare)
 
-The project is now a monolith. You can manage everything from the root directory.
+### Prerequisites
+- Cloudflare account with Workers, D1, and R2 enabled
+- `wrangler` CLI (`npx wrangler`)
 
-### 1. Database (MongoDB)
-Ensure MongoDB is installed and running on your local machine. We successfully started it with:
+### 1. Create D1 Database
 ```bash
-mongod --dbpath ./data/db
+npx wrangler d1 create siapnyafe-db
+```
+Copy the returned `database_id` into `wrangler.jsonc`.
+
+### 2. Initialize Schema
+```bash
+npx wrangler d1 execute siapnyafe-db --file=schema.sql --remote
 ```
 
-### 2. One-Time Setup
-Install all dependencies for root, backend, and frontend with one command:
+### 3. Create R2 Bucket
 ```bash
-npm run install-all
+npx wrangler r2 bucket create siapnyafe-images
 ```
 
-### 3. Build & Run (Production/Monolith)
-To run the application as a single unit (API + Frontend):
-1. **Build the frontend**:
-   ```bash
-   npm run build
-   ```
-2. **Start the monolith server**:
-   ```bash
-   npm start
-   ```
-*Access the full app at `http://localhost:3000`*
-
-### 4. Development Mode
-To run both backend and frontend concurrently with Hot Module Replacement (HMR):
+### 4. Deploy
 ```bash
+npm run deploy
+```
+
+### 5. Seed Database
+```bash
+curl -X POST https://<your-worker>.workers.dev/api/seed \
+  -H "Content-Type: application/json" \
+  -d '{"secret":"siap-nyafe-seed-2024"}'
+```
+
+---
+
+## 💻 Development
+
+```bash
+# Install dependencies
+npm install
+
+# Run dev server (frontend + API proxy)
 npm run dev
+
+# Build for production
+npm run build
 ```
-*API runs on `http://localhost:3000`, Frontend runs on `http://localhost:8085`*
+
+In development, the frontend runs on `http://localhost:8085` with API requests proxied to `http://localhost:3000`. To test the API locally, you can run the Worker locally:
+
+```bash
+npx wrangler dev
+```
 
 ---
 
-## 🔑 Access & Credentials
+## 🔑 Credentials
 
-| Role | Access URL | Identifier | Password |
-| :--- | :--- | :--- | :--- |
-| **Manager** | `http://localhost:8085/login` | `manager` | `password123` |
-| **Staff** | `http://localhost:8085/login` | *Employee Email* | `password123` |
-| **Customer** | `http://localhost:8085/order` | N/A | N/A |
-
-> [!TIP]
-> - **Default Staff Email**: You can use `manager` or `michael@americano.com` for testing.
-> - **Data Reset**: To reset or re-seed the database with dummy data, visit `http://localhost:3000/api/seeder/run` while the backend is running.
-
+| Role | Username | Password |
+| :--- | :--- | :--- |
+| **Manager** | `manager` | `manager123` |
+| **Cashier** | `cashier` | `cashier123` |
 
 ---
 
 ## 👥 Authors
+
 Developed by **Widi Firmaan** and the **Project Team**.
