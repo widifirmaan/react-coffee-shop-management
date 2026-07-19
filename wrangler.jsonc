@@ -1,32 +1,43 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "react-coffee-shop-management",
-  "main": "worker.js",
-  "compatibility_date": "2026-07-19",
-  "compatibility_flags": ["nodejs_compat"],
-  "observability": {
-    "logs": {
-      "enabled": true
-    }
-  },
-  "build": {
-    "command": "npm run build"
-  },
-  "assets": {
-    "directory": "dist",
-    "not_found_handling": "single-page-application"
-  },
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "siapnyafe",
-      "database_id": "b10eb25a-0f08-4606-aa09-593e7624c1a8"
-    }
-  ],
-  "r2_buckets": [
-    {
-      "binding": "IMAGES",
-      "bucket_name": "siapnyafe-images"
-    }
-  ]
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "react-coffee-shop-management",
+	"main": "worker.js",
+	"compatibility_date": "2026-07-19",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"routes": [
+		{
+			"pattern": "siapnyafe.widifirmaan.web.id",
+			"zone_name": "widifirmaan.web.id",
+			"custom_domain": true,
+			"enabled": true,
+			"previews_enabled": false
+		}
+	],
+	"observability": {
+		"logs": {
+			"enabled": true
+		}
+	},
+	"build": {
+		"command": "npm run build"
+	},
+	"assets": {
+		"directory": "dist",
+		"not_found_handling": "single-page-application"
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "siapnyafe",
+			"database_id": "b10eb25a-0f08-4606-aa09-593e7624c1a8"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "IMAGES",
+			"bucket_name": "siapnyafe-images"
+		}
+	]
 }
