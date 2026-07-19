@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 
 const SALT_ROUNDS = 10;
-const JWT_SECRET_KEY = 'siap-nyafe-jwt-secret-2024';
+let JWT_SECRET_KEY = 'change-me-in-production';
 
 function uid() {
   return crypto.randomUUID();
@@ -834,7 +834,7 @@ async function handleApi(request, env) {
   // ===================================================================
   if (path === '/api/seed' && method === 'POST') {
     const { secret } = body;
-    if (secret !== 'siap-nyafe-seed-2024') return error('Invalid secret', 401);
+    if (!env.SEED_SECRET || secret !== env.SEED_SECRET) return error('Invalid secret', 401);
 
     const existing = await DB.prepare('SELECT * FROM employees LIMIT 1').first();
     if (existing) return error('Database already seeded', 400);
@@ -879,6 +879,7 @@ async function handleApi(request, env) {
 
 export default {
   async fetch(request, env, ctx) {
+    JWT_SECRET_KEY = env.JWT_SECRET || JWT_SECRET_KEY;
     const url = new URL(request.url);
 
     if (url.pathname.startsWith('/api/')) {

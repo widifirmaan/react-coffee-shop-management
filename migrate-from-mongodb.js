@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto';
 import { writeFileSync } from 'fs';
 
 const MONGO_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017';
-const MONGO_DB = 'coffeeshop';
+const MONGO_DB = 'test';
 const OUTPUT_FILE = 'migration.sql';
 
 function uid() {

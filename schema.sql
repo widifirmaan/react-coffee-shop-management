@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS employees (
   phone TEXT,
   position TEXT,
   salary REAL,
+  pin TEXT,
   role TEXT NOT NULL DEFAULT 'Cashier',
   image TEXT,
   contact TEXT,
@@ -52,6 +53,7 @@ CREATE TABLE IF NOT EXISTS menus (
 CREATE TABLE IF NOT EXISTS categories (
   id TEXT PRIMARY KEY,
   name TEXT UNIQUE NOT NULL,
+  description TEXT,
   createdAt TEXT DEFAULT (datetime('now'))
 );
 
@@ -77,7 +79,14 @@ CREATE TABLE IF NOT EXISTS shop_config (
   infoFooter2 TEXT,
   techSpec1 TEXT,
   techSpec2 TEXT,
-  techSpec3 TEXT
+  techSpec3 TEXT,
+  latestDropPromoTitle TEXT,
+  latestDropPromoDesc TEXT,
+  latestDropPromoDate TEXT,
+  latestDropNewsTitle TEXT,
+  latestDropNewsDesc TEXT,
+  latestDropEventTitle TEXT,
+  latestDropEventDesc TEXT
 );
 
 CREATE TABLE IF NOT EXISTS orders (

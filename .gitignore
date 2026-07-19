@@ -3,3 +3,6 @@ dist/
 .DS_Store
 .env
 *.log
+migration.sql
+migrate-now.js
+*.sqlite
