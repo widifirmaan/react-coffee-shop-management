@@ -150,22 +150,26 @@ async function handleApi(request, env) {
   // AUTH
   // ===================================================================
   if (path === '/api/auth/login' && method === 'POST') {
-    const { username, email, password } = body;
+    const { employeeId, email, password } = body;
     if (!password) return error('Password is required');
     let emp;
-    if (username) {
-      emp = await DB.prepare('SELECT * FROM employees WHERE username = ?').bind(username).first();
+    if (employeeId && email) {
+      // Try employeeId first, then email — both come from same input
+      emp = await DB.prepare('SELECT * FROM employees WHERE employeeId = ?').bind(employeeId).first();
+      if (!emp) emp = await DB.prepare('SELECT * FROM employees WHERE email = ?').bind(email).first();
+    } else if (employeeId) {
+      emp = await DB.prepare('SELECT * FROM employees WHERE employeeId = ?').bind(employeeId).first();
     } else if (email) {
       emp = await DB.prepare('SELECT * FROM employees WHERE email = ?').bind(email).first();
     } else {
-      return error('Username or email is required');
+      return error('Employee ID or email is required');
     }
     if (!emp) return error('Invalid credentials', 401);
     const pwdValid = await bcrypt.compare(password, emp.password);
     if (!pwdValid) return error('Invalid credentials', 401);
     const userObj = stripPassword(emp);
     const token = await signJwt({
-      id: userObj.id, username: userObj.username,
+      id: userObj.id,
       email: userObj.email, role: userObj.role, employeeId: userObj.employeeId,
     });
     const response = json({ token, user: userObj });
@@ -219,7 +223,7 @@ async function handleApi(request, env) {
       id, employeeId: body.employeeId, name: body.name,
       email: body.email || null, phone: body.phone || null,
       position: body.position || null, salary: body.salary || 0,
-      role: body.role || 'STAFF', username: body.username || body.employeeId,
+      role: body.role || 'STAFF',
       password: hash, pin: body.pin || null
     };
     const cols = Object.keys(fields);
@@ -235,7 +239,7 @@ async function handleApi(request, env) {
     if (method === 'PUT') {
       if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403);
       const fields = {};
-      for (const k of ['employeeId', 'name', 'email', 'phone', 'position', 'salary', 'role', 'username', 'pin']) {
+      for (const k of ['employeeId', 'name', 'email', 'phone', 'position', 'salary', 'role', 'pin']) {
         if (body[k] !== undefined) fields[k] = body[k];
       }
       if (body.password) fields.password = await bcrypt.hash(body.password, SALT_ROUNDS);
@@ -591,7 +595,7 @@ async function handleApi(request, env) {
   if (path === '/api/notes/dashboard' && method === 'POST') {
     if (!user) return error('Unauthorized', 401);
     const existing = await DB.prepare('SELECT * FROM notes LIMIT 1').first();
-    const noteData = { content: body.content, lastUpdatedBy: user.username || 'unknown', updatedAt: nowISO() };
+    const noteData = { content: body.content, lastUpdatedBy: user.email || user.name || 'unknown', updatedAt: nowISO() };
     if (existing) {
       const setClauses = Object.keys(noteData).map(k => `${k} = ?`).join(', ');
       await DB.prepare(`UPDATE notes SET ${setClauses} WHERE id = ?`).bind(...Object.values(noteData), existing.id).run();
@@ -607,7 +611,7 @@ async function handleApi(request, env) {
   if (path === '/api/notes' && method === 'POST') {
     if (!user) return error('Unauthorized', 401);
     const id = uid();
-    body.lastUpdatedBy = user.username || 'unknown';
+      body.lastUpdatedBy = user.email || user.name || 'unknown';
     body.updatedAt = nowISO();
     const cols = ['id', ...Object.keys(body)];
     const vals = ['?', ...Object.keys(body).map(() => '?')];
@@ -621,7 +625,7 @@ async function handleApi(request, env) {
     if (method === 'PUT') {
       if (!user) return error('Unauthorized', 401);
       body.updatedAt = nowISO();
-      body.lastUpdatedBy = user.username || 'unknown';
+    body.lastUpdatedBy = user.email || user.name || 'unknown';
       const setClauses = Object.keys(body).map(k => `${k} = ?`).join(', ');
       await DB.prepare(`UPDATE notes SET ${setClauses} WHERE id = ?`).bind(...Object.values(body), noteId).run();
       return json({ message: 'Updated' });
@@ -884,14 +888,14 @@ async function handleApi(request, env) {
     const empId = uid();
     const hash = await bcrypt.hash('manager123', SALT_ROUNDS);
     await DB.prepare(
-      'INSERT INTO employees (id, employeeId, username, email, password, name, phone, position, salary, role, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    ).bind(empId, 'EMP-MAN-001', 'manager', 'manager@americano.com', hash, 'Manager', '08123456789', 'Manager', 5000000, 'Manager', 1).run();
+      'INSERT INTO employees (id, employeeId, email, password, name, phone, position, salary, role, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).bind(empId, 'EMP-MAN-001', 'manager@americano.com', hash, 'Manager', '08123456789', 'Manager', 5000000, 'Manager', 1).run();
 
     const cashierId = uid();
     const cashierHash = await bcrypt.hash('cashier123', SALT_ROUNDS);
     await DB.prepare(
-      'INSERT INTO employees (id, employeeId, username, email, password, name, phone, position, salary, role, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    ).bind(cashierId, 'EMP-CSH-001', 'cashier', 'cashier@americano.com', cashierHash, 'Cashier', '08123456788', 'Cashier', 3000000, 'Cashier', 1).run();
+      'INSERT INTO employees (id, employeeId, email, password, name, phone, position, salary, role, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).bind(cashierId, 'EMP-CSH-001', 'cashier@americano.com', cashierHash, 'Cashier', '08123456788', 'Cashier', 3000000, 'Cashier', 1).run();
 
     const configId = uid();
     await DB.prepare(
@@ -906,7 +910,7 @@ async function handleApi(request, env) {
       await DB.prepare('INSERT INTO categories (id, name) VALUES (?, ?)').bind(uid(), cat).run();
     }
 
-    return json({ message: 'Database seeded successfully. Login: manager / manager123' });
+    return json({ message: 'Database seeded successfully. Login: EMP-MAN-001 / manager123 or cashier@americano.com / cashier123' });
   }
 
   // ===================================================================

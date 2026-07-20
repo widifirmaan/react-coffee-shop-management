@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function LoginPage({ onLogin }) {
-    const [username, setUsername] = useState('');
+    const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -29,7 +29,7 @@ function LoginPage({ onLogin }) {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ username, password }),
+                body: JSON.stringify({ employeeId: identifier, email: identifier, password }),
             });
 
             if (response.ok) {
@@ -115,8 +115,8 @@ function LoginPage({ onLogin }) {
                 </form>
 
                 <div style={{ marginTop: '30px', borderTop: '2px solid black', paddingTop: '15px' }}>
-                    <p style={{ fontWeight: 700, margin: '5px 0' }}>MANAGER: manager / manager123</p>
-                    <p style={{ fontWeight: 700, margin: '5px 0' }}>CASHIER: cashier / cashier123</p>
+                    <p style={{ fontWeight: 700, margin: '5px 0' }}>MANAGER: EMP-MAN-001 / manager123</p>
+                    <p style={{ fontWeight: 700, margin: '5px 0' }}>CASHIER: EMP-CSH-001 / cashier123</p>
                 </div>
             </div>
 

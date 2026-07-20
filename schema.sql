@@ -1,7 +1,6 @@
 CREATE TABLE IF NOT EXISTS employees (
   id TEXT PRIMARY KEY,
   employeeId TEXT UNIQUE NOT NULL,
-  username TEXT,
   email TEXT,
   password TEXT NOT NULL,
   name TEXT NOT NULL,

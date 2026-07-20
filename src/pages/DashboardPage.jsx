@@ -121,20 +121,11 @@ export default function DashboardPage({ user }) {
     };
 
     const fetchTodayShift = async () => {
-        if (!user || !user.username) return;
+        if (!user || !user.employeeId) return;
         try {
-            // First, get the employee data to map username to employeeId
-            const empRes = await axios.get('/api/employees');
-            const currentEmployee = empRes.data.find(e => e.username === user.username);
-
-            if (!currentEmployee) {
-                console.error('Employee not found for user:', user.username);
-                return;
-            }
-
             const shiftRes = await axios.get('/api/shifts');
             const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
-            const userShift = shiftRes.data.find(s => s.employeeId === currentEmployee.employeeId && s.dayOfWeek === today);
+            const userShift = shiftRes.data.find(s => s.employeeId === user.employeeId && s.dayOfWeek === today);
             setTodayShift(userShift);
         } catch (e) {
             console.error('Failed to fetch today shift', e);
@@ -157,7 +148,7 @@ export default function DashboardPage({ user }) {
         try {
             await axios.post('/api/notes/dashboard', {
                 content: noteContent,
-                updatedBy: user.username
+                updatedBy: user.employeeId
             });
             setIsNoteDirty(false);
             setOriginalNoteContent(noteContent);
@@ -169,18 +160,9 @@ export default function DashboardPage({ user }) {
     };
 
     const checkAttendance = async () => {
-        if (!user || !user.username) return;
+        if (!user || !user.employeeId) return;
         try {
-            // Fetch employee data to get correct employeeId
-            const empRes = await axios.get('/api/employees');
-            const currentEmployee = empRes.data.find(e => e.username === user.username);
-
-            if (!currentEmployee) {
-                console.log('Employee not found for user:', user.username);
-                return;
-            }
-
-            const res = await axios.get(`/api/attendance/today/${currentEmployee.employeeId}`);
+            const res = await axios.get(`/api/attendance/today/${user.employeeId}`);
             setAttendance(res.data);
         } catch (error) {
             console.log("No attendance record yet (or error)");
@@ -192,19 +174,9 @@ export default function DashboardPage({ user }) {
             message: "CONFIRM CLOCK IN?",
             onConfirm: async () => {
                 try {
-                    // Fetch employee data to get correct employeeId
-                    const empRes = await axios.get('/api/employees');
-                    const currentEmployee = empRes.data.find(e => e.username === user.username);
-
-                    if (!currentEmployee) {
-                        setAlertMsg({ type: 'error', message: 'EMPLOYEE NOT FOUND!' });
-                        setConfirmation(null);
-                        return;
-                    }
-
                     const payload = {
-                        employeeId: currentEmployee.employeeId,
-                        employeeName: currentEmployee.name
+                        employeeId: user.employeeId,
+                        employeeName: user.name
                     };
                     const res = await axios.post('/api/attendance/clock-in', payload);
                     if (res.data.checkInStatus === 'BLOCKED') {
@@ -243,17 +215,7 @@ export default function DashboardPage({ user }) {
             message: "CONFIRM CLOCK OUT?",
             onConfirm: async () => {
                 try {
-                    // Fetch employee data to get correct employeeId
-                    const empRes = await axios.get('/api/employees');
-                    const currentEmployee = empRes.data.find(e => e.username === user.username);
-
-                    if (!currentEmployee) {
-                        setAlertMsg({ type: 'error', message: 'EMPLOYEE NOT FOUND!' });
-                        setConfirmation(null);
-                        return;
-                    }
-
-                    const res = await axios.post('/api/attendance/clock-out', { employeeId: currentEmployee.employeeId });
+                    const res = await axios.post('/api/attendance/clock-out', { employeeId: user.employeeId });
 
                     if (res.data && res.data.status_alert === 'TOO_EARLY') {
                         setLateModal({
