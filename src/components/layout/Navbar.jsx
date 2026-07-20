@@ -52,7 +52,7 @@ export default function Navbar({ user, onLogout, shopConfig }) {
                     textTransform: 'uppercase',
                     zIndex: -1
                 }}>
-                    Hi, {user.name || user.username}! 👋
+                    Hi, {user.username}! 👋
                 </div>
             )}
         </nav>
