@@ -116,7 +116,10 @@ function LoginPage({ onLogin }) {
 
                 <div style={{ marginTop: '30px', borderTop: '2px solid black', paddingTop: '15px' }}>
                     <p style={{ fontWeight: 700, margin: '5px 0' }}>MANAGER: EMP-MAN-001 / manager123</p>
+                    <p style={{ fontWeight: 700, margin: '5px 0' }}>BARISTA: EMP-BAR-001 / barista123</p>
                     <p style={{ fontWeight: 700, margin: '5px 0' }}>CASHIER: EMP-CSH-001 / cashier123</p>
+                    <p style={{ fontWeight: 700, margin: '5px 0' }}>KITCHEN: EMP-KIT-001 / kitchen123</p>
+                    <p style={{ fontWeight: 700, margin: '5px 0' }}>WAITER: EMP-WAI-001 / waiter123</p>
                 </div>
             </div>
 

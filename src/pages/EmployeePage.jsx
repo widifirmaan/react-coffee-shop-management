@@ -263,8 +263,8 @@ export default function EmployeePage() {
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                        <Select label="POSITION" value={formData.position} onChange={e => setFormData({ ...formData, position: e.target.value, role: e.target.value === 'Manager' ? 'MANAGER' : 'STAFF' })}
-                            options={['Barista', 'Manager', 'Cashier', 'Baker', 'Cleaner'].map(p => ({ value: p, label: p }))} />
+                        <Select label="POSITION" value={formData.position} onChange={e => { const pos = e.target.value; const roleMap = { Manager: 'MANAGER', Barista: 'BARISTA', Cashier: 'CASHIER', 'Kitchen Staff': 'KITCHEN STAFF', Waiter: 'WAITER' }; setFormData({ ...formData, position: pos, role: roleMap[pos] || 'STAFF' }); }}
+                            options={['Barista', 'Manager', 'Cashier', 'Kitchen Staff', 'Waiter', 'Baker', 'Cleaner'].map(p => ({ value: p, label: p }))} />
                         <Input label="SALARY (IDR)" type="number" value={formData.salary} onChange={e => setFormData({ ...formData, salary: e.target.value })} required />
                     </div>
 

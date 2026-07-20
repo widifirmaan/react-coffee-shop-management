@@ -885,17 +885,28 @@ async function handleApi(request, env) {
     const existing = await DB.prepare('SELECT * FROM employees LIMIT 1').first();
     if (existing) return error('Database already seeded', 400);
 
-    const empId = uid();
-    const hash = await bcrypt.hash('manager123', SALT_ROUNDS);
-    await DB.prepare(
-      'INSERT INTO employees (id, employeeId, email, password, name, phone, position, salary, role, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    ).bind(empId, 'EMP-MAN-001', 'manager@americano.com', hash, 'Manager', '08123456789', 'Manager', 5000000, 'Manager', 1).run();
+    async function seedEmp(employeeId, email, password, name, phone, position, salary, role) {
+      const id = uid();
+      const hash = await bcrypt.hash(password, SALT_ROUNDS);
+      await DB.prepare(
+        'INSERT INTO employees (id, employeeId, email, password, name, phone, position, salary, role, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      ).bind(id, employeeId, email, hash, name, phone, position, salary, role, 1).run();
+    }
 
-    const cashierId = uid();
-    const cashierHash = await bcrypt.hash('cashier123', SALT_ROUNDS);
-    await DB.prepare(
-      'INSERT INTO employees (id, employeeId, email, password, name, phone, position, salary, role, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    ).bind(cashierId, 'EMP-CSH-001', 'cashier@americano.com', cashierHash, 'Cashier', '08123456788', 'Cashier', 3000000, 'Cashier', 1).run();
+    await seedEmp('EMP-MAN-001', 'manager@americano.com', 'manager123', 'Andi Manager', '08123456781', 'Manager', 5000000, 'Manager');
+    await seedEmp('EMP-MAN-002', 'manager2@americano.com', 'manager123', 'Siti Manager', '08123456782', 'Manager', 5000000, 'Manager');
+    await seedEmp('EMP-BAR-001', 'barista1@americano.com', 'barista123', 'Budi Barista', '08123456783', 'Barista', 3000000, 'Barista');
+    await seedEmp('EMP-BAR-002', 'barista2@americano.com', 'barista123', 'Rina Barista', '08123456784', 'Barista', 3000000, 'Barista');
+    await seedEmp('EMP-BAR-003', 'barista3@americano.com', 'barista123', 'Dedi Barista', '08123456785', 'Barista', 3000000, 'Barista');
+    await seedEmp('EMP-CSH-001', 'cashier1@americano.com', 'cashier123', 'Rini Cashier', '08123456786', 'Cashier', 3000000, 'Cashier');
+    await seedEmp('EMP-CSH-002', 'cashier2@americano.com', 'cashier123', 'Tono Cashier', '08123456787', 'Cashier', 3000000, 'Cashier');
+    await seedEmp('EMP-CSH-003', 'cashier3@americano.com', 'cashier123', 'Dewi Cashier', '08123456788', 'Cashier', 3000000, 'Cashier');
+    await seedEmp('EMP-KIT-001', 'kitchen1@americano.com', 'kitchen123', 'Joko Kitchen', '08123456789', 'Kitchen Staff', 3500000, 'Kitchen Staff');
+    await seedEmp('EMP-KIT-002', 'kitchen2@americano.com', 'kitchen123', 'Wati Kitchen', '08123456790', 'Kitchen Staff', 3500000, 'Kitchen Staff');
+    await seedEmp('EMP-KIT-003', 'kitchen3@americano.com', 'kitchen123', 'Agus Kitchen', '08123456791', 'Kitchen Staff', 3500000, 'Kitchen Staff');
+    await seedEmp('EMP-WAI-001', 'waiter1@americano.com', 'waiter123', 'Sari Waiter', '08123456792', 'Waiter', 2500000, 'Waiter');
+    await seedEmp('EMP-WAI-002', 'waiter2@americano.com', 'waiter123', 'Ahmad Waiter', '08123456793', 'Waiter', 2500000, 'Waiter');
+    await seedEmp('EMP-WAI-003', 'waiter3@americano.com', 'waiter123', 'Maya Waiter', '08123456794', 'Waiter', 2500000, 'Waiter');
 
     const configId = uid();
     await DB.prepare(
@@ -910,7 +921,7 @@ async function handleApi(request, env) {
       await DB.prepare('INSERT INTO categories (id, name) VALUES (?, ?)').bind(uid(), cat).run();
     }
 
-    return json({ message: 'Database seeded successfully. Login: EMP-MAN-001 / manager123 or cashier@americano.com / cashier123' });
+    return json({ message: 'Database seeded with 14 employees. Example logins: EMP-MAN-001 / manager123, EMP-BAR-001 / barista123, EMP-CSH-001 / cashier123, EMP-KIT-001 / kitchen123, EMP-WAI-001 / waiter123' });
   }
 
   // ===================================================================
