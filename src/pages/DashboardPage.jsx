@@ -179,31 +179,40 @@ export default function DashboardPage({ user }) {
                         employeeName: user.name
                     };
                     const res = await axios.post('/api/attendance/clock-in', payload);
-                    if (res.data.checkInStatus === 'BLOCKED') {
+                    const rec = res.data.record || res.data;
+                    if (rec.status === 'TIDAK ABSEN MASUK') {
                         setLateModal({
                             type: 'blocked',
-                            message: 'LOCKED OUT!',
-                            details: res.data.debugInfo
+                            message: 'TIDAK ABSEN MASUK',
+                            details: 'Anda tidak clock in. Silahkan hubungi manager.'
                         });
-                        setAlertMsg({ type: 'error', message: 'ACCOUNT LOCKED!' });
+                        setAlertMsg({ type: 'error', message: 'TIDAK ABSEN MASUK!' });
+                        setAttendance(rec);
+                        fetchShiftData();
+                    } else if (rec.lateAlert) {
+                        setLateModal({
+                            type: 'late',
+                            message: 'ANDA TERLAMBAT!',
+                            details: 'Anda terlambat, silahkan hubungi manager.'
+                        });
+                        setAlertMsg({ type: 'error', message: 'ANDA TERLAMBAT!' });
+                        setAttendance(rec);
+                        fetchShiftData();
                     } else {
-                        setAttendance(res.data);
-
-                        if (res.data.status === 'LATE') {
-                            setLateModal({
-                                type: 'late',
-                                message: 'LATE ARRIVAL DETECTED!',
-                                details: 'YOU ARE LATE! PLEASE EXPLAIN TO MANAGER.'
-                            });
-                            setAlertMsg({ type: 'error', message: 'LATE RECORDED!' });
-                        } else {
-                            setAlertMsg({ type: 'success', message: 'CLOCKED IN SUCCESSFULLY!' });
-                        }
-
+                        setAttendance(rec);
+                        setAlertMsg({ type: 'success', message: 'CLOCKED IN SUCCESSFULLY!' });
                         fetchShiftData();
                     }
                 } catch (error) {
-                    setAlertMsg({ type: 'error', message: 'CLOCK IN FAILED!' });
+                    const msg = error.response?.data?.message || 'CLOCK IN FAILED!';
+                    if (msg.includes('Belum waktu clock in')) {
+                        setLateModal({
+                            type: 'early',
+                            message: 'BELUM WAKTU!',
+                            details: msg
+                        });
+                    }
+                    setAlertMsg({ type: 'error', message: msg });
                 }
                 setConfirmation(null);
             }
@@ -216,23 +225,31 @@ export default function DashboardPage({ user }) {
             onConfirm: async () => {
                 try {
                     const res = await axios.post('/api/attendance/clock-out', { employeeId: user.employeeId });
-
-                    if (res.data && res.data.status_alert === 'TOO_EARLY') {
+                    const rec = res.data.record || res.data;
+                    if (rec.status === 'TIDAK ABSEN KELUAR') {
                         setLateModal({
-                            type: 'early',
-                            message: 'TOO EARLY!',
-                            details: 'YOU CANNOT CLOCK OUT BEFORE YOUR SHIFT ENDS!'
+                            type: 'blocked',
+                            message: 'TIDAK ABSEN KELUAR',
+                            details: 'Anda tidak clock out. Silahkan hubungi manager.'
                         });
-                        setAlertMsg({ type: 'error', message: 'SHIFT INCOMPLETE!' });
-                        setAttendance(res.data);
-                        fetchShiftData();
+                        setAlertMsg({ type: 'error', message: 'TIDAK ABSEN KELUAR!' });
                     } else {
-                        setAttendance(res.data);
                         setAlertMsg({ type: 'success', message: 'CLOCKED OUT SUCCESSFULLY!' });
-                        fetchShiftData();
                     }
+                    setAttendance(rec);
+                    fetchShiftData();
                 } catch (error) {
-                    setAlertMsg({ type: 'error', message: 'CLOCK OUT FAILED!' });
+                    const msg = error.response?.data?.message || 'CLOCK OUT FAILED!';
+                    const isEarly = msg.includes('Belum waktu clock out');
+                    const isLate = msg.includes('Waktu clock out sudah lewat');
+                    if (isEarly || isLate) {
+                        setLateModal({
+                            type: isEarly ? 'early' : 'late',
+                            message: isEarly ? 'BELUM WAKTU!' : 'TERLAMBAT!',
+                            details: msg
+                        });
+                    }
+                    setAlertMsg({ type: 'error', message: msg });
                 }
                 setConfirmation(null);
             }

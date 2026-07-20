@@ -525,6 +525,12 @@ input:focus {
         margin-top: 50px;
         margin-bottom: 50px;
     }
+    .page-header-container > div:last-child {
+        width: 100%;
+    }
+    .page-header-container > div:last-child button {
+        width: 100% !important;
+    }
 }
 
 .page-header-title {
@@ -672,4 +678,26 @@ input:focus {
 .dropdown-select:focus {
     transform: translate(-2px, -2px);
     box-shadow: 7px 7px 0 0 black;
+}
+
+.shift-header-actions {
+    display: flex;
+    gap: 30px;
+}
+
+@media (max-width: 768px) {
+    .shift-sidebar {
+        display: none !important;
+    }
+    .shift-delete-btn {
+        display: none !important;
+    }
+    .shift-header-actions {
+        flex-direction: column !important;
+        width: 100%;
+        gap: 15px !important;
+    }
+    .shift-header-btn {
+        width: 100% !important;
+    }
 }

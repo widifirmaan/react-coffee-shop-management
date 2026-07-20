@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Calendar, Save, Trash2, Plus, Users } from 'lucide-react';
+import { Calendar, Save, Trash2, Plus, Users, Shuffle } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Alert } from '../components/ui/Alert';
@@ -8,17 +8,31 @@ import { Modal } from '../components/ui/Modal';
 import { Select } from '../components/ui/Input';
 import PageHeader from '../components/ui/PageHeader';
 import { TableContainer, Table, Thead, Tbody, Tr, Th, Td } from '../components/ui/Table';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 
 const DAYS = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
 const SHIFTS = ['MORNING', 'AFTERNOON', 'EVENING'];
+const ALLOWED_SAVE_DAYS = ['SATURDAY', 'SUNDAY', 'MONDAY'];
+
+function getJakartaDay() {
+  const d = new Date();
+  const jakarta = new Date(d.getTime() + 7 * 60 * 60 * 1000);
+  const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+  return days[jakarta.getUTCDay()];
+}
+
+const todayDay = getJakartaDay();
+const canSaveToday = ALLOWED_SAVE_DAYS.includes(todayDay);
 
 export default function ShiftPage() {
     const [shifts, setShifts] = useState([]);
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [isRandomizing, setIsRandomizing] = useState(false);
     const [alertMsg, setAlertMsg] = useState(null);
     const [selectedSlot, setSelectedSlot] = useState(null); // { day, shift }
+    const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
 
     // For Modal
     const [employeeToAdd, setEmployeeToAdd] = useState('');
@@ -80,6 +94,28 @@ export default function ShiftPage() {
 
     const handleRemove = (shiftToRemove) => {
         setShifts(shifts.filter(s => s !== shiftToRemove));
+    };
+
+    const handleRandomize = () => {
+        setConfirmDialog({
+            isOpen: true,
+            title: 'RANDOMIZE SHIFTS?',
+            message: 'Ini akan menghapus semua jadwal yang ada dan membuat jadwal baru secara acak & adil. Lanjutkan?',
+            onConfirm: async () => {
+                setConfirmDialog({ ...confirmDialog, isOpen: false });
+                setIsRandomizing(true);
+                try {
+                    const res = await axios.post('/api/shifts/randomize');
+                    setShifts(res.data);
+                    setAlertMsg({ type: 'success', message: 'SHIFTS RANDOMIZED SUCCESSFULLY!' });
+                } catch (e) {
+                    const errMsg = e.response?.data?.error || 'RANDOMIZE FAILED';
+                    setAlertMsg({ type: 'error', message: errMsg });
+                } finally {
+                    setIsRandomizing(false);
+                }
+            }
+        });
     };
 
     const handleSave = async () => {
@@ -170,9 +206,14 @@ export default function ShiftPage() {
                 icon={Calendar}
                 color="#c4b5fd"
                 action={
-                    <Button onClick={handleSave} disabled={isSaving} variant="primary" style={{ padding: '15px 30px', fontSize: '1.2rem' }}>
-                        <Save size={20} /> {isSaving ? 'SAVING...' : 'SAVE SCHEDULE'}
-                    </Button>
+                    <div className="shift-header-actions">
+                        <Button onClick={handleRandomize} disabled={isRandomizing} variant="secondary" className="shift-header-btn">
+                            <Shuffle size={20} /> {isRandomizing ? 'RANDOMIZING...' : 'RANDOMIZE'}
+                        </Button>
+                        <Button onClick={handleSave} disabled={isSaving || !canSaveToday} variant="primary" className="shift-header-btn">
+                            <Save size={20} /> {isSaving ? 'SAVING...' : !canSaveToday ? 'SELASA-JUMAT TIDAK BISA SAVE' : 'SAVE SCHEDULE'}
+                        </Button>
+                    </div>
                 }
             />
 
@@ -244,6 +285,7 @@ export default function ShiftPage() {
                                                                     <strong>{s.employeeName} ({s.position})</strong>
                                                                 </div>
                                                                 <div
+                                                                    className="shift-delete-btn"
                                                                     onClick={() => handleRemove(s)}
                                                                     style={{ cursor: 'pointer', color: 'red', marginLeft: '5px' }}
                                                                 >
@@ -278,8 +320,8 @@ export default function ShiftPage() {
                     </div>
                 </div>
 
-                {/* Sidebar Source (Draggable) */}
-                <div style={{ width: '250px', display: 'flex', flexDirection: 'column', gap: '10px', flexShrink: 0 }}>
+                {/* Sidebar Source (Draggable) — hidden on mobile */}
+                <div className="shift-sidebar" style={{ width: '250px', display: 'flex', flexDirection: 'column', gap: '10px', flexShrink: 0 }}>
                     <Card title="DRAG STAFF TO SCHEDULE" style={{ display: 'flex', flexDirection: 'column', padding: 0 }}>
                         <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                             {employees.map(emp => (
@@ -307,6 +349,13 @@ export default function ShiftPage() {
                     </Card>
                 </div>
             </div>
+            <ConfirmDialog
+                isOpen={confirmDialog.isOpen}
+                title={confirmDialog.title}
+                message={confirmDialog.message}
+                onConfirm={confirmDialog.onConfirm}
+                onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+            />
         </div>
     );
 }

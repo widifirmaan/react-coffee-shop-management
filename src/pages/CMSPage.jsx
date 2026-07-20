@@ -182,8 +182,8 @@ export default function CMSPage() {
             <style>
                 {`
                     @keyframes marquee {
-                        0% { transform: translateX(0); }
-                        100% { transform: translateX(-50%); }
+                        0% { transform: translate3d(0, 0, 0); }
+                        100% { transform: translate3d(-50%, 0, 0); }
                     }
                     @keyframes float {
                         0% { transform: translateY(0px) rotate(0deg); }
@@ -195,12 +195,12 @@ export default function CMSPage() {
                         to { transform: rotate(360deg); }
                     }
                     @keyframes marquee-reverse {
-                        0% { transform: translateX(-50%); }
-                        100% { transform: translateX(0); }
+                        0% { transform: translate3d(-50%, 0, 0); }
+                        100% { transform: translate3d(0, 0, 0); }
                     }
                     @keyframes marquee-vertical {
-                        0% { transform: translateY(0); }
-                        100% { transform: translateY(-50%); }
+                        0% { transform: translate3d(0, 0, 0); }
+                        100% { transform: translate3d(0, -50%, 0); }
                     }
                     .marquee-container {
                         display: flex;

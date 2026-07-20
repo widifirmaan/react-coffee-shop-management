@@ -303,6 +303,7 @@ export default function EmployeePage() {
                                     <Thead>
                                         <Tr>
                                             <Th>DATE</Th>
+                                            <Th>SHIFT</Th>
                                             <Th>IN</Th>
                                             <Th>OUT</Th>
                                             <Th>STATUS</Th>
@@ -313,12 +314,13 @@ export default function EmployeePage() {
                                         {historyModal.logs.map((log) => (
                                             <Tr key={log.id}>
                                                 <Td>{log.date}</Td>
+                                                <Td>{log.shiftType === 'MORNING' ? '07:00-15:00' : log.shiftType === 'AFTERNOON' ? '15:00-23:00' : log.shiftType === 'EVENING' ? '23:00-07:00' : log.shiftType || '-'}</Td>
                                                 <Td>{log.clockInTime ? new Date(log.clockInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</Td>
                                                 <Td>{log.clockOutTime ? new Date(log.clockOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</Td>
                                                 <Td>
                                                     <span style={{
                                                         fontWeight: 'bold',
-                                                        color: (log.status === 'LATE' || log.checkInStatus === 'LATE') ? 'red' : 'green'
+                                                        color: (log.status === 'LATE' || log.checkInStatus === 'LATE' || log.status?.includes('TIDAK ABSEN')) ? 'red' : 'green'
                                                     }}>
                                                         {log.status || log.checkInStatus || '-'}
                                                     </span>

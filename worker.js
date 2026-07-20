@@ -120,6 +120,12 @@ function getJakartaDateStr() {
   return `${j.getUTCFullYear()}-${String(j.getUTCMonth() + 1).padStart(2, '0')}-${String(j.getUTCDate()).padStart(2, '0')}`;
 }
 
+function getYesterdayJakartaDateStr() {
+  const j = getJakartaDate();
+  j.setUTCDate(j.getUTCDate() - 1);
+  return `${j.getUTCFullYear()}-${String(j.getUTCMonth() + 1).padStart(2, '0')}-${String(j.getUTCDate()).padStart(2, '0')}`;
+}
+
 function getDayOfWeek() {
   const j = getJakartaDate();
   const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -500,6 +506,11 @@ async function handleApi(request, env) {
 
   if (path === '/api/shifts' && method === 'POST') {
     if (!user) return error('Unauthorized', 401);
+    const allowedDays = ['SATURDAY', 'SUNDAY', 'MONDAY'];
+    const todayDay = getDayOfWeek();
+    if (!allowedDays.includes(todayDay)) {
+      return error('Shift schedule hanya bisa disimpan hari Sabtu, Minggu, atau Senin', 400);
+    }
     const shifts = body.shifts || body;
     if (Array.isArray(shifts)) {
       await DB.prepare('DELETE FROM shift_schedules').run();
@@ -510,6 +521,63 @@ async function handleApi(request, env) {
       }
     }
     return json({ message: 'Shifts saved' });
+  }
+
+  if (path === '/api/shifts/randomize' && method === 'POST') {
+    if (!user) return error('Unauthorized', 401);
+    const { results: employees } = await DB.prepare('SELECT * FROM employees WHERE active = 1').all();
+
+    const byRole = {};
+    for (const emp of employees) {
+      const r = emp.role?.toUpperCase();
+      if (!byRole[r]) byRole[r] = [];
+      byRole[r].push(emp);
+    }
+
+    const requiredRoles = ['MANAGER', 'BARISTA', 'CASHIER', 'KITCHEN STAFF', 'WAITER'];
+    for (const role of requiredRoles) {
+      if (!byRole[role] || byRole[role].length === 0) {
+        return error(`Tidak ada karyawan aktif dengan role ${role}`, 400);
+      }
+    }
+
+    const DAYS = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
+    const SHIFTS = ['MORNING', 'AFTERNOON', 'EVENING'];
+    const newShifts = [];
+
+    for (const role of requiredRoles) {
+      const emps = byRole[role];
+      const usage = new Array(emps.length).fill(0);
+
+      for (const day of DAYS) {
+        for (const shiftType of SHIFTS) {
+          let minUsage = Infinity;
+          let candidates = [];
+          for (let i = 0; i < emps.length; i++) {
+            if (usage[i] < minUsage) {
+              minUsage = usage[i];
+              candidates = [i];
+            } else if (usage[i] === minUsage) {
+              candidates.push(i);
+            }
+          }
+          const pick = candidates[Math.floor(Math.random() * candidates.length)];
+          usage[pick]++;
+
+          const emp = emps[pick];
+          newShifts.push({
+            employeeId: emp.employeeId,
+            employeeName: emp.name,
+            role: emp.role,
+            position: emp.position,
+            dayOfWeek: day,
+            shiftType
+          });
+        }
+      }
+    }
+
+    return json(newShifts);
   }
 
   // ===================================================================
@@ -735,6 +803,23 @@ async function handleApi(request, env) {
     return json(rec || null);
   }
 
+  // ===================================================================
+  // ATTENDANCE LOGIC
+  // Shift windows (matching ShiftPage display):
+  //   MORNING:   07:00 - 15:00
+  //   AFTERNOON: 15:00 - 23:00
+  //   EVENING:   23:00 - 07:00
+  // Clock-in:
+  //   [start -10min, start]         → ON_TIME
+  //   (start, start + 2hr]          → LATE (alert "anda terlambat")
+  //   > start + 2hr                 → auto-record TIDAK ABSEN MASUK
+  // Clock-out:
+  //   [end, end + 2hr]              → normal clock-out
+  //   > end + 2hr                   → auto-record TIDAK ABSEN KELUAR
+  // ===================================================================
+  const SHIFT_START = { MORNING: 7, AFTERNOON: 15, EVENING: 23 };
+  const SHIFT_END   = { MORNING: 15, AFTERNOON: 23, EVENING: 7 };
+
   if (path === '/api/attendance/clock-in' && method === 'POST') {
     if (!user) return error('Unauthorized', 401);
     const { employeeId } = body;
@@ -750,17 +835,38 @@ async function handleApi(request, env) {
     const totalMin = jDate.getUTCHours() * 60 + jDate.getUTCMinutes();
     const dayOfWeek = getDayOfWeek();
     const scheduledShift = await DB.prepare('SELECT * FROM shift_schedules WHERE employeeId = ? AND dayOfWeek = ?').bind(employeeId, dayOfWeek).first();
+
     let shiftType = 'UNSCHEDULED';
-    let isLate = false;
+    let status = 'UNSCHEDULED';
     let minutesLate = 0;
+    let lateAlert = false;
+    let clockInTime = jDate.toISOString();
+    let present = 1;
+
     if (scheduledShift) {
       shiftType = scheduledShift.shiftType || 'UNSCHEDULED';
-      const expectedStart = { MORNING: 8, AFTERNOON: 15, EVENING: 22 }[shiftType];
-      if (expectedStart !== undefined) {
-        const expectedMin = expectedStart * 60 + 15;
-        if (totalMin > expectedMin) {
-          isLate = true;
-          minutesLate = totalMin - expectedStart * 60;
+      const startHour = SHIFT_START[shiftType];
+      if (startHour !== undefined) {
+        const earliestMin = startHour * 60 - 10;
+        const shiftStartMin = startHour * 60;
+        const autoAbsenMin = shiftStartMin + 120; // 2 jam setelah shift start
+
+        if (totalMin < earliestMin) {
+          return error('Belum waktu clock in. Clock in dapat dilakukan 10 menit sebelum jam shift dimulai.', 400);
+        }
+
+        if (totalMin > autoAbsenMin) {
+          // > 2 jam: auto-record tidak absen masuk
+          status = 'TIDAK ABSEN MASUK';
+          clockInTime = '';
+          present = 0;
+        } else if (totalMin > shiftStartMin) {
+          // 1 menit - 2 jam: LATE
+          minutesLate = totalMin - shiftStartMin;
+          status = 'LATE';
+          lateAlert = true;
+        } else {
+          status = 'ON_TIME';
         }
       }
     }
@@ -768,9 +874,10 @@ async function handleApi(request, env) {
     const id = uid();
     await DB.prepare(
       'INSERT INTO attendance_records (id, employee_id, date, present, clockInTime, shiftType, status, minutesLate, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    ).bind(id, emp.id, today, 1, jDate.toISOString(), shiftType, isLate ? 'LATE' : (shiftType === 'UNSCHEDULED' ? 'UNSCHEDULED' : 'ON_TIME'), minutesLate, '').run();
+    ).bind(id, emp.id, today, present, clockInTime, shiftType, status, minutesLate, '').run();
 
-    return json({ message: 'Clocked in', record: { id, date: today, present: true, clockInTime: jDate.toISOString(), shiftType, status: isLate ? 'LATE' : (shiftType === 'UNSCHEDULED' ? 'UNSCHEDULED' : 'ON_TIME'), minutesLate } });
+    const record = { id, date: today, present, clockInTime, shiftType, status, minutesLate, lateAlert };
+    return json({ message: status === 'TIDAK ABSEN MASUK' ? 'Tidak absen masuk' : 'Clocked in', record });
   }
 
   if (path === '/api/attendance/clock-out' && method === 'POST') {
@@ -780,23 +887,49 @@ async function handleApi(request, env) {
     const emp = await DB.prepare('SELECT * FROM employees WHERE employeeId = ?').bind(employeeId).first();
     if (!emp) return error('Employee not found', 404);
 
-    const today = getJakartaDateStr();
-    const record = await DB.prepare('SELECT * FROM attendance_records WHERE employee_id = ? AND date = ?').bind(emp.id, today).first();
-    if (!record) return error('No clock-in record found for today', 400);
-
     const jDate = getJakartaDate();
+    const today = getJakartaDateStr();
+    const totalMin = jDate.getUTCHours() * 60 + jDate.getUTCMinutes();
+
+    // Try today's record; if early morning (before 12:00), also try yesterday
+    // (handles EVENING shift ending at 07:00 next day, and AFTERNOON clock-out past midnight)
+    let record = await DB.prepare('SELECT * FROM attendance_records WHERE employee_id = ? AND date = ?').bind(emp.id, today).first();
+    if (!record && totalMin < 720) {
+      const yesterdayDate = getYesterdayJakartaDateStr();
+      record = await DB.prepare('SELECT * FROM attendance_records WHERE employee_id = ? AND date = ?').bind(emp.id, yesterdayDate).first();
+    }
+    if (!record) return error('No clock-in record found', 400);
+
+    const shiftType = record.shiftType || 'UNSCHEDULED';
+    if (shiftType !== 'UNSCHEDULED') {
+      const endHour = SHIFT_END[shiftType];
+      if (endHour !== undefined) {
+        const endMin = endHour * 60;
+        const maxOutMin = endMin + 120; // 2 jam setelah shift selesai
+
+        if (totalMin < endMin) {
+          return error('Belum waktu clock out. Tunggu sampai jam shift selesai.', 400);
+        }
+
+        if (totalMin > maxOutMin) {
+          // > 2 jam: auto-record tidak absen keluar
+          await DB.prepare('UPDATE attendance_records SET clockOutTime = ?, hoursWorked = NULL, status = ? WHERE id = ?')
+            .bind('', 'TIDAK ABSEN KELUAR', record.id).run();
+          return json({ message: 'Tidak absen keluar', record: { ...record, clockOutTime: '', hoursWorked: null, status: 'TIDAK ABSEN KELUAR' } });
+        }
+      }
+    }
+
     const clockIn = record.clockInTime;
+    let hoursWorked = null;
     if (clockIn) {
       const diffMs = jDate.getTime() - new Date(clockIn).getTime();
-      const hoursWorked = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100;
-      let statusAlert = null;
-      if (hoursWorked < 7.75 && record.status !== 'UNSCHEDULED') {
-        statusAlert = 'TOO_EARLY';
-      }
-      await DB.prepare('UPDATE attendance_records SET clockOutTime = ?, hoursWorked = ?, status_alert = ? WHERE id = ?')
-        .bind(jDate.toISOString(), hoursWorked, statusAlert, record.id).run();
+      hoursWorked = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100;
     }
-    return json({ message: 'Clocked out' });
+    await DB.prepare('UPDATE attendance_records SET clockOutTime = ?, hoursWorked = ? WHERE id = ?')
+      .bind(jDate.toISOString(), hoursWorked, record.id).run();
+
+    return json({ message: 'Clocked out', record: { ...record, clockOutTime: jDate.toISOString(), hoursWorked } });
   }
 
   // ===================================================================
@@ -922,6 +1055,111 @@ async function handleApi(request, env) {
     }
 
     return json({ message: 'Database seeded with 14 employees. Example logins: EMP-MAN-001 / manager123, EMP-BAR-001 / barista123, EMP-CSH-001 / cashier123, EMP-KIT-001 / kitchen123, EMP-WAI-001 / waiter123' });
+  }
+
+  if (path === '/api/seed-content' && method === 'POST') {
+    const { secret } = body;
+    if (!env.SEED_SECRET || secret !== env.SEED_SECRET) return error('Invalid secret', 401);
+
+    const now = nowISO();
+
+    const menus = [
+      { name: 'Espresso', category: 'Coffee', price: 25000, description: 'Single shot espresso murni dengan rasa kuat dan aroma khas.' },
+      { name: 'Double Espresso', category: 'Coffee', price: 35000, description: 'Double shot espresso untuk sensasi kafein yang lebih intens.' },
+      { name: 'Americano', category: 'Coffee', price: 30000, description: 'Espresso dengan tambahan air panas, ringan dan nikmat.' },
+      { name: 'Long Black', category: 'Coffee', price: 32000, description: 'American版本 dengan crema yang lebih tebal.' },
+      { name: 'Cappuccino', category: 'Coffee', price: 38000, description: 'Espresso dengan steamed milk dan foam susu yang lembut.' },
+      { name: 'Cafe Latte', category: 'Coffee', price: 38000, description: 'Espresso dengan susu steam yang creamy dan sedikit foam.' },
+      { name: 'Flat White', category: 'Coffee', price: 40000, description: 'Double espresso dengan microfoam susu yang velvety.' },
+      { name: 'Mocha', category: 'Coffee', price: 42000, description: 'Perpaduan espresso, coklat, dan steamed milk.' },
+      { name: 'Caramel Macchiato', category: 'Coffee', price: 45000, description: 'Layered vanilla latte dengan drizzle karamel di atasnya.' },
+      { name: 'Vanilla Latte', category: 'Coffee', price: 42000, description: 'Classic latte dengan sentuhan vanilla syrup.' },
+      { name: 'Hazelnut Latte', category: 'Coffee', price: 42000, description: 'Latte dengan hazelnut syrup yang manis dan harum.' },
+      { name: 'Affogato', category: 'Coffee', price: 40000, description: 'Scoop es krim vanilla disiram espresso panas.' },
+      { name: 'Cold Brew', category: 'Coffee', price: 35000, description: 'Kopi seduh dingin 12 jam, smooth dan rendah asam.' },
+      { name: 'Nitro Cold Brew', category: 'Coffee', price: 42000, description: 'Cold brew dengan infus nitrogen, tekstur creamy dan creamy head.' },
+      { name: 'Iced Latte', category: 'Coffee', price: 36000, description: 'Latte segar dengan es batu.' },
+      { name: 'Iced Mocha', category: 'Coffee', price: 40000, description: 'Mocha dingin dengan es batu.' },
+      { name: 'Iced Caramel Macchiato', category: 'Coffee', price: 43000, description: 'Caramel macchiato versi dingin.' },
+      { name: 'Espresso Con Panna', category: 'Coffee', price: 30000, description: 'Espresso dengan whipped cream di atasnya.' },
+      { name: 'Cortado', category: 'Coffee', price: 32000, description: 'Espresso dengan sedikit susu hangat, rasanya seimbang.' },
+      { name: 'Piccolo Latte', category: 'Coffee', price: 30000, description: 'Small latte dengan rasa espresso yang kuat.' },
+      { name: 'Irish Coffee', category: 'Coffee', price: 50000, description: 'Kopi hitam dengan Irish whiskey dan whipped cream.' },
+      { name: 'Cafe Bombon', category: 'Coffee', price: 35000, description: 'Espresso dengan susu kental manis, khas Spanyol.' },
+      { name: 'Kopi Susu Gula Aren', category: 'Coffee', price: 35000, description: 'Kopi susu kekinian dengan gula aren asli.' },
+      { name: 'Kopi Hitam', category: 'Coffee', price: 20000, description: 'Kopi hitam tradisional Indonesia pilihan.' },
+      { name: 'Vietnamese Drip', category: 'Coffee', price: 35000, description: 'KopiVietnam slow drip dengan susu kental manis.' },
+      { name: 'Matcha Latte', category: 'Non-Coffee', price: 40000, description: 'Matcha bubuk premium dengan steamed milk.' },
+      { name: 'Taro Latte', category: 'Non-Coffee', price: 38000, description: 'Minuman taro creamy dengan aroma vanilla.' },
+      { name: 'Chocolate', category: 'Non-Coffee', price: 35000, description: 'Segelas coklat panas creamy dan menghangatkan.' },
+      { name: 'White Chocolate Mocha', category: 'Non-Coffee', price: 42000, description: 'White chocolate dan susu steam, manis dan lembut.' },
+      { name: 'Strawberry Latte', category: 'Non-Coffee', price: 38000, description: 'Fresh strawberry puree dengan susu.' },
+      { name: 'Blue Latte', category: 'Non-Coffee', price: 40000, description: 'Minuman bunga telang biru yang cantik dan menenangkan.' },
+      { name: 'Red Velvet Latte', category: 'Non-Coffee', price: 40000, description: 'Red velvet dengan susu steam, manis dan creamy.' },
+      { name: 'Japanese Tea', category: 'Non-Coffee', price: 25000, description: 'Green tea Jepang premium.' },
+      { name: 'Earl Grey', category: 'Non-Coffee', price: 25000, description: 'Teh Earl Grey dengan aroma bergamot klasik.' },
+      { name: 'Chamomile Tea', category: 'Non-Coffee', price: 25000, description: 'Teh chamomile menenangkan, tanpa kafein.' },
+      { name: 'Lemon Tea', category: 'Non-Coffee', price: 20000, description: 'Teh hitam dengan perasan lemon segar.' },
+      { name: 'Fresh Orange Juice', category: 'Non-Coffee', price: 28000, description: 'Jus jeruk segar tanpa gula tambahan.' },
+      { name: 'Mango Smoothie', category: 'Non-Coffee', price: 32000, description: 'Smoothie mangga segar dengan yogurt.' },
+      { name: 'Strawberry Smoothie', category: 'Non-Coffee', price: 32000, description: 'Smoothie stroberi segar dengan yogurt.' },
+      { name: 'Mineral Water', category: 'Non-Coffee', price: 10000, description: 'Air mineral berkualitas.' },
+      { name: 'Soda', category: 'Non-Coffee', price: 15000, description: 'Minuman soda pilihan.' },
+      { name: 'Croissant', category: 'Snack', price: 25000, description: 'Croissant klasik Prancis, buttery dan flaky.' },
+      { name: 'Butter Croissant', category: 'Snack', price: 28000, description: 'Croissant dengan lapisan mentega ekstra.' },
+      { name: 'Almond Croissant', category: 'Snack', price: 32000, description: 'Croissant isi almond paste dan topping almond slice.' },
+      { name: 'Banana Bread', category: 'Snack', price: 20000, description: 'Roti pisang homemade, moist dan penuh rasa.' },
+      { name: 'Blueberry Muffin', category: 'Snack', price: 22000, description: 'Muffin blueberry dengan topping streusel.' },
+      { name: 'Chocolate Muffin', category: 'Snack', price: 22000, description: 'Muffin coklat fudge yang rich dan moist.' },
+      { name: 'Cheesecake', category: 'Snack', price: 35000, description: 'New York style cheesecake creamy dengan base graham.' },
+      { name: 'Tiramisu', category: 'Snack', price: 38000, description: 'Classic Italian tiramisu dengan mascarpone.' },
+      { name: 'Black Forest Cake', category: 'Snack', price: 35000, description: 'Cake coklat dengan cherry dan whipped cream.' },
+      { name: 'Carrot Cake', category: 'Snack', price: 32000, description: 'Carrot cake dengan cream cheese frosting.' },
+      { name: 'French Fries', category: 'Food', price: 25000, description: 'Kentang goreng crispy dengan saus pilihan.' },
+      { name: 'Nachos', category: 'Food', price: 35000, description: 'Nachos dengan keju leleh, salsa, dan sour cream.' },
+      { name: 'Chicken Wings', category: 'Food', price: 40000, description: 'Sayap ayam goreng dengan saus BBQ pedas.' },
+      { name: 'Sandwich', category: 'Food', price: 35000, description: 'Sandwich roti gandum dengan isian ayam dan sayur segar.' },
+      { name: 'Toast', category: 'Food', price: 25000, description: 'Roti panggang dengan butter dan selai.' },
+      { name: 'Pasta Carbonara', category: 'Food', price: 45000, description: 'Fettuccine carbonara creamy dengan bacon dan parmesan.' },
+      { name: 'Pasta Aglio Olio', category: 'Food', price: 42000, description: 'Spaghetti aglio olio dengan bawang putih dan cabai.' },
+      { name: 'Nasi Goreng', category: 'Food', price: 40000, description: 'Nasi goreng kampung dengan telur dan kerupuk.' },
+      { name: 'Mie Goreng', category: 'Food', price: 35000, description: 'Mie goreng jawa dengan sayuran dan telur.' },
+      { name: 'Pisang Goreng', category: 'Food', price: 20000, description: 'Pisang goreng crispy dengan topping coklat dan keju.' },
+    ];
+
+    for (const m of menus) {
+      await DB.prepare(
+        'INSERT INTO menus (id, name, category, price, description, available, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, 1, ?, ?)'
+      ).bind(uid(), m.name, m.category, m.price, m.description, now, now).run();
+    }
+
+    const posts = [
+      { title: 'Grand Opening Siap Nyafe Coffee', category: 'NEWS', status: 'PUBLISHED', excerpt: 'Akhirnya Siap Nyafe Coffee resmi hadir di Jakarta!', content: 'Kami dengan bangga mengumumkan pembukaan Siap Nyafe Coffee di pusat kota Jakarta. Hadir dengan konsep modern industrial yang nyaman, kami menyajikan berbagai pilihan kopi berkualitas dari biji kopi pilihan petani lokal Indonesia. Mulai dari espresso klasik hingga minuman kopi kekinian seperti Kopi Susu Gula Aren dan Cold Brew. Dukung terus kopi lokal Indonesia!', createdAt: '2026-06-15T08:00' },
+      { title: 'Welcome to the Family: Our Story', category: 'NEWS', status: 'PUBLISHED', excerpt: 'Cerita di balik lahirnya Siap Nyafe Coffee.', content: 'Berawal dari kecintaan terhadap kopi Nusantara, kami mendirikan Siap Nyafe Coffee dengan misi memperkenalkan cita rasa kopi Indonesia ke seluruh dunia. Setiap cangkir yang kami sajikan adalah hasil seleksi ketat dari petani kopi terbaik di Sumatera, Jawa, Bali, dan Sulawesi. Kami percaya bahwa secangkir kopi yang baik bisa membawa kebahagiaan dan menyatukan orang-orang.', createdAt: '2026-06-15T09:00' },
+      { title: 'Meet Our Barista Team', category: 'NEWS', status: 'PUBLISHED', excerpt: 'Kenalan dengan para barista handal Siap Nyafe.', content: 'Tim barista kami adalah para profesional yang telah terlatih dan bersertifikat. Mereka tidak hanya ahli dalam meracik kopi, tetapi juga passionate dalam memberikan pengalaman terbaik bagi setiap pelanggan. Dari latte art yang indah hingga rekomendasi kopi yang tepat sesuai selera Anda, barista kami siap melayani.', createdAt: '2026-06-20T10:00' },
+      { title: 'The Art of Latte Art', category: 'NEWS', status: 'PUBLISHED', excerpt: 'Belajar seni latte art dari barista profesional.', content: 'Latte art bukan sekadar hiasan di atas kopi, tetapi sebuah bentuk seni yang membutuhkan keahlian dan latihan. Barista kami telah menguasai berbagai teknik pouring untuk menciptakan rosetta, tulip, swan, dan berbagai motif lainnya. Setiap cangkir latte art adalah karya seni yang unik untuk Anda!', createdAt: '2026-06-25T11:00' },
+      { title: 'Kopi Indonesia: Dari Petani ke Cangkir', category: 'NEWS', status: 'PUBLISHED', excerpt: 'Perjalanan biji kopi dari kebun hingga ke cangkir Anda.', content: 'Indonesia adalah salah satu penghasil kopi terbaik di dunia. Kopi Gayo dari Aceh dengan karakter earthy dan spicy, Kopi Java dengan body yang smooth dan hints of chocolate, serta Kopi Toraja dengan kompleksitas rasa yang kaya. Di Siap Nyafe, kami bangga menyajikan kopi-kopi terbaik Nusantara dengan metode seduh yang tepat.', createdAt: '2026-07-01T08:00' },
+      { title: 'New Cold Brew Arrival', category: 'PROMO', status: 'PUBLISHED', excerpt: 'Cold brew baru dengan rasa lebih smooth!', content: 'Kami menghadirkan Cold Brew baru yang diseduh selama 12 jam untuk menghasilkan rasa yang lebih smooth, rendah asam, dan full-bodied. Tersedia juga Nitro Cold Brew dengan tekstur creamy berkat infus nitrogen. Nikmati kesegaran Cold Brew di hari yang panas!', createdAt: '2026-07-05T09:00' },
+      { title: 'Buy 1 Get 1 Every Monday', category: 'PROMO', status: 'PUBLISHED', excerpt: 'Senin ceria dengan promo Buy 1 Get 1 untuk semua minuman.', content: 'Setiap hari Senin, kami memberikan promo spesial Buy 1 Get 1 untuk semua menu minuman. Ajak teman atau kolega Anda dan nikmati kopi favorit berdua dengan harga yang lebih hemat. Promo berlaku sepanjang hari untuk dine-in maupun takeaway. Syarat dan ketentuan berlaku.', createdAt: '2026-07-10T10:00' },
+      { title: 'Happy Hour 3-5 PM', category: 'PROMO', status: 'PUBLISHED', excerpt: 'Diskon 20% untuk semua menu setiap jam 3-5 sore!', content: 'Butuh penyemangat di sore hari? Nikmati Happy Hour setiap hari pukul 15.00 - 17.00 dengan diskon 20% untuk semua menu minuman. Cocok untuk melepas penat setelah seharian beraktivitas. Jangan lewatkan promo spesial ini!', createdAt: '2026-07-12T14:00' },
+      { title: 'Weekly Special: New Menu Launch', category: 'PROMO', status: 'PUBLISHED', excerpt: 'Coba menu-menu baru kami yang lebih variatif!', content: 'Setiap minggu kami menghadirkan menu spesial baru yang siap memanjakan lidah Anda. Mulai dari minuman seasonal hingga makanan ringan pendamping kopi. Follow Instagram kami untuk update menu spesial minggu ini!', createdAt: '2026-07-15T08:00' },
+      { title: 'Student Discount 15%', category: 'PROMO', status: 'PUBLISHED', excerpt: 'Pelajar dan mahasiswa dapat diskon 15% setiap hari.', content: 'Tunjukkan kartu pelajar atau mahasiswa Anda dan dapatkan diskon 15% untuk semua pembelian. Kami ingin mendukung generasi muda Indonesia untuk lebih produktif dengan secangkir kopi berkualitas. Promo berlaku setiap hari selama jam operasional.', createdAt: '2026-07-18T09:00' },
+      { title: 'New Menu: Healthy Options', category: 'PROMO', status: 'PUBLISHED', excerpt: 'Menu sehat baru untuk gaya hidup sadar kesehatan.', content: 'Kini hadir pilihan menu sehat untuk Anda yang peduli dengan kesehatan. Smoothie bowl dengan buah segar, oatmeal latte, serta minuman rendah kalori. Nikmati kopi favorit Anda tanpa rasa bersalah! Tersedia juga opsi susu alternatif seperti oat milk, almond milk, dan soy milk.', createdAt: '2026-07-20T10:00' },
+      { title: 'Live Music Every Friday', category: 'EVENT', status: 'PUBLISHED', excerpt: 'Nikmati live music setiap Jumat malam di Siap Nyafe.', content: 'Setiap hari Jumat pukul 19.00 - 21.00, kami menghadirkan live music dengan berbagai genre musik akustik. Nikmati kopi favorit Anda ditemani alunan musik yang menenangkan. Bawa teman dan keluarga untuk pengalaman ngopi yang lebih berkesan!', createdAt: '2026-06-18T10:00' },
+      { title: 'Coffee Brewing Workshop', category: 'EVENT', status: 'PUBLISHED', excerpt: 'Belajar teknik brewing kopi yang benar.', content: 'Ikuti workshop brewing kopi kami setiap hari Sabtu pukul 10.00 - 12.00. Pelajari berbagai metode brewing mulai dari V60, Aeropress, French Press, hingga Cold Brew. Cocok untuk pemula hingga enthusiast yang ingin memperdalam ilmu kopi. Biaya pendaftaran Rp 100.000 termasuk alat dan bahan.', createdAt: '2026-06-22T10:00' },
+      { title: 'Open Mic Night', category: 'EVENT', status: 'PUBLISHED', excerpt: 'Tunjukkan bakat Anda di panggung open mic!', content: 'Setiap hari Rabu malam, Siap Nyafe menjadi tempat bagi para kreator untuk mengekspresikan diri melalui open mic. Puisi, komedi, musik, storytelling — semua boleh tampil! Daftarkan diri Anda di kasir atau melalui Instagram kami. Tiket masuk gratis dengan minimum pemesanan satu minuman.', createdAt: '2026-07-08T10:00' },
+      { title: 'Year-End Celebration', category: 'EVENT', status: 'PUBLISHED', excerpt: 'Rayakan akhir tahun bersama Siap Nyafe!', content: 'Mari rayakan akhir tahun bersama Siap Nyafe Coffee! Akan ada live music spesial, games berhadiah, dan menu spesial akhir tahun. Datang dan nikmati momen kebersamaan di penghujung tahun. Reserve tempat Anda sekarang karena kapasitas terbatas!', createdAt: '2026-07-15T12:00' },
+      { title: 'Barista Competition 2026', category: 'EVENT', status: 'PUBLISHED', excerpt: 'Ikuti kompetisi barista antar kafe se-Jakarta!', content: 'Siap Nyafe menjadi tuan rumah kompetisi barista antar kafe se-Jakarta. Adu skill latte art, brewing, dan speed challenge Anda. Hadiah utamaRp 5.000.000 + trophy. Pendaftaran dibuka sampai 31 Juli 2026. Hubungi kami untuk informasi lebih lanjut.', createdAt: '2026-07-18T10:00' },
+    ];
+
+    for (const p of posts) {
+      const slug = p.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now();
+      await DB.prepare(
+        'INSERT INTO posts (id, title, slug, content, excerpt, category, status, publishedAt, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      ).bind(uid(), p.title, slug, p.content, p.excerpt, p.category, p.status, p.status === 'PUBLISHED' ? now : null, p.createdAt, now).run();
+    }
+
+    return json({ message: `Seeded ${menus.length} menu items and ${posts.length} blog posts` });
   }
 
   // ===================================================================
