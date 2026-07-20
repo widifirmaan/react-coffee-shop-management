@@ -47,7 +47,7 @@ export default function WaiterPage() {
         <div className="page-container" style={{ minHeight: '100vh', background: '#f8fafc' }}>
             <PageHeader title="WAITER DASHBOARD" description="REAL-TIME NOTIFICATIONS" color="#60a5fa" />
 
-            <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            <div>
                 {loading ? (
                     <div style={{ textAlign: 'center', fontSize: '1.2rem', fontWeight: 'bold' }}>LOADING...</div>
                 ) : notifications.length === 0 ? (
