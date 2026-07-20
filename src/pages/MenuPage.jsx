@@ -114,6 +114,9 @@ export default function MenuPage({ user }) {
     const [menuForm, setMenuForm] = useState({ name: '', category: '', price: '', description: '', imageUrl: '', available: true, gallery: [] });
     const [alertMsg, setAlertMsg] = useState(null);
     const [confirmDialog, setConfirmDialog] = useState({ isOpen: false });
+    const [orderCustomer, setOrderCustomer] = useState('');
+    const [orderTable, setOrderTable] = useState('Take Away');
+    const [orderQty, setOrderQty] = useState(1);
 
     const isManager = user?.role?.toUpperCase() === 'MANAGER';
 
@@ -227,6 +230,26 @@ export default function MenuPage({ user }) {
         }
     };
 
+    const handlePlaceOrder = async () => {
+        if (!viewingMenu) return;
+        try {
+            await axios.post('/api/orders', {
+                items: [{ menuId: viewingMenu.id, menuName: viewingMenu.name, quantity: orderQty, price: viewingMenu.price }],
+                totalAmount: viewingMenu.price * orderQty,
+                tableNumber: orderTable,
+                customerName: orderCustomer || 'Guest',
+                paymentMethod: 'CASH'
+            });
+            setAlertMsg({ type: 'success', message: 'ORDER PLACED!' });
+            setViewingMenu(null);
+            setOrderQty(1);
+            setOrderCustomer('');
+            setOrderTable('Take Away');
+        } catch (e) {
+            setAlertMsg({ type: 'error', message: 'ORDER FAILED!' });
+        }
+    };
+
     const toggleAvailability = async (menu) => {
         try {
             await axios.put(`/api/menus/${menu.id}`, { ...menu, available: !menu.available });
@@ -310,7 +333,7 @@ export default function MenuPage({ user }) {
                 description="MANAGE PRODUCTS & CATEGORIES"
                 icon={ShoppingCart}
                 color="#fde68a"
-                action={<Button onClick={() => setIsCategoryModalOpen(true)} variant="primary">+ CATEGORY</Button>}
+                action={isManager && <Button onClick={() => setIsCategoryModalOpen(true)} variant="primary">+ CATEGORY</Button>}
             />
 
             {/* Search */}
@@ -330,18 +353,20 @@ export default function MenuPage({ user }) {
                     <div key={category} style={{ marginBottom: '50px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
                             <h2 className="category-header" style={{ fontWeight: '900', textTransform: 'uppercase', margin: 0, background: 'black', color: 'white', padding: '5px 15px', transform: 'rotate(-1deg)' }}>{category}</h2>
-                            {category !== 'Uncategorized' && category !== 'Featured' && (
+                            {isManager && category !== 'Uncategorized' && category !== 'Featured' && (
                                 <Button variant="danger" style={{ padding: '5px 10px', height: 'fit-content' }} onClick={() => handleDeleteCategory(category)}>
                                     <Trash2 size={16} />
                                 </Button>
                             )}
-                            <Button variant="secondary" style={{ padding: '5px 10px', height: 'fit-content', marginLeft: 'auto' }} onClick={() => {
-                                setEditingMenu(null);
-                                setMenuForm({ name: '', category: category, price: '', description: '', imageUrl: '', available: true, gallery: [] });
-                                setIsMenuModalOpen(true);
-                            }}>
-                                <Plus size={16} /> ADD ITEM
-                            </Button>
+                            {isManager && (
+                                <Button variant="secondary" style={{ padding: '5px 10px', height: 'fit-content', marginLeft: 'auto' }} onClick={() => {
+                                    setEditingMenu(null);
+                                    setMenuForm({ name: '', category: category, price: '', description: '', imageUrl: '', available: true, gallery: [] });
+                                    setIsMenuModalOpen(true);
+                                }}>
+                                    <Plus size={16} /> ADD ITEM
+                                </Button>
+                            )}
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px', alignItems: 'stretch' }}>
@@ -367,11 +392,13 @@ export default function MenuPage({ user }) {
                                         </div>
                                         <p style={{ opacity: 0.7, fontSize: '0.9rem', marginBottom: '15px', height: '40px', overflow: 'hidden' }}>{menu.description}</p>
 
-                                        <div style={{ paddingTop: '15px', borderTop: '2px dashed black', display: 'flex', gap: '8px', marginTop: 'auto' }}>
-                                            <Button style={{ flex: 1, padding: '5px' }} variant={menu.available ? 'secondary' : 'success'} onClick={(e) => { e.stopPropagation(); toggleAvailability(menu); }}>
-                                                {menu.available ? 'DISABLE' : 'ENABLE'}
-                                            </Button>
-                                        </div>
+                                        {isManager && (
+                                            <div style={{ paddingTop: '15px', borderTop: '2px dashed black', display: 'flex', gap: '8px', marginTop: 'auto' }}>
+                                                <Button style={{ flex: 1, padding: '5px' }} variant={menu.available ? 'secondary' : 'success'} onClick={(e) => { e.stopPropagation(); toggleAvailability(menu); }}>
+                                                    {menu.available ? 'DISABLE' : 'ENABLE'}
+                                                </Button>
+                                            </div>
+                                        )}
                                     </div>
                                 </Card>
                             ))}
@@ -412,28 +439,48 @@ export default function MenuPage({ user }) {
                 {viewingMenu && (
                     <div className="menu-modal-grid">
                         <div>
-                            <GalleryGrid isEditable={true} menuForm={menuForm} setMenuForm={setMenuForm} handleFileUpload={handleFileUpload} />
+                            <GalleryGrid isEditable={isManager} menuForm={menuForm} setMenuForm={setMenuForm} handleFileUpload={handleFileUpload} />
                         </div>
                         <div>
-                            <>
-                                <Input label="NAME" value={menuForm.name} onChange={e => setMenuForm({ ...menuForm, name: e.target.value })} maxLength={50} />
-                                <Select
-                                    label="CATEGORY"
-                                    value={menuForm.category}
-                                    onChange={e => setMenuForm({ ...menuForm, category: e.target.value })}
-                                    options={[
-                                        { value: 'Featured', label: 'Featured' },
-                                        ...categories.filter(c => c.name !== 'Featured' && c.name !== 'Uncategorized').map(c => ({ value: c.name, label: c.name })),
-                                        { value: 'Uncategorized', label: 'Uncategorized' }
-                                    ]}
-                                />
-                                <Input label="DESCRIPTION" value={menuForm.description} onChange={e => setMenuForm({ ...menuForm, description: e.target.value })} type="textarea" maxLength={500} />
-                                <Input label="PRICE" type="number" value={menuForm.price} onChange={e => setMenuForm({ ...menuForm, price: e.target.value })} max={100000000} />
-                                <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
-                                    <Button onClick={handleDetailSave} variant="primary" style={{ flex: 1 }}>SAVE CHANGES</Button>
-                                    <Button onClick={() => handleDeleteMenu(viewingMenu.id)} variant="danger" style={{ flex: 1 }}>DELETE</Button>
-                                </div>
-                            </>
+                            {isManager ? (
+                                <>
+                                    <Input label="NAME" value={menuForm.name} onChange={e => setMenuForm({ ...menuForm, name: e.target.value })} maxLength={50} />
+                                    <Select
+                                        label="CATEGORY"
+                                        value={menuForm.category}
+                                        onChange={e => setMenuForm({ ...menuForm, category: e.target.value })}
+                                        options={[
+                                            { value: 'Featured', label: 'Featured' },
+                                            ...categories.filter(c => c.name !== 'Featured' && c.name !== 'Uncategorized').map(c => ({ value: c.name, label: c.name })),
+                                            { value: 'Uncategorized', label: 'Uncategorized' }
+                                        ]}
+                                    />
+                                    <Input label="DESCRIPTION" value={menuForm.description} onChange={e => setMenuForm({ ...menuForm, description: e.target.value })} type="textarea" maxLength={500} />
+                                    <Input label="PRICE" type="number" value={menuForm.price} onChange={e => setMenuForm({ ...menuForm, price: e.target.value })} max={100000000} />
+                                    <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
+                                        <Button onClick={handleDetailSave} variant="primary" style={{ flex: 1 }}>SAVE CHANGES</Button>
+                                        <Button onClick={() => handleDeleteMenu(viewingMenu.id)} variant="danger" style={{ flex: 1 }}>DELETE</Button>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <p style={{ fontSize: '1.2rem', lineHeight: 1.6 }}>{viewingMenu.description}</p>
+                                    <h2 style={{ fontSize: '2.5rem', margin: '20px 0' }}>Rp {viewingMenu.price.toLocaleString()}</h2>
+                                    <div style={{ marginBottom: '20px' }}>
+                                        <Input label="CUSTOMER NAME" value={orderCustomer} onChange={e => setOrderCustomer(e.target.value)} placeholder="Guest" maxLength={50} />
+                                        <Select label="TABLE" value={orderTable} onChange={e => setOrderTable(e.target.value)}
+                                            options={[{ value: 'Take Away', label: 'Take Away' }, ...[...Array(20)].map((_, i) => ({ value: `Table ${i + 1}`, label: `Table ${i + 1}` }))]} />
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                        <Button onClick={() => setOrderQty(Math.max(1, orderQty - 1))} variant="secondary" style={{ flex: '0 0 50px' }}>-</Button>
+                                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '1.5rem', border: '3px solid black' }}>{orderQty}</div>
+                                        <Button onClick={() => setOrderQty(orderQty + 1)} variant="secondary" style={{ flex: '0 0 50px' }}>+</Button>
+                                    </div>
+                                    <Button onClick={handlePlaceOrder} variant="primary" style={{ width: '100%', marginTop: '20px', padding: '15px' }}>
+                                        PLACE ORDER
+                                    </Button>
+                                </>
+                            )}
                         </div>
                     </div>
                 )}
