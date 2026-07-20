@@ -21,9 +21,12 @@ export const NotificationCard = ({ notification, onDismiss }) => {
             justifyContent: 'space-between',
             alignItems: 'center',
             boxShadow: '8px 8px 0 0 black',
-            marginBottom: '20px'
+            marginBottom: '20px',
+            width: '100%',
+            maxWidth: '100%',
+            boxSizing: 'border-box'
         }}>
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
                     <span style={{
                         background: '#ef4444',
@@ -39,10 +42,10 @@ export const NotificationCard = ({ notification, onDismiss }) => {
                         <Clock size={16} /> {timeString}
                     </span>
                 </div>
-                <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '900', textTransform: 'uppercase' }}>
+                <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '900', textTransform: 'uppercase', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
                     {notification.type === 'CALL_WAITER' ? 'WAITRESS NEEDED' : notification.type}
                 </h3>
-                <p style={{ margin: '5px 0 0 0', fontWeight: 'bold', fontSize: '1.1rem' }}>{notification.message}</p>
+                <p style={{ margin: '5px 0 0 0', fontWeight: 'bold', fontSize: '1.1rem', overflowWrap: 'break-word', wordBreak: 'break-word' }}>{notification.message}</p>
             </div>
 
             <div style={{ marginLeft: '20px' }}>
