@@ -116,8 +116,8 @@ export default function SettingsPage() {
             <form onSubmit={handleSave}>
                 <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(3, 1fr)',
-                    gap: '20px'
+                    gridTemplateColumns: '1fr',
+                    gap: '30px'
                 }}>
 
                     {/* General Settings */}
