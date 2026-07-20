@@ -119,20 +119,24 @@ export default function FinancePage() {
                                 </Td>
                             </Tr>
                         ))}
+                        {filtered.length === 0 && (
+                            <Tr>
+                                <Td colSpan="4" style={{ padding: '40px', textAlign: 'center', opacity: 0.5 }}>NO TRANSACTIONS FOUND</Td>
+                            </Tr>
+                        )}
                     </Tbody>
                 </Table>
-                {filtered.length === 0 && <div style={{ padding: '40px', textAlign: 'center', opacity: 0.5 }}>NO TRANSACTIONS FOUND</div>}
-
-                {filtered.length > 0 && (
-                    <Pagination
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={setCurrentPage}
-                        itemsPerPage={itemsPerPage}
-                        totalItems={filtered.length}
-                    />
-                )}
             </TableContainer>
+
+            {filtered.length > 0 && (
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                    itemsPerPage={itemsPerPage}
+                    totalItems={filtered.length}
+                />
+            )}
 
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="RECORD TRANSACTION">
                 <form onSubmit={handleAdd}>
