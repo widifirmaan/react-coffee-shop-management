@@ -214,14 +214,19 @@ async function handleApi(request, env) {
   if (path === '/api/employees' && method === 'POST') {
     if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403);
     const id = uid();
-    body.password = await bcrypt.hash(body.password, SALT_ROUNDS);
-    const { password, ...rest } = body;
-    const cols = ['id', ...Object.keys(rest)];
-    const vals = ['?', ...Object.keys(rest).map(() => '?')];
-    const sql = `INSERT INTO employees (${cols.join(',')}) VALUES (${vals.join(',')})`;
-    const params = [id, ...Object.values(rest)];
-    await DB.prepare(sql).bind(...params).run();
-    return json({ id, ...body }, 201);
+    const hash = body.password ? await bcrypt.hash(body.password, SALT_ROUNDS) : null;
+    const fields = {
+      id, employeeId: body.employeeId, name: body.name,
+      email: body.email || null, phone: body.phone || null,
+      position: body.position || null, salary: body.salary || 0,
+      role: body.role || 'STAFF', username: body.username || body.employeeId,
+      password: hash, pin: body.pin || null
+    };
+    const cols = Object.keys(fields);
+    const vals = cols.map(() => '?');
+    const params = Object.values(fields);
+    await DB.prepare(`INSERT INTO employees (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(...params).run();
+    return json({ id, ...body, password: undefined }, 201);
   }
 
   const empMatch = path.match(/^\/api\/employees\/([^/]+)$/);
@@ -229,10 +234,14 @@ async function handleApi(request, env) {
     const empId = empMatch[1];
     if (method === 'PUT') {
       if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403);
-      if (body.password) body.password = await bcrypt.hash(body.password, SALT_ROUNDS);
-      else delete body.password;
-      const setClauses = Object.keys(body).map(k => `${k} = ?`).join(', ');
-      const params = [...Object.values(body), empId];
+      const fields = {};
+      for (const k of ['employeeId', 'name', 'email', 'phone', 'position', 'salary', 'role', 'username', 'pin']) {
+        if (body[k] !== undefined) fields[k] = body[k];
+      }
+      if (body.password) fields.password = await bcrypt.hash(body.password, SALT_ROUNDS);
+      if (Object.keys(fields).length === 0) return error('No fields to update', 400);
+      const setClauses = Object.keys(fields).map(k => `${k} = ?`).join(', ');
+      const params = [...Object.values(fields), empId];
       await DB.prepare(`UPDATE employees SET ${setClauses} WHERE id = ?`).bind(...params).run();
       return json({ message: 'Updated' });
     }
