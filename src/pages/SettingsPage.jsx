@@ -120,7 +120,7 @@ export default function SettingsPage() {
                     gap: 20px;
                 }
                 .settings-grid > .brutalist-card {
-                    padding: 20px !important;
+                    padding: 15px !important;
                 }
                 @media (max-width: 768px) {
                     .settings-grid {
