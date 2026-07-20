@@ -44,7 +44,6 @@ export const Modal = ({ isOpen, onClose, title, children, maxWidth = '800px' }) 
                     width: '100%',
                     maxWidth: maxWidth,
                     maxHeight: '90vh',
-                    overflowY: 'auto',
                     boxShadow: '10px 10px 0 0 black',
                     display: 'flex',
                     flexDirection: 'column',
@@ -56,7 +55,8 @@ export const Modal = ({ isOpen, onClose, title, children, maxWidth = '800px' }) 
             >
                 <div style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    padding: '20px', borderBottom: '4px solid black', background: '#FCD34D'
+                    padding: '20px', borderBottom: '4px solid black', background: '#FCD34D',
+                    flexShrink: 0
                 }}>
                     <h2 style={{ fontSize: '1.8rem', fontWeight: '900', margin: 0, textTransform: 'uppercase' }}>
                         {title}
@@ -71,7 +71,7 @@ export const Modal = ({ isOpen, onClose, title, children, maxWidth = '800px' }) 
                         <X size={24} />
                     </button>
                 </div>
-                <div style={{ padding: '30px' }}>
+                <div style={{ padding: '30px', overflowY: 'auto', flex: 1 }}>
                     {children}
                 </div>
             </div>
