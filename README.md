@@ -158,4 +158,4 @@ npx wrangler dev
 
 ## 👥 Authors
 
-Developed by **Widi Firmaan** and the **Project Team**.
+Developed by **Widi Firmansyah**.
