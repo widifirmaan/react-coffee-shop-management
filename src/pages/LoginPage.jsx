@@ -93,8 +93,8 @@ function LoginPage({ onLogin }) {
                         <label style={{ fontWeight: 900, fontSize: '0.8rem', display: 'block' }}>USER IDENTIFIER</label>
                         <input
                             type="text"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
+                            value={identifier}
+                            onChange={(e) => setIdentifier(e.target.value)}
                             placeholder="EMAIL OR USERNAME"
                             required
                         />
