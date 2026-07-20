@@ -113,12 +113,25 @@ export default function SettingsPage() {
 
             {alertMsg && <Alert type={alertMsg.type} message={alertMsg.message} onClose={() => setAlertMsg(null)} />}
 
+            <style>{`
+                .settings-grid {
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 20px;
+                }
+                .settings-grid > .brutalist-card {
+                    padding: 20px !important;
+                }
+                @media (max-width: 768px) {
+                    .settings-grid {
+                        grid-template-columns: 1fr;
+                        gap: 30px;
+                    }
+                }
+            `}</style>
+
             <form onSubmit={handleSave}>
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr',
-                    gap: '30px'
-                }}>
+                <div className="settings-grid">
 
                     {/* General Settings */}
                     <Card title="GENERAL INFO" icon={Globe}>
