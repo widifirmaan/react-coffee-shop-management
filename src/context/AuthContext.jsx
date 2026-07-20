@@ -15,7 +15,12 @@ export const AuthProvider = ({ children }) => {
             const storedUser = localStorage.getItem('user');
             if (storedUser) {
                 try {
-                    const parsedUser = JSON.parse(storedUser);
+                    let parsedUser = JSON.parse(storedUser);
+                    // Normalize: if stored as { token, user }, unwrap
+                    if (parsedUser.user && parsedUser.token) {
+                        parsedUser = parsedUser.user;
+                        localStorage.setItem('user', JSON.stringify(parsedUser));
+                    }
                     setUser(parsedUser);
                     // Optional: Verify token/session validity with backend
                     // await axios.get('/api/auth/check'); 
@@ -52,8 +57,10 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const login = (userData) => {
-        setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
+        // Normalize: if passed { token, user }, unwrap
+        const normalized = userData.user ? userData.user : userData;
+        setUser(normalized);
+        localStorage.setItem('user', JSON.stringify(normalized));
     };
 
     const logout = () => {

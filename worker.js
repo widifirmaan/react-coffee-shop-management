@@ -42,6 +42,15 @@ function parseJsonFields(row) {
   }
   return row;
 }
+function stringifyJsonFields(obj) {
+  if (!obj) return obj;
+  for (const key of JSON_FIELDS) {
+    if (Array.isArray(obj[key]) || (obj[key] && typeof obj[key] === 'object')) {
+      obj[key] = JSON.stringify(obj[key]);
+    }
+  }
+  return obj;
+}
 
 async function signJwt(payload) {
   const header = { alg: 'HS256', typ: 'JWT' };
@@ -264,6 +273,7 @@ async function handleApi(request, env) {
 
   if (path === '/api/menus' && method === 'POST') {
     if (!user) return error('Unauthorized', 401);
+    stringifyJsonFields(body);
     const id = uid();
     const cols = ['id', ...Object.keys(body)];
     const vals = ['?', ...Object.keys(body).map(() => '?')];
@@ -281,6 +291,7 @@ async function handleApi(request, env) {
     }
     if (method === 'PUT') {
       if (!user) return error('Unauthorized', 401);
+      stringifyJsonFields(body);
       const setClauses = Object.keys(body).map(k => `${k} = ?`).join(', ');
       await DB.prepare(`UPDATE menus SET ${setClauses} WHERE id = ?`).bind(...Object.values(body), menuId).run();
       return json({ message: 'Updated' });
@@ -332,6 +343,7 @@ async function handleApi(request, env) {
 
   if (path === '/api/config' && method === 'PUT') {
     if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403);
+    stringifyJsonFields(body);
     const existing = await DB.prepare('SELECT * FROM shop_config LIMIT 1').first();
     if (existing) {
       const setClauses = Object.keys(body).map(k => `${k} = ?`).join(', ');
@@ -377,6 +389,7 @@ async function handleApi(request, env) {
     body.status = body.status || 'PENDING';
     body.createdAt = nowISO();
     if (body.totalAmount) delete body.totalAmount;
+    stringifyJsonFields(body);
     const id = uid();
     const cols = ['id', ...Object.keys(body)];
     const vals = ['?', ...Object.keys(body).map(() => '?')];
@@ -396,6 +409,7 @@ async function handleApi(request, env) {
         body.grandTotal = body.totalPrice + tax;
       }
       body.updatedAt = nowISO();
+      stringifyJsonFields(body);
       const setClauses = Object.keys(body).map(k => `${k} = ?`).join(', ');
       await DB.prepare(`UPDATE orders SET ${setClauses} WHERE id = ?`).bind(...Object.values(body), orderId).run();
       return json({ message: 'Updated' });

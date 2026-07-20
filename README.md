@@ -106,16 +106,22 @@ npx wrangler d1 execute siapnyafe-db --file=schema.sql --remote
 npx wrangler r2 bucket create siapnyafe-images
 ```
 
-### 4. Deploy
+### 4. Set Secrets
+```bash
+echo '<your-jwt-secret>' | npx wrangler secret put JWT_SECRET
+echo '<your-seed-secret>' | npx wrangler secret put SEED_SECRET
+```
+
+### 5. Deploy
 ```bash
 npm run deploy
 ```
 
-### 5. Seed Database
+### 6. Seed Database
 ```bash
-curl -X POST https://<your-worker>.workers.dev/api/seed \
+curl -X POST https://siapnyafe.widifirmaan.web.id/api/seed \
   -H "Content-Type: application/json" \
-  -d '{"secret":"siap-nyafe-seed-2024"}'
+  -d '{"secret":"<your-seed-secret>"}'
 ```
 
 ---

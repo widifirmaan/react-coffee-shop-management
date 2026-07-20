@@ -33,10 +33,10 @@ function LoginPage({ onLogin }) {
             });
 
             if (response.ok) {
-                const user = await response.json();
+                const data = await response.json();
                 setShowGate(true); // Trigger gate animation
                 setTimeout(() => {
-                    onLogin(user);
+                    onLogin(data.user);
                     navigate('/dashboard');
                 }, 1000); // Wait for gate animation
             } else {
