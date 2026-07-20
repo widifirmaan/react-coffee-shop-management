@@ -165,7 +165,7 @@ export default function KitchenPage() {
                 }
             `}</style>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '30px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '30px' }}>
                 {orders.map(order => (
                     <Card key={order.id} style={{ background: 'white', padding: '20px' }}>
                         {/* Header */}
