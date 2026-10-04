@@ -186,9 +186,11 @@ export default function KitchenPage() {
         }
     };
     // Filter and Paginate History
+    const searchLower = (searchTerm || '').toLowerCase();
     const filteredHistory = completedOrders.filter(o =>
-        o.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        o.id.toLowerCase().includes(searchTerm.toLowerCase())
+        (o.customerName || '').toLowerCase().includes(searchLower) ||
+        (o.id || '').toLowerCase().includes(searchLower) ||
+        (o.orderNumber || '').toLowerCase().includes(searchLower)
     );
     const totalHistoryPages = Math.ceil(filteredHistory.length / itemsPerPage);
     const paginatedHistory = filteredHistory.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);

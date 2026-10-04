@@ -102,7 +102,8 @@ export default function CashierPage({ user, shopConfig }) {
         : 10;
     const taxRate = taxPercent / 100;
     const taxAmount = includeTax ? Math.round(subtotal * taxRate) : 0;
-    const grandTotal = Math.max(0, subtotal + taxAmount - parseFloat(discountAmount || 0));
+    const validDiscount = Math.max(0, parseFloat(discountAmount || 0));
+    const grandTotal = Math.max(0, subtotal + taxAmount - validDiscount);
     const changeAmount = Math.max(0, parseFloat(cashTendered || 0) - grandTotal);
     const isCashSufficient = paymentMethod !== 'CASH' || parseFloat(cashTendered || 0) >= grandTotal;
 
@@ -119,6 +120,7 @@ export default function CashierPage({ user, shopConfig }) {
     };
 
     const handleProcessOrder = async () => {
+        if (processing) return;
         if (cart.length === 0) {
             setAlertMsg({ type: 'error', message: 'CART IS EMPTY! PLEASE ADD ITEMS.' });
             return;
@@ -174,7 +176,7 @@ export default function CashierPage({ user, shopConfig }) {
     // Filter menu items
     const filteredMenus = menus.filter(m => {
         const matchesCategory = activeCategory === 'All' || m.category === activeCategory;
-        const matchesSearch = !searchQuery || m.name.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch = !searchQuery || (m.name || '').toLowerCase().includes(searchQuery.toLowerCase());
         return matchesCategory && matchesSearch;
     });
 

@@ -97,9 +97,10 @@ export default function FinancePage({ user }) {
     };
 
     const filtered = transactions.filter(t => {
+        const searchLower = (searchTerm || '').toLowerCase();
         const matchesSearch = !searchTerm ||
-            t.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (t.category && t.category.toLowerCase().includes(searchTerm.toLowerCase()));
+            (t.description || '').toLowerCase().includes(searchLower) ||
+            (t.category && t.category.toLowerCase().includes(searchLower));
         const matchesType = typeFilter === 'ALL' || t.type === typeFilter;
         const matchesTime = filterByDate(t.date || t.createdAt);
         return matchesSearch && matchesType && matchesTime;

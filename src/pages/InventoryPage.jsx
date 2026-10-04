@@ -178,17 +178,22 @@ export default function InventoryPage({ user }) {
     };
 
     // Filter calculations
+    const searchLower = (searchTerm || '').toLowerCase();
     const filteredStock = ingredients.filter(i =>
-        i.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (i.category && i.category.toLowerCase().includes(searchTerm.toLowerCase()))
+        (i.name || '').toLowerCase().includes(searchLower) ||
+        (i.category && i.category.toLowerCase().includes(searchLower))
     );
 
     const filteredRecipes = recipes.filter(r =>
-        (r.menuName && r.menuName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (r.ingredientName && r.ingredientName.toLowerCase().includes(searchTerm.toLowerCase()))
+        (r.menuName && r.menuName.toLowerCase().includes(searchLower)) ||
+        (r.ingredientName && r.ingredientName.toLowerCase().includes(searchLower))
     );
 
-    const lowStockCount = ingredients.filter(i => (i.quantity || 0) < (i.minThreshold || i.minStock || 0)).length;
+    const lowStockCount = ingredients.filter(i => {
+        const threshold = parseFloat(i.minThreshold ?? i.minStock ?? 0);
+        const currentQty = parseFloat(i.quantity ?? i.stock ?? 0);
+        return currentQty <= threshold;
+    }).length;
 
     // Pagination
     const currentList = activeTab === 'STOCK' ? filteredStock : filteredRecipes;

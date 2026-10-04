@@ -20,7 +20,7 @@ import './OrderPage.css';
 export default function OrderPage({ shopConfig }) {
     const [menus, setMenus] = useState([]);
     const [cart, setCart] = useState([]);
-    const [customerInfo, setCustomerInfo] = useState({ name: '', tableNumber: '', notes: '', paymentMethod: 'CASH' });
+    const [customerInfo, setCustomerInfo] = useState({ name: '', tableNumber: 'Take Away', notes: '', paymentMethod: 'CASH' });
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [activeCategory, setActiveCategory] = useState('All');
@@ -31,6 +31,7 @@ export default function OrderPage({ shopConfig }) {
     const [zoomedImage, setZoomedImage] = useState(null);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [orderSuccess, setOrderSuccess] = useState(null);
+    const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
 
     useEffect(() => {
         fetchMenus();
@@ -79,6 +80,12 @@ export default function OrderPage({ shopConfig }) {
     const grandTotal = subtotal + tax;
 
     const processOrder = async () => {
+        if (isSubmittingOrder) return;
+        if (!cart || cart.length === 0) {
+            setAlertMsg({ type: 'error', message: 'CART IS EMPTY!' });
+            return;
+        }
+        setIsSubmittingOrder(true);
         try {
             const orderPayload = {
                 items: cart.map(i => ({ menuId: i.id, menuName: i.name, quantity: i.quantity, price: i.price })),
@@ -86,7 +93,7 @@ export default function OrderPage({ shopConfig }) {
                 totalAmount: subtotal,
                 tax: tax,
                 grandTotal: grandTotal,
-                tableNumber: customerInfo.tableNumber,
+                tableNumber: customerInfo.tableNumber || 'Take Away',
                 orderType: customerInfo.tableNumber === 'Take Away' ? 'TAKEAWAY' : 'DINE_IN',
                 customerName: customerInfo.name,
                 notes: customerInfo.notes,
@@ -96,9 +103,11 @@ export default function OrderPage({ shopConfig }) {
             setOrderSuccess(res.data);
             setCart([]);
             setIsConfirmOpen(false);
-            setCustomerInfo({ name: '', tableNumber: '', notes: '', paymentMethod: 'CASH' });
+            setCustomerInfo({ name: '', tableNumber: 'Take Away', notes: '', paymentMethod: 'CASH' });
         } catch (e) {
             setAlertMsg({ type: 'error', message: 'ORDER FAILED. PLEASE TRY AGAIN.' });
+        } finally {
+            setIsSubmittingOrder(false);
         }
     };
 
@@ -320,8 +329,10 @@ export default function OrderPage({ shopConfig }) {
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: '15px', marginTop: '20px' }}>
-                    <Button variant="secondary" onClick={() => setIsConfirmOpen(false)} style={{ flex: 1 }}>CANCEL</Button>
-                    <Button variant="primary" onClick={processOrder} style={{ flex: 1 }}>YES, ORDER!</Button>
+                    <Button variant="secondary" onClick={() => setIsConfirmOpen(false)} disabled={isSubmittingOrder} style={{ flex: 1 }}>CANCEL</Button>
+                    <Button variant="primary" onClick={processOrder} disabled={isSubmittingOrder} style={{ flex: 1 }}>
+                        {isSubmittingOrder ? 'ORDERING...' : 'YES, ORDER!'}
+                    </Button>
                 </div>
             </Modal>
 

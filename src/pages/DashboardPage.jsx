@@ -276,7 +276,11 @@ export default function DashboardPage({ user }) {
 
             // Calculate today's stats
             const today = new Date().toDateString();
-            const todayOrders = orders.filter(o => new Date(o.createdAt).toDateString() === today);
+            const todayOrders = orders.filter(o => {
+                if (!o.createdAt) return false;
+                const d = new Date(o.createdAt);
+                return !isNaN(d.getTime()) && d.toDateString() === today;
+            });
             const todayRevenue = todayOrders
                 .filter(o => o.status !== 'CANCELLED')
                 .reduce((sum, o) => sum + parseFloat(o.grandTotal || o.totalPrice || o.totalAmount || 0), 0);

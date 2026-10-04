@@ -161,10 +161,11 @@ export default function EmployeePage() {
         }
     };
 
+    const searchLower = (searchTerm || '').toLowerCase();
     const filtered = employees.filter(e =>
-        e.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        e.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        e.position.toLowerCase().includes(searchTerm.toLowerCase())
+        (e.name || '').toLowerCase().includes(searchLower) ||
+        (e.employeeId || '').toLowerCase().includes(searchLower) ||
+        (e.position || '').toLowerCase().includes(searchLower)
     );
 
     const totalPages = Math.ceil(filtered.length / itemsPerPage);

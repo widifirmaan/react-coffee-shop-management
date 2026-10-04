@@ -79,7 +79,7 @@ function json(data, status = 200, extraHeaders = {}) {
 }
 
 function error(msg, status = 400, extraHeaders = {}) {
-  return json({ message: msg }, status, extraHeaders);
+  return json({ message: msg, error: msg }, status, extraHeaders);
 }
 
 const PLACEHOLDER_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect fill="#eee" width="200" height="200"/><text fill="#999" font-size="14" text-anchor="middle" x="100" y="105">Image not found</text></svg>';
@@ -299,7 +299,7 @@ async function deductIngredientsForOrder(DB, items) {
   if (!Array.isArray(items) || !DB) return;
   for (const item of items) {
     const qty = parseFloat(item.quantity || 1);
-    if (qty <= 0) continue;
+    if (isNaN(qty) || qty <= 0) continue;
     let recipes = [];
     if (item.menuId || item.id) {
       const res = await DB.prepare('SELECT * FROM recipes WHERE menuId = ?').bind(item.menuId || item.id).all();
@@ -312,7 +312,7 @@ async function deductIngredientsForOrder(DB, items) {
 
     for (const r of recipes) {
       const deductAmount = parseFloat(r.amount || 0) * qty;
-      if (deductAmount > 0) {
+      if (deductAmount > 0 && !isNaN(deductAmount)) {
         await DB.prepare('UPDATE ingredients SET quantity = MAX(0, quantity - ?), stock = MAX(0, stock - ?), updatedAt = ? WHERE id = ?')
           .bind(deductAmount, deductAmount, nowISO(), r.ingredientId).run();
 
@@ -322,6 +322,31 @@ async function deductIngredientsForOrder(DB, items) {
           await DB.prepare('INSERT INTO notifications (id, title, message, type, read, timestamp) VALUES (?, ?, ?, ?, 0, ?)')
             .bind(notifId, 'LOW INVENTORY ALERT', `Stock for ${ing.name} is low (${ing.quantity} ${ing.unit || ''} remaining)!`, 'WARNING', nowISO()).run();
         }
+      }
+    }
+  }
+}
+
+async function restoreIngredientsForOrder(DB, items) {
+  if (!Array.isArray(items) || !DB) return;
+  for (const item of items) {
+    const qty = parseFloat(item.quantity || 1);
+    if (isNaN(qty) || qty <= 0) continue;
+    let recipes = [];
+    if (item.menuId || item.id) {
+      const res = await DB.prepare('SELECT * FROM recipes WHERE menuId = ?').bind(item.menuId || item.id).all();
+      recipes = res?.results || [];
+    }
+    if (recipes.length === 0 && (item.menuName || item.name)) {
+      const res = await DB.prepare('SELECT * FROM recipes WHERE menuName = ?').bind(item.menuName || item.name).all();
+      recipes = res?.results || [];
+    }
+
+    for (const r of recipes) {
+      const restoreAmount = parseFloat(r.amount || 0) * qty;
+      if (restoreAmount > 0 && !isNaN(restoreAmount)) {
+        await DB.prepare('UPDATE ingredients SET quantity = quantity + ?, stock = stock + ?, updatedAt = ? WHERE id = ?')
+          .bind(restoreAmount, restoreAmount, nowISO(), r.ingredientId).run();
       }
     }
   }
@@ -636,18 +661,30 @@ async function handleApi(request, env) {
   }
 
   if (path === '/api/orders' && method === 'POST') {
-    if (!body.orderNumber) {
-      const r = Math.random().toString(36).substring(2, 11).toUpperCase();
-      body.orderNumber = `ORD-${r}`;
+    if (!body || typeof body !== 'object') {
+      return error('Invalid order payload', 400, cors);
     }
-    const totalPrice = parseFloat(body.totalPrice || body.totalAmount || 0);
-    const tax = parseFloat(body.tax || 0);
+    if (!Array.isArray(body.items) || body.items.length === 0) {
+      return error('Order must contain at least one item', 400, cors);
+    }
+    for (const it of body.items) {
+      if (typeof it.quantity === 'number' && it.quantity <= 0) {
+        return error('Item quantity must be greater than 0', 400, cors);
+      }
+    }
+    if (!body.orderNumber) {
+      const ts = Date.now().toString(36).toUpperCase().slice(-4);
+      const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
+      body.orderNumber = `ORD-${ts}-${rand}`;
+    }
+    const totalPrice = Math.max(0, parseFloat(body.totalPrice || body.totalAmount || 0));
+    const tax = Math.max(0, parseFloat(body.tax || 0));
     body.totalPrice = totalPrice;
     body.tax = tax;
     if (body.grandTotal !== undefined && !isNaN(parseFloat(body.grandTotal))) {
-      body.grandTotal = parseFloat(body.grandTotal);
+      body.grandTotal = Math.max(0, parseFloat(body.grandTotal));
     } else {
-      body.grandTotal = totalPrice + tax;
+      body.grandTotal = Math.max(0, totalPrice + tax);
     }
     body.status = (body.status || 'PENDING').toUpperCase();
     body.createdAt = nowISO();
@@ -724,6 +761,15 @@ async function handleApi(request, env) {
       }
       if (status === 'COMPLETED') {
         await syncOrderToFinance(DB, parsed, user);
+      }
+      if (status === 'CANCELLED') {
+        // Void financial transaction if any was synced
+        await DB.prepare('DELETE FROM transactions WHERE description LIKE ?').bind(`%${order.orderNumber}%`).run();
+        // Restore inventory if it was deducted
+        if (order.inventoryDeducted === 1 && parsed.items) {
+          await restoreIngredientsForOrder(DB, parsed.items);
+          await DB.prepare('UPDATE orders SET inventoryDeducted = 0 WHERE id = ?').bind(orderId).run();
+        }
       }
     }
     return json({ message: 'Status updated' }, 200, cors);
@@ -1178,10 +1224,17 @@ async function handleApi(request, env) {
   }
 
   const notifMatch = path.match(/^\/api\/notifications\/([^/]+)\/read$/);
-  if (notifMatch && method === 'PUT') {
+  if (notifMatch && (method === 'PUT' || method === 'PATCH')) {
     if (!user) return error('Unauthorized', 401, cors);
     await DB.prepare('UPDATE notifications SET read = 1 WHERE id = ?').bind(notifMatch[1]).run();
     return json({ message: 'Marked as read' }, 200, cors);
+  }
+
+  const notifIdMatch = path.match(/^\/api\/notifications\/([^/]+)$/);
+  if (notifIdMatch && method === 'DELETE') {
+    if (!user) return error('Unauthorized', 401, cors);
+    await DB.prepare('DELETE FROM notifications WHERE id = ?').bind(notifIdMatch[1]).run();
+    return json({ message: 'Deleted' }, 200, cors);
   }
 
   // ===================================================================
@@ -1193,6 +1246,8 @@ async function handleApi(request, env) {
   }
 
   if (path === '/api/feedbacks' && method === 'POST') {
+    const rating = parseInt(body.rating, 10);
+    body.rating = (!isNaN(rating) && rating >= 1 && rating <= 5) ? rating : 5;
     const { hour } = getJakartaHoursMinutes();
     const dayOfWeek = getDayOfWeek();
     let shiftType = 'MORNING';
@@ -1549,6 +1604,18 @@ async function handleApi(request, env) {
 
     if (!fileArrayBuffer) return error('No file uploaded', 400, cors);
 
+    // Validate MIME type (must be image)
+    const allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml', 'image/avif'];
+    if (!fileMime || !allowedMimes.includes(fileMime.toLowerCase())) {
+      return error('Invalid file type. Only JPEG, PNG, WEBP, GIF, SVG, and AVIF images are allowed.', 400, cors);
+    }
+
+    // Validate File Size (max 5MB)
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
+    if (fileArrayBuffer.byteLength > MAX_FILE_SIZE) {
+      return error('File is too large. Maximum allowed size is 5MB.', 400, cors);
+    }
+
     // Delete old image from R2 and DB
     if (oldFileId) {
       const cleanId = oldFileId.replace(/^\/api\/images\//, '');
@@ -1854,7 +1921,7 @@ export default {
         return await handleApi(request, env);
       } catch (err) {
         console.error('API Error:', err);
-        return json({ message: err.message || 'Internal error' }, 500, corsHeaders(request));
+        return json({ message: err.message || 'Internal error', error: err.message || 'Internal error' }, 500, corsHeaders(request));
       }
     }
 

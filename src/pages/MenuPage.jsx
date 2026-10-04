@@ -363,7 +363,8 @@ export default function MenuPage({ user }) {
     };
 
     // Filter Logic
-    const filteredMenus = menus.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    const searchLower = (searchTerm || '').toLowerCase();
+    const filteredMenus = menus.filter(m => (m.name || '').toLowerCase().includes(searchLower));
 
     // Group by Category
     const menusByCategory = filteredMenus.reduce((acc, menu) => {
