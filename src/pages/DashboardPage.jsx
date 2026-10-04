@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { TrendingUp, DollarSign, ShoppingBag, Users, Package, ChefHat, AlertTriangle, Calendar, Clock, StickyNote, Save, Bell } from 'lucide-react';
+import { TrendingUp, DollarSign, ShoppingBag, Users, Package, ChefHat, AlertTriangle, Calendar, Clock, StickyNote, Save, Bell, Wrench, CreditCard } from 'lucide-react';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { Alert } from '../components/ui/Alert';
 import { Card } from '../components/ui/Card';
@@ -523,6 +524,90 @@ export default function DashboardPage({ user }) {
                         </div>
                     </div>
                 </Card>
+            </div>
+
+            {/* QUICK ACTIONS BAR */}
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                gap: '15px',
+                marginBottom: '40px'
+            }}>
+                <Link to="/cashier" style={{ textDecoration: 'none' }}>
+                    <div style={{
+                        background: '#4ade80',
+                        color: 'black',
+                        border: '3px solid black',
+                        boxShadow: '4px 4px 0 0 black',
+                        padding: '16px 20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        fontWeight: '900',
+                        fontSize: '1rem',
+                        cursor: 'pointer'
+                    }}>
+                        <span>CASHIER POS</span>
+                        <CreditCard size={24} />
+                    </div>
+                </Link>
+
+                <Link to="/kitchen" style={{ textDecoration: 'none' }}>
+                    <div style={{
+                        background: '#fcd34d',
+                        color: 'black',
+                        border: '3px solid black',
+                        boxShadow: '4px 4px 0 0 black',
+                        padding: '16px 20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        fontWeight: '900',
+                        fontSize: '1rem',
+                        cursor: 'pointer'
+                    }}>
+                        <span>KITCHEN / BAR KDS</span>
+                        <ChefHat size={24} />
+                    </div>
+                </Link>
+
+                <Link to="/assets" style={{ textDecoration: 'none' }}>
+                    <div style={{
+                        background: '#38bdf8',
+                        color: 'black',
+                        border: '3px solid black',
+                        boxShadow: '4px 4px 0 0 black',
+                        padding: '16px 20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        fontWeight: '900',
+                        fontSize: '1rem',
+                        cursor: 'pointer'
+                    }}>
+                        <span>ASSETS & MACHINES</span>
+                        <Wrench size={24} />
+                    </div>
+                </Link>
+
+                <Link to="/inventory" style={{ textDecoration: 'none' }}>
+                    <div style={{
+                        background: '#c084fc',
+                        color: 'black',
+                        border: '3px solid black',
+                        boxShadow: '4px 4px 0 0 black',
+                        padding: '16px 20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        fontWeight: '900',
+                        fontSize: '1rem',
+                        cursor: 'pointer'
+                    }}>
+                        <span>INVENTORY & STOCK</span>
+                        <Package size={24} />
+                    </div>
+                </Link>
             </div>
 
 

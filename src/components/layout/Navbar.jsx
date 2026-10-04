@@ -16,11 +16,13 @@ export default function Navbar({ user, onLogout, shopConfig }) {
 
             <div className={`nav-links ${isMenuOpen ? 'open' : ''}`}>
                 <Link to="/dashboard" className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>DASHBOARD</Link>
+                <Link to="/cashier" className={`nav-link ${location.pathname === '/cashier' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)} style={{ background: '#4ade80', color: 'black', fontWeight: '900' }}>CASHIER POS</Link>
                 <Link to="/menu" className={`nav-link ${location.pathname === '/menu' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>MENU</Link>
                 <Link to="/kitchen" className={`nav-link ${location.pathname === '/kitchen' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>KITCHEN</Link>
                 <Link to="/waiter" className={`nav-link ${location.pathname === '/waiter' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>WAITER</Link>
                 <Link to="/feedback" className={`nav-link ${location.pathname === '/feedback' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>FEEDBACK</Link>
                 <Link to="/inventory" className={`nav-link ${location.pathname === '/inventory' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>INVENTORY</Link>
+                <Link to="/assets" className={`nav-link ${location.pathname === '/assets' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>ASSETS</Link>
                 <Link to="/employees" className={`nav-link ${location.pathname === '/employees' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>STAFF</Link>
                 <Link to="/shifts" className={`nav-link ${location.pathname === '/shifts' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>SHIFTS</Link>
                 <Link to="/finance" className={`nav-link ${location.pathname === '/finance' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)}>FINANCE</Link>

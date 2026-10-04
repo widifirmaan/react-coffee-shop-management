@@ -203,3 +203,34 @@ CREATE TABLE IF NOT EXISTS images (
   r2Key TEXT,
   createdAt TEXT DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS assets (
+  id TEXT PRIMARY KEY,
+  assetCode TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  category TEXT NOT NULL,
+  purchaseDate TEXT,
+  purchasePrice REAL DEFAULT 0,
+  condition TEXT DEFAULT 'GOOD',
+  status TEXT DEFAULT 'ACTIVE',
+  location TEXT,
+  serialNumber TEXT,
+  lastMaintenanceDate TEXT,
+  nextMaintenanceDate TEXT,
+  notes TEXT,
+  createdAt TEXT DEFAULT (datetime('now')),
+  updatedAt TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS recipes (
+  id TEXT PRIMARY KEY,
+  menuId TEXT NOT NULL,
+  menuName TEXT,
+  ingredientId TEXT NOT NULL,
+  ingredientName TEXT,
+  amount REAL NOT NULL,
+  unit TEXT,
+  createdAt TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY (menuId) REFERENCES menus(id),
+  FOREIGN KEY (ingredientId) REFERENCES ingredients(id)
+);

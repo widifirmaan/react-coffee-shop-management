@@ -24,6 +24,8 @@ import PostManagementPage from './pages/PostManagementPage';
 import WaiterPage from './pages/WaiterPage';
 import FeedbackPage from './pages/FeedbackPage';
 import ShiftPage from './pages/ShiftPage';
+import AssetManagementPage from './pages/AssetManagementPage';
+import CashierPage from './pages/CashierPage';
 
 function AppContent() {
     const location = useLocation();
@@ -98,6 +100,8 @@ function AppContent() {
                     <Route path="/posts" element={<PostManagementPage user={user} />} />
                     <Route path="/waiter" element={<WaiterPage />} />
                     <Route path="/feedback" element={<FeedbackPage />} />
+                    <Route path="/cashier" element={<CashierPage user={user} shopConfig={shopConfig} />} />
+                    <Route path="/assets" element={<AssetManagementPage user={user} />} />
                     <Route path="/shifts" element={<ShiftPage />} />
                     {/* Fallback route */}
                     <Route path="*" element={<Navigate to="/dashboard" replace />} />

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import axios from 'axios';
+
 function LoginPage({ onLogin }) {
     const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
@@ -24,19 +26,16 @@ function LoginPage({ onLogin }) {
         setIsLoggingIn(true);
 
         try {
-            const response = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ employeeId: identifier, email: identifier, password }),
+            const res = await axios.post('/api/auth/login', {
+                employeeId: identifier,
+                email: identifier,
+                password
             });
 
-            if (response.ok) {
-                const data = await response.json();
+            if (res.data) {
                 setShowGate(true); // Trigger gate animation
                 setTimeout(() => {
-                    onLogin(data.user);
+                    onLogin({ user: res.data.user, token: res.data.token });
                     navigate('/dashboard');
                 }, 1000); // Wait for gate animation
             } else {
@@ -44,7 +43,8 @@ function LoginPage({ onLogin }) {
                 setIsLoggingIn(false);
             }
         } catch (err) {
-            setError('SERVER ERROR');
+            const msg = err.response?.data?.message || 'INVALID CREDENTIALS';
+            setError(msg.toUpperCase());
             setIsLoggingIn(false);
         }
     };
@@ -114,12 +114,10 @@ function LoginPage({ onLogin }) {
                     </button>
                 </form>
 
-                <div style={{ marginTop: '30px', borderTop: '2px solid black', paddingTop: '15px' }}>
-                    <p style={{ fontWeight: 700, margin: '5px 0' }}>MANAGER: EMP-MAN-001 / manager123</p>
-                    <p style={{ fontWeight: 700, margin: '5px 0' }}>BARISTA: EMP-BAR-001 / barista123</p>
-                    <p style={{ fontWeight: 700, margin: '5px 0' }}>CASHIER: EMP-CSH-001 / cashier123</p>
-                    <p style={{ fontWeight: 700, margin: '5px 0' }}>KITCHEN: EMP-KIT-001 / kitchen123</p>
-                    <p style={{ fontWeight: 700, margin: '5px 0' }}>WAITER: EMP-WAI-001 / waiter123</p>
+                <div style={{ marginTop: '25px', borderTop: '2px solid black', paddingTop: '15px', textAlign: 'center' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 900, opacity: 0.6, letterSpacing: '1px' }}>
+                        SIAP NYAFE POS SYSTEM • AUTHORIZED STAFF ONLY
+                    </span>
                 </div>
             </div>
 

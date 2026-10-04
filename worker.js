@@ -1,7 +1,54 @@
 import bcrypt from 'bcryptjs';
 
 const SALT_ROUNDS = 10;
-let JWT_SECRET_KEY = 'change-me-in-production';
+let JWT_SECRET_KEY = 'siap-nyafe-secure-jwt-key-production-2026';
+
+const TABLE_COLUMNS = {
+  employees: ['employeeId', 'email', 'name', 'phone', 'position', 'salary', 'pin', 'role', 'image', 'contact', 'active'],
+  menus: ['name', 'category', 'price', 'description', 'image', 'imageUrl', 'available', 'gallery'],
+  categories: ['name', 'description'],
+  shop_config: [
+    'shopName', 'websiteTitle', 'faviconUrl', 'address', 'phoneNumber',
+    'instagramUrl', 'facebookUrl', 'twitterUrl', 'socialLinks', 'heroImageUrl',
+    'badgeText1', 'badgeText2', 'marqueeText', 'galleryImages', 'infoTitle',
+    'infoContent', 'infoFooter1', 'infoFooter2', 'techSpec1', 'techSpec2',
+    'techSpec3', 'latestDropPromoTitle', 'latestDropPromoDesc', 'latestDropPromoDate',
+    'latestDropNewsTitle', 'latestDropNewsDesc', 'latestDropEventTitle', 'latestDropEventDesc'
+  ],
+  orders: [
+    'orderNumber', 'items', 'totalPrice', 'totalAmount', 'tax', 'grandTotal',
+    'status', 'paymentMethod', 'paymentAmount', 'changeAmount', 'employeeId',
+    'tableNumber', 'orderType', 'notes', 'customerName', 'shiftStaff', 'createdAt', 'updatedAt'
+  ],
+  posts: [
+    'title', 'slug', 'content', 'excerpt', 'author', 'status', 'image',
+    'featuredImage', 'category', 'tags', 'publishedAt', 'createdAt', 'updatedAt'
+  ],
+  transactions: ['type', 'category', 'amount', 'description', 'date', 'employeeId'],
+  ingredients: ['name', 'category', 'stock', 'quantity', 'unit', 'minStock', 'minThreshold', 'price', 'supplier'],
+  notes: ['title', 'content', 'lastUpdatedBy', 'updatedBy', 'updatedAt'],
+  notifications: ['title', 'message', 'type', 'tableNumber', 'read', 'timestamp'],
+  feedbacks: ['customerName', 'rating', 'message', 'shiftEmployees', 'timestamp'],
+  assets: [
+    'assetCode', 'name', 'category', 'purchaseDate', 'purchasePrice',
+    'condition', 'status', 'location', 'serialNumber', 'lastMaintenanceDate',
+    'nextMaintenanceDate', 'notes', 'createdAt', 'updatedAt'
+  ],
+  recipes: [
+    'menuId', 'menuName', 'ingredientId', 'ingredientName', 'amount', 'unit', 'createdAt'
+  ]
+};
+
+function pickFields(obj, allowedKeys) {
+  const result = {};
+  if (!obj || typeof obj !== 'object') return result;
+  for (const k of allowedKeys) {
+    if (obj[k] !== undefined) {
+      result[k] = obj[k];
+    }
+  }
+  return result;
+}
 
 function uid() {
   return crypto.randomUUID();
@@ -13,15 +60,25 @@ function stripPassword(row) {
   return rest;
 }
 
-function json(data, status = 200) {
+function corsHeaders(request) {
+  const origin = request ? (request.headers.get('Origin') || '*') : '*';
+  return {
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Credentials': 'true',
+  };
+}
+
+function json(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...extraHeaders },
   });
 }
 
-function error(msg, status = 400) {
-  return json({ message: msg }, status);
+function error(msg, status = 400, extraHeaders = {}) {
+  return json({ message: msg }, status, extraHeaders);
 }
 
 const PLACEHOLDER_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect fill="#eee" width="200" height="200"/><text fill="#999" font-size="14" text-anchor="middle" x="100" y="105">Image not found</text></svg>';
@@ -52,36 +109,47 @@ function stringifyJsonFields(obj) {
   return obj;
 }
 
-async function signJwt(payload) {
+async function signJwt(payload, secret = JWT_SECRET_KEY, expiresInSeconds = 7 * 86400) {
   const header = { alg: 'HS256', typ: 'JWT' };
+  const now = Math.floor(Date.now() / 1000);
+  const fullPayload = {
+    ...payload,
+    iat: now,
+    exp: now + expiresInSeconds,
+  };
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey(
-    'raw', enc.encode(JWT_SECRET_KEY),
+    'raw', enc.encode(secret),
     { name: 'HMAC', hash: 'SHA-256' },
     false, ['sign']
   );
   const b64 = (o) => btoa(JSON.stringify(o)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
   const h = b64(header);
-  const p = b64(payload);
+  const p = b64(fullPayload);
   const sig = await crypto.subtle.sign('HMAC', key, enc.encode(`${h}.${p}`));
   const s = btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
   return `${h}.${p}.${s}`;
 }
 
-async function verifyJwt(token) {
+async function verifyJwt(token, secret = JWT_SECRET_KEY) {
   try {
     const parts = token.split('.');
     if (parts.length !== 3) return null;
     const enc = new TextEncoder();
     const key = await crypto.subtle.importKey(
-      'raw', enc.encode(JWT_SECRET_KEY),
+      'raw', enc.encode(secret),
       { name: 'HMAC', hash: 'SHA-256' },
       false, ['verify']
     );
     const sig = Uint8Array.from(atob(parts[2].replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
     const valid = await crypto.subtle.verify('HMAC', key, sig, enc.encode(`${parts[0]}.${parts[1]}`));
     if (!valid) return null;
-    return JSON.parse(atob(parts[1]));
+    const payload = JSON.parse(atob(parts[1]));
+    const now = Math.floor(Date.now() / 1000);
+    if (payload.exp && payload.exp < now) {
+      return null; // Token expired
+    }
+    return payload;
   } catch {
     return null;
   }
@@ -95,10 +163,11 @@ function getToken(request) {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
-async function authenticate(request) {
+async function authenticate(request, env) {
   const token = getToken(request);
   if (!token) return null;
-  return verifyJwt(token);
+  const secret = env?.JWT_SECRET || JWT_SECRET_KEY;
+  return verifyJwt(token, secret);
 }
 
 function requireRole(user, roles) {
@@ -110,30 +179,135 @@ function requireRole(user, roles) {
 const DAYS = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
 const DAY_MAP = { Sun: 'SUNDAY', Mon: 'MONDAY', Tue: 'TUESDAY', Wed: 'WEDNESDAY', Thu: 'THURSDAY', Fri: 'FRIDAY', Sat: 'SATURDAY' };
 
-function getJakartaDate() {
-  const now = new Date();
-  return new Date(now.getTime() + 7 * 60 * 60 * 1000);
+function getJakartaHoursMinutes(d = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Jakarta',
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: false
+  }).formatToParts(d);
+  let hour = 0, minute = 0;
+  for (const p of parts) {
+    if (p.type === 'hour') hour = parseInt(p.value, 10);
+    if (p.type === 'minute') minute = parseInt(p.value, 10);
+  }
+  return { hour, minute, totalMin: hour * 60 + minute };
 }
 
-function getJakartaDateStr() {
-  const j = getJakartaDate();
-  return `${j.getUTCFullYear()}-${String(j.getUTCMonth() + 1).padStart(2, '0')}-${String(j.getUTCDate()).padStart(2, '0')}`;
+function getJakartaDateStr(offsetDays = 0) {
+  const d = new Date();
+  if (offsetDays !== 0) d.setDate(d.getDate() + offsetDays);
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Jakarta',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(d);
 }
 
 function getYesterdayJakartaDateStr() {
-  const j = getJakartaDate();
-  j.setUTCDate(j.getUTCDate() - 1);
-  return `${j.getUTCFullYear()}-${String(j.getUTCMonth() + 1).padStart(2, '0')}-${String(j.getUTCDate()).padStart(2, '0')}`;
+  return getJakartaDateStr(-1);
 }
 
-function getDayOfWeek() {
-  const j = getJakartaDate();
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  return DAY_MAP[days[j.getUTCDay()]];
+function getDayOfWeek(offsetDays = 0) {
+  const d = new Date();
+  if (offsetDays !== 0) d.setDate(d.getDate() + offsetDays);
+  const dayName = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Jakarta',
+    weekday: 'short',
+  }).format(d);
+  return DAY_MAP[dayName] || 'MONDAY';
 }
 
 function nowISO() {
   return new Date().toISOString();
+}
+
+let tablesInitialized = false;
+async function initTables(DB) {
+  if (tablesInitialized || !DB) return;
+  try {
+    await DB.prepare(`
+      CREATE TABLE IF NOT EXISTS assets (
+        id TEXT PRIMARY KEY,
+        assetCode TEXT UNIQUE NOT NULL,
+        name TEXT NOT NULL,
+        category TEXT NOT NULL,
+        purchaseDate TEXT,
+        purchasePrice REAL DEFAULT 0,
+        condition TEXT DEFAULT 'GOOD',
+        status TEXT DEFAULT 'ACTIVE',
+        location TEXT,
+        serialNumber TEXT,
+        lastMaintenanceDate TEXT,
+        nextMaintenanceDate TEXT,
+        notes TEXT,
+        createdAt TEXT DEFAULT (datetime('now')),
+        updatedAt TEXT DEFAULT (datetime('now'))
+      )
+    `).run();
+    await DB.prepare(`
+      CREATE TABLE IF NOT EXISTS recipes (
+        id TEXT PRIMARY KEY,
+        menuId TEXT NOT NULL,
+        menuName TEXT,
+        ingredientId TEXT NOT NULL,
+        ingredientName TEXT,
+        amount REAL NOT NULL,
+        unit TEXT,
+        createdAt TEXT DEFAULT (datetime('now'))
+      )
+    `).run();
+    tablesInitialized = true;
+  } catch (e) {
+    console.error('initTables error:', e);
+  }
+}
+
+async function deductIngredientsForOrder(DB, items) {
+  if (!Array.isArray(items) || !DB) return;
+  for (const item of items) {
+    const qty = parseFloat(item.quantity || 1);
+    if (qty <= 0) continue;
+    let recipes = [];
+    if (item.menuId || item.id) {
+      const res = await DB.prepare('SELECT * FROM recipes WHERE menuId = ?').bind(item.menuId || item.id).all();
+      recipes = res.results || [];
+    }
+    if (recipes.length === 0 && (item.menuName || item.name)) {
+      const res = await DB.prepare('SELECT * FROM recipes WHERE menuName = ?').bind(item.menuName || item.name).all();
+      recipes = res.results || [];
+    }
+
+    for (const r of recipes) {
+      const deductAmount = parseFloat(r.amount || 0) * qty;
+      if (deductAmount > 0) {
+        await DB.prepare('UPDATE ingredients SET quantity = MAX(0, quantity - ?), stock = MAX(0, stock - ?), updatedAt = ? WHERE id = ?')
+          .bind(deductAmount, deductAmount, nowISO(), r.ingredientId).run();
+
+        const ing = await DB.prepare('SELECT * FROM ingredients WHERE id = ?').bind(r.ingredientId).first();
+        if (ing && ing.quantity <= (ing.minThreshold || ing.minStock || 0)) {
+          const notifId = uid();
+          await DB.prepare('INSERT INTO notifications (id, title, message, type, read, timestamp) VALUES (?, ?, ?, ?, 0, ?)')
+            .bind(notifId, 'LOW INVENTORY ALERT', `Stock for ${ing.name} is low (${ing.quantity} ${ing.unit || ''} remaining)!`, 'WARNING', nowISO()).run();
+        }
+      }
+    }
+  }
+}
+
+async function syncOrderToFinance(DB, order, user) {
+  if (!order || !order.orderNumber || !DB) return;
+  const grandTotal = parseFloat(order.grandTotal || order.totalPrice || order.totalAmount || 0);
+  if (grandTotal <= 0) return;
+
+  const existing = await DB.prepare('SELECT id FROM transactions WHERE description LIKE ?').bind(`%${order.orderNumber}%`).first();
+  if (existing) return;
+
+  const id = uid();
+  const desc = `Order #${order.orderNumber} - ${order.customerName || 'Walk-in'} (${order.paymentMethod || 'CASH'})`;
+  await DB.prepare('INSERT INTO transactions (id, type, category, amount, description, date, employeeId) VALUES (?, ?, ?, ?, ?, ?, ?)')
+    .bind(id, 'INCOME', 'Sales', grandTotal, desc, nowISO(), user?.employeeId || order.employeeId || 'POS').run();
 }
 
 async function handleApi(request, env) {
@@ -141,8 +315,16 @@ async function handleApi(request, env) {
   const method = request.method;
   const path = url.pathname;
   const searchParams = url.searchParams;
-  const user = await authenticate(request);
+  const cors = corsHeaders(request);
+
+  if (method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: cors });
+  }
+
+  const user = await authenticate(request, env);
   const DB = env.DB;
+  const secret = env.JWT_SECRET || JWT_SECRET_KEY;
+  await initTables(DB);
 
   let body = {};
   if (['POST', 'PUT', 'PATCH'].includes(method)) {
@@ -157,7 +339,7 @@ async function handleApi(request, env) {
   // ===================================================================
   if (path === '/api/auth/login' && method === 'POST') {
     const { employeeId, email, password } = body;
-    if (!password) return error('Password is required');
+    if (!password) return error('Password is required', 400, cors);
     let emp;
     if (employeeId && email) {
       // Try employeeId first, then email — both come from same input
@@ -168,32 +350,34 @@ async function handleApi(request, env) {
     } else if (email) {
       emp = await DB.prepare('SELECT * FROM employees WHERE email = ?').bind(email).first();
     } else {
-      return error('Employee ID or email is required');
+      return error('Employee ID or email is required', 400, cors);
     }
-    if (!emp) return error('Invalid credentials', 401);
+    if (!emp) return error('Invalid credentials', 401, cors);
+    if (!emp.active) return error('Account is inactive. Please contact manager.', 403, cors);
+
     const pwdValid = await bcrypt.compare(password, emp.password);
-    if (!pwdValid) return error('Invalid credentials', 401);
+    if (!pwdValid) return error('Invalid credentials', 401, cors);
     const userObj = stripPassword(emp);
     const token = await signJwt({
       id: userObj.id,
       email: userObj.email, role: userObj.role, employeeId: userObj.employeeId,
-    });
-    const response = json({ token, user: userObj });
-    response.headers.append('Set-Cookie', `token=${token}; HttpOnly; Path=/; Max-Age=86400; SameSite=Lax; Secure`);
+    }, secret, 7 * 86400); // 7 days expiration
+    const response = json({ token, user: userObj }, 200, cors);
+    response.headers.append('Set-Cookie', `token=${token}; HttpOnly; Path=/; Max-Age=604800; SameSite=Lax`);
     return response;
   }
 
   if (path === '/api/auth/logout' && method === 'POST') {
-    const response = json({ message: 'Logged out' });
+    const response = json({ message: 'Logged out' }, 200, cors);
     response.headers.append('Set-Cookie', 'token=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax');
     return response;
   }
 
   if (path === '/api/auth/me' && method === 'GET') {
-    if (!user) return error('Unauthorized', 401);
+    if (!user) return error('Unauthorized', 401, cors);
     const emp = await DB.prepare('SELECT * FROM employees WHERE id = ?').bind(user.id).first();
-    if (!emp) return error('User not found', 404);
-    return json(stripPassword(emp));
+    if (!emp) return error('User not found', 404, cors);
+    return json(stripPassword(emp), 200, cors);
   }
 
   // ===================================================================
@@ -286,18 +470,24 @@ async function handleApi(request, env) {
       sql += ' AND name LIKE ?';
       params.push(`%${searchParams.get('search')}%`);
     }
+    sql += ' ORDER BY name ASC';
     const { results } = await DB.prepare(sql).bind(...params).all();
-    return json(results.map(parseJsonFields));
+    return json(results.map(parseJsonFields), 200, cors);
   }
 
   if (path === '/api/menus' && method === 'POST') {
-    if (!user) return error('Unauthorized', 401);
+    if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403, cors);
     stringifyJsonFields(body);
+    const sanitized = pickFields(body, TABLE_COLUMNS.menus);
+    if (!sanitized.name || sanitized.price === undefined) return error('Name and price are required', 400, cors);
     const id = uid();
-    const cols = ['id', ...Object.keys(body)];
-    const vals = ['?', ...Object.keys(body).map(() => '?')];
-    await DB.prepare(`INSERT INTO menus (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(id, ...Object.values(body)).run();
-    return json({ id, ...body }, 201);
+    sanitized.id = id;
+    sanitized.createdAt = nowISO();
+    sanitized.updatedAt = nowISO();
+    const cols = Object.keys(sanitized);
+    const vals = cols.map(() => '?');
+    await DB.prepare(`INSERT INTO menus (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(...Object.values(sanitized)).run();
+    return json(parseJsonFields({ ...sanitized }), 201, cors);
   }
 
   const menuMatch = path.match(/^\/api\/menus\/([^/]+)$/);
@@ -305,20 +495,23 @@ async function handleApi(request, env) {
     const menuId = menuMatch[1];
     if (method === 'GET') {
       const doc = await DB.prepare('SELECT * FROM menus WHERE id = ?').bind(menuId).first();
-      if (!doc) return error('Not found', 404);
-      return json(parseJsonFields(doc));
+      if (!doc) return error('Not found', 404, cors);
+      return json(parseJsonFields(doc), 200, cors);
     }
     if (method === 'PUT') {
-      if (!user) return error('Unauthorized', 401);
+      if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403, cors);
       stringifyJsonFields(body);
-      const setClauses = Object.keys(body).map(k => `${k} = ?`).join(', ');
-      await DB.prepare(`UPDATE menus SET ${setClauses} WHERE id = ?`).bind(...Object.values(body), menuId).run();
-      return json({ message: 'Updated' });
+      const sanitized = pickFields(body, TABLE_COLUMNS.menus);
+      if (Object.keys(sanitized).length === 0) return error('No valid fields to update', 400, cors);
+      sanitized.updatedAt = nowISO();
+      const setClauses = Object.keys(sanitized).map(k => `${k} = ?`).join(', ');
+      await DB.prepare(`UPDATE menus SET ${setClauses} WHERE id = ?`).bind(...Object.values(sanitized), menuId).run();
+      return json({ message: 'Updated' }, 200, cors);
     }
     if (method === 'DELETE') {
-      if (!user) return error('Unauthorized', 401);
+      if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403, cors);
       await DB.prepare('DELETE FROM menus WHERE id = ?').bind(menuId).run();
-      return json({ message: 'Deleted' });
+      return json({ message: 'Deleted' }, 200, cors);
     }
   }
 
@@ -327,21 +520,23 @@ async function handleApi(request, env) {
   // ===================================================================
   if (path === '/api/categories' && method === 'GET') {
     const { results } = await DB.prepare('SELECT * FROM categories ORDER BY name ASC').all();
-    return json(results);
+    return json(results, 200, cors);
   }
 
   if (path === '/api/categories' && method === 'POST') {
-    if (!user) return error('Unauthorized', 401);
+    if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403, cors);
+    if (!body.name) return error('Category name is required', 400, cors);
     const id = uid();
-    await DB.prepare('INSERT INTO categories (id, name) VALUES (?, ?)').bind(id, body.name).run();
-    return json({ id, name: body.name }, 201);
+    await DB.prepare('INSERT INTO categories (id, name, description) VALUES (?, ?, ?)')
+      .bind(id, body.name, body.description || null).run();
+    return json({ id, name: body.name, description: body.description || null }, 201, cors);
   }
 
   const catMatch = path.match(/^\/api\/categories\/([^/]+)$/);
   if (catMatch && method === 'DELETE') {
-    if (!user) return error('Unauthorized', 401);
+    if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403, cors);
     await DB.prepare('DELETE FROM categories WHERE id = ?').bind(catMatch[1]).run();
-    return json({ message: 'Deleted' });
+    return json({ message: 'Deleted' }, 200, cors);
   }
 
   // ===================================================================
@@ -355,32 +550,38 @@ async function handleApi(request, env) {
         id, 'Siap Nyafe', 'Siap Nyafe - Excellent Coffee', 'Welcome to Siap Nyafe Coffee Shop!',
         'Our Story', 'Born in Jakarta, brewed for the bold.', 'EST. 2024', 'JAKARTA'
       ).run();
-      return json({ id, shopName: 'Siap Nyafe', websiteTitle: 'Siap Nyafe - Excellent Coffee', marqueeText: 'Welcome to Siap Nyafe Coffee Shop!', infoTitle: 'Our Story', infoContent: 'Born in Jakarta, brewed for the bold.', infoFooter1: 'EST. 2024', infoFooter2: 'JAKARTA' });
+      return json({ id, shopName: 'Siap Nyafe', websiteTitle: 'Siap Nyafe - Excellent Coffee', marqueeText: 'Welcome to Siap Nyafe Coffee Shop!', infoTitle: 'Our Story', infoContent: 'Born in Jakarta, brewed for the bold.', infoFooter1: 'EST. 2024', infoFooter2: 'JAKARTA' }, 200, cors);
     }
-    return json(parseJsonFields(config));
+    return json(parseJsonFields(config), 200, cors);
   }
 
   if (path === '/api/config' && method === 'PUT') {
-    if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403);
+    if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403, cors);
     stringifyJsonFields(body);
+    const sanitized = pickFields(body, TABLE_COLUMNS.shop_config);
     const existing = await DB.prepare('SELECT * FROM shop_config LIMIT 1').first();
     if (existing) {
-      const setClauses = Object.keys(body).map(k => `${k} = ?`).join(', ');
-      await DB.prepare(`UPDATE shop_config SET ${setClauses} WHERE id = ?`).bind(...Object.values(body), existing.id).run();
+      if (Object.keys(sanitized).length > 0) {
+        const setClauses = Object.keys(sanitized).map(k => `${k} = ?`).join(', ');
+        await DB.prepare(`UPDATE shop_config SET ${setClauses} WHERE id = ?`).bind(...Object.values(sanitized), existing.id).run();
+      }
+      const updated = await DB.prepare('SELECT * FROM shop_config WHERE id = ?').bind(existing.id).first();
+      return json(parseJsonFields(updated), 200, cors);
     } else {
       const id = uid();
-      const cols = ['id', ...Object.keys(body)];
-      const vals = ['?', ...Object.keys(body).map(() => '?')];
-      await DB.prepare(`INSERT INTO shop_config (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(id, ...Object.values(body)).run();
+      sanitized.id = id;
+      const cols = Object.keys(sanitized);
+      const vals = cols.map(() => '?');
+      await DB.prepare(`INSERT INTO shop_config (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(...Object.values(sanitized)).run();
+      return json(parseJsonFields(sanitized), 200, cors);
     }
-    return json({ message: 'Config updated' });
   }
 
   // ===================================================================
   // ORDERS
   // ===================================================================
   if (path === '/api/orders' && method === 'GET') {
-    if (!user) return error('Unauthorized', 401);
+    if (!user) return error('Unauthorized', 401, cors);
     let sql = 'SELECT * FROM orders WHERE 1=1';
     const params = [];
     if (searchParams.get('status')) {
@@ -392,8 +593,15 @@ async function handleApi(request, env) {
       params.push(searchParams.get('excludeStatus').toUpperCase());
     }
     sql += ' ORDER BY createdAt DESC';
+    if (searchParams.get('limit')) {
+      const l = parseInt(searchParams.get('limit'), 10);
+      if (!isNaN(l) && l > 0) {
+        sql += ' LIMIT ?';
+        params.push(l);
+      }
+    }
     const { results } = await DB.prepare(sql).bind(...params).all();
-    return json(results.map(parseJsonFields));
+    return json(results.map(parseJsonFields), 200, cors);
   }
 
   if (path === '/api/orders' && method === 'POST') {
@@ -401,26 +609,42 @@ async function handleApi(request, env) {
       const r = Math.random().toString(36).substring(2, 11).toUpperCase();
       body.orderNumber = `ORD-${r}`;
     }
-    const totalPrice = body.totalPrice || body.totalAmount || 0;
-    const tax = body.tax || 0;
+    const totalPrice = parseFloat(body.totalPrice || body.totalAmount || 0);
+    const tax = parseFloat(body.tax || 0);
     body.totalPrice = totalPrice;
-    body.grandTotal = parseFloat(totalPrice) + parseFloat(tax);
-    body.status = body.status || 'PENDING';
+    body.tax = tax;
+    body.grandTotal = totalPrice + tax;
+    body.status = (body.status || 'PENDING').toUpperCase();
     body.createdAt = nowISO();
-    if (body.totalAmount) delete body.totalAmount;
+    body.updatedAt = nowISO();
+
+    const rawItems = Array.isArray(body.items) ? [...body.items] : [];
     stringifyJsonFields(body);
+
+    const sanitized = pickFields(body, TABLE_COLUMNS.orders);
     const id = uid();
-    const cols = ['id', ...Object.keys(body)];
-    const vals = ['?', ...Object.keys(body).map(() => '?')];
-    await DB.prepare(`INSERT INTO orders (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(id, ...Object.values(body)).run();
-    return json({ id, ...body }, 201);
+    sanitized.id = id;
+    const cols = Object.keys(sanitized);
+    const vals = cols.map(() => '?');
+    await DB.prepare(`INSERT INTO orders (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(...Object.values(sanitized)).run();
+
+    // Auto-deduct inventory if created as PREPARING or COMPLETED (e.g. direct Cashier POS checkout)
+    if (sanitized.status === 'PREPARING' || sanitized.status === 'COMPLETED') {
+      await deductIngredientsForOrder(DB, rawItems);
+    }
+    // Auto-sync to Finance if COMPLETED
+    if (sanitized.status === 'COMPLETED') {
+      await syncOrderToFinance(DB, sanitized, user);
+    }
+
+    return json(parseJsonFields({ ...sanitized }), 201, cors);
   }
 
   const orderMatch = path.match(/^\/api\/orders\/([^/]+)$/);
   if (orderMatch) {
     const orderId = orderMatch[1];
     if (method === 'PUT') {
-      if (!user) return error('Unauthorized', 401);
+      if (!user) return error('Unauthorized', 401, cors);
       if (body.items) {
         body.totalPrice = body.items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 0), 0);
         const existing = await DB.prepare('SELECT * FROM orders WHERE id = ?').bind(orderId).first();
@@ -429,23 +653,37 @@ async function handleApi(request, env) {
       }
       body.updatedAt = nowISO();
       stringifyJsonFields(body);
-      const setClauses = Object.keys(body).map(k => `${k} = ?`).join(', ');
-      await DB.prepare(`UPDATE orders SET ${setClauses} WHERE id = ?`).bind(...Object.values(body), orderId).run();
-      return json({ message: 'Updated' });
+      const sanitized = pickFields(body, TABLE_COLUMNS.orders);
+      if (Object.keys(sanitized).length === 0) return error('No valid fields to update', 400, cors);
+      const setClauses = Object.keys(sanitized).map(k => `${k} = ?`).join(', ');
+      await DB.prepare(`UPDATE orders SET ${setClauses} WHERE id = ?`).bind(...Object.values(sanitized), orderId).run();
+      return json({ message: 'Updated' }, 200, cors);
     }
     if (method === 'DELETE') {
-      if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403);
+      if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403, cors);
       await DB.prepare('DELETE FROM orders WHERE id = ?').bind(orderId).run();
-      return json({ message: 'Deleted' });
+      return json({ message: 'Deleted' }, 200, cors);
     }
   }
 
   const orderStatusMatch = path.match(/^\/api\/orders\/([^/]+)\/status$/);
   if (orderStatusMatch && method === 'PATCH') {
-    if (!user) return error('Unauthorized', 401);
-    const status = searchParams.get('status') || body.status || '';
-    await DB.prepare('UPDATE orders SET status = ? WHERE id = ?').bind(status.toUpperCase(), orderStatusMatch[1]).run();
-    return json({ message: 'Status updated' });
+    if (!user) return error('Unauthorized', 401, cors);
+    const orderId = orderStatusMatch[1];
+    const status = (searchParams.get('status') || body.status || '').toUpperCase();
+    await DB.prepare('UPDATE orders SET status = ?, updatedAt = ? WHERE id = ?').bind(status, nowISO(), orderId).run();
+
+    const order = await DB.prepare('SELECT * FROM orders WHERE id = ?').bind(orderId).first();
+    if (order) {
+      const parsed = parseJsonFields({ ...order });
+      if (status === 'PREPARING' || status === 'COMPLETED') {
+        await deductIngredientsForOrder(DB, parsed.items);
+      }
+      if (status === 'COMPLETED') {
+        await syncOrderToFinance(DB, parsed, user);
+      }
+    }
+    return json({ message: 'Status updated' }, 200, cors);
   }
 
   // ===================================================================
@@ -453,23 +691,29 @@ async function handleApi(request, env) {
   // ===================================================================
   if (path === '/api/posts' && method === 'GET') {
     const { results } = await DB.prepare('SELECT * FROM posts ORDER BY createdAt DESC').all();
-    return json(results.map(parseJsonFields));
+    return json(results.map(parseJsonFields), 200, cors);
   }
 
   if (path === '/api/posts/published' && method === 'GET') {
     const { results } = await DB.prepare('SELECT * FROM posts WHERE status = ? ORDER BY publishedAt DESC').bind('PUBLISHED').all();
-    return json(results.map(parseJsonFields));
+    return json(results.map(parseJsonFields), 200, cors);
   }
 
   if (path === '/api/posts' && method === 'POST') {
-    if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403);
+    if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403, cors);
     if (!body.slug) body.slug = (body.title || 'untitled').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now();
     if (body.status === 'PUBLISHED') body.publishedAt = nowISO();
+    body.createdAt = nowISO();
+    body.updatedAt = nowISO();
+    stringifyJsonFields(body);
+
+    const sanitized = pickFields(body, TABLE_COLUMNS.posts);
     const id = uid();
-    const cols = ['id', ...Object.keys(body)];
-    const vals = ['?', ...Object.keys(body).map(() => '?')];
-    await DB.prepare(`INSERT INTO posts (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(id, ...Object.values(body)).run();
-    return json({ id, ...body }, 201);
+    sanitized.id = id;
+    const cols = Object.keys(sanitized);
+    const vals = cols.map(() => '?');
+    await DB.prepare(`INSERT INTO posts (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(...Object.values(sanitized)).run();
+    return json(parseJsonFields({ ...sanitized }), 201, cors);
   }
 
   const postMatch = path.match(/^\/api\/posts\/([^/]+)$/);
@@ -477,21 +721,25 @@ async function handleApi(request, env) {
     const postId = postMatch[1];
     if (method === 'GET') {
       const doc = await DB.prepare('SELECT * FROM posts WHERE id = ?').bind(postId).first();
-      if (!doc) return error('Not found', 404);
-      return json(parseJsonFields(doc));
+      if (!doc) return error('Not found', 404, cors);
+      return json(parseJsonFields(doc), 200, cors);
     }
     if (method === 'PUT') {
-      if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403);
+      if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403, cors);
       if (body.status === 'PUBLISHED' && !body.publishedAt) body.publishedAt = nowISO();
       body.updatedAt = nowISO();
-      const setClauses = Object.keys(body).map(k => `${k} = ?`).join(', ');
-      await DB.prepare(`UPDATE posts SET ${setClauses} WHERE id = ?`).bind(...Object.values(body), postId).run();
-      return json({ message: 'Updated' });
+      stringifyJsonFields(body);
+
+      const sanitized = pickFields(body, TABLE_COLUMNS.posts);
+      if (Object.keys(sanitized).length === 0) return error('No valid fields to update', 400, cors);
+      const setClauses = Object.keys(sanitized).map(k => `${k} = ?`).join(', ');
+      await DB.prepare(`UPDATE posts SET ${setClauses} WHERE id = ?`).bind(...Object.values(sanitized), postId).run();
+      return json({ message: 'Updated' }, 200, cors);
     }
     if (method === 'DELETE') {
-      if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403);
+      if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403, cors);
       await DB.prepare('DELETE FROM posts WHERE id = ?').bind(postId).run();
-      return json({ message: 'Deleted' });
+      return json({ message: 'Deleted' }, 200, cors);
     }
   }
 
@@ -499,32 +747,28 @@ async function handleApi(request, env) {
   // SHIFTS
   // ===================================================================
   if (path === '/api/shifts' && method === 'GET') {
-    if (!user) return error('Unauthorized', 401);
+    if (!user) return error('Unauthorized', 401, cors);
     const { results } = await DB.prepare('SELECT * FROM shift_schedules').all();
-    return json(results);
+    return json(results, 200, cors);
   }
 
   if (path === '/api/shifts' && method === 'POST') {
-    if (!user) return error('Unauthorized', 401);
-    const allowedDays = ['SATURDAY', 'SUNDAY', 'MONDAY'];
-    const todayDay = getDayOfWeek();
-    if (!allowedDays.includes(todayDay)) {
-      return error('Shift schedule hanya bisa disimpan hari Sabtu, Minggu, atau Senin', 400);
-    }
+    if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403, cors);
     const shifts = body.shifts || body;
     if (Array.isArray(shifts)) {
       await DB.prepare('DELETE FROM shift_schedules').run();
       for (const s of shifts) {
+        if (!s.employeeId || !s.dayOfWeek || !s.shiftType) continue;
         const id = uid();
         await DB.prepare('INSERT INTO shift_schedules (id, employeeId, employeeName, role, position, dayOfWeek, shiftType) VALUES (?, ?, ?, ?, ?, ?, ?)')
-          .bind(id, s.employeeId, s.employeeName, s.role, s.position, s.dayOfWeek, s.shiftType).run();
+          .bind(id, s.employeeId, s.employeeName || '', s.role || '', s.position || '', s.dayOfWeek, s.shiftType).run();
       }
     }
-    return json({ message: 'Shifts saved' });
+    return json({ message: 'Shifts saved' }, 200, cors);
   }
 
   if (path === '/api/shifts/randomize' && method === 'POST') {
-    if (!user) return error('Unauthorized', 401);
+    if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403, cors);
     const { results: employees } = await DB.prepare('SELECT * FROM employees WHERE active = 1').all();
 
     const byRole = {};
@@ -537,7 +781,7 @@ async function handleApi(request, env) {
     const requiredRoles = ['MANAGER', 'BARISTA', 'CASHIER', 'KITCHEN STAFF', 'WAITER'];
     for (const role of requiredRoles) {
       if (!byRole[role] || byRole[role].length === 0) {
-        return error(`Tidak ada karyawan aktif dengan role ${role}`, 400);
+        return error(`Tidak ada karyawan aktif dengan role ${role}`, 400, cors);
       }
     }
 
@@ -577,14 +821,14 @@ async function handleApi(request, env) {
       }
     }
 
-    return json(newShifts);
+    return json(newShifts, 200, cors);
   }
 
   // ===================================================================
   // TRANSACTIONS
   // ===================================================================
   if (path === '/api/transactions' && method === 'GET') {
-    if (!user) return error('Unauthorized', 401);
+    if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403, cors);
     let sql = 'SELECT * FROM transactions WHERE 1=1';
     const params = [];
     if (searchParams.get('type')) {
@@ -593,115 +837,272 @@ async function handleApi(request, env) {
     }
     sql += ' ORDER BY date DESC';
     const { results } = await DB.prepare(sql).bind(...params).all();
-    return json(results);
+    return json(results, 200, cors);
   }
 
   if (path === '/api/transactions' && method === 'POST') {
-    if (!user) return error('Unauthorized', 401);
+    if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403, cors);
     body.date = body.date || nowISO();
+    body.employeeId = body.employeeId || user.employeeId || '';
+    body.amount = parseFloat(body.amount || 0);
+    const sanitized = pickFields(body, TABLE_COLUMNS.transactions);
+    if (!sanitized.type || isNaN(sanitized.amount)) {
+      return error('Type and valid amount are required', 400, cors);
+    }
     const id = uid();
-    const cols = ['id', ...Object.keys(body)];
-    const vals = ['?', ...Object.keys(body).map(() => '?')];
-    await DB.prepare(`INSERT INTO transactions (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(id, ...Object.values(body)).run();
-    return json({ id, ...body }, 201);
+    sanitized.id = id;
+    const cols = Object.keys(sanitized);
+    const vals = cols.map(() => '?');
+    await DB.prepare(`INSERT INTO transactions (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(...Object.values(sanitized)).run();
+    return json(sanitized, 201, cors);
   }
 
   // ===================================================================
   // INGREDIENTS
   // ===================================================================
   if (path === '/api/ingredients' && method === 'GET') {
-    if (!user) return error('Unauthorized', 401);
+    if (!user) return error('Unauthorized', 401, cors);
     const { results } = await DB.prepare('SELECT * FROM ingredients').all();
-    return json(results);
+    return json(results, 200, cors);
   }
 
   if (path === '/api/ingredients' && method === 'POST') {
-    if (!user) return error('Unauthorized', 401);
+    if (!user || !requireRole(user, ['Manager', 'Barista', 'Kitchen Staff'])) return error('Forbidden', 403, cors);
+    const sanitized = pickFields(body, TABLE_COLUMNS.ingredients);
+    if (!sanitized.name) return error('Ingredient name is required', 400, cors);
     const id = uid();
-    const cols = ['id', ...Object.keys(body)];
-    const vals = ['?', ...Object.keys(body).map(() => '?')];
-    await DB.prepare(`INSERT INTO ingredients (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(id, ...Object.values(body)).run();
-    return json({ id, ...body }, 201);
+    sanitized.id = id;
+    sanitized.stock = parseFloat(sanitized.stock || sanitized.quantity || 0);
+    sanitized.quantity = sanitized.stock;
+    sanitized.minStock = parseFloat(sanitized.minStock || sanitized.minThreshold || 0);
+    sanitized.minThreshold = sanitized.minStock;
+    sanitized.createdAt = nowISO();
+    sanitized.updatedAt = nowISO();
+    const cols = Object.keys(sanitized);
+    const vals = cols.map(() => '?');
+    await DB.prepare(`INSERT INTO ingredients (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(...Object.values(sanitized)).run();
+    return json(sanitized, 201, cors);
   }
 
   const ingMatch = path.match(/^\/api\/ingredients\/([^/]+)$/);
   if (ingMatch) {
     const ingId = ingMatch[1];
     if (method === 'PUT') {
-      if (!user) return error('Unauthorized', 401);
+      if (!user || !requireRole(user, ['Manager', 'Barista', 'Kitchen Staff'])) return error('Forbidden', 403, cors);
       body.updatedAt = nowISO();
-      const setClauses = Object.keys(body).map(k => `${k} = ?`).join(', ');
-      await DB.prepare(`UPDATE ingredients SET ${setClauses} WHERE id = ?`).bind(...Object.values(body), ingId).run();
-      return json({ message: 'Updated' });
+      if (body.stock !== undefined) body.quantity = parseFloat(body.stock || 0);
+      if (body.quantity !== undefined) body.stock = parseFloat(body.quantity || 0);
+      if (body.minStock !== undefined) body.minThreshold = parseFloat(body.minStock || 0);
+      if (body.minThreshold !== undefined) body.minStock = parseFloat(body.minThreshold || 0);
+      const sanitized = pickFields(body, TABLE_COLUMNS.ingredients);
+      if (Object.keys(sanitized).length === 0) return error('No valid fields to update', 400, cors);
+      const setClauses = Object.keys(sanitized).map(k => `${k} = ?`).join(', ');
+      await DB.prepare(`UPDATE ingredients SET ${setClauses} WHERE id = ?`).bind(...Object.values(sanitized), ingId).run();
+      return json({ message: 'Updated' }, 200, cors);
     }
     if (method === 'DELETE') {
-      if (!user) return error('Unauthorized', 401);
+      if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403, cors);
       await DB.prepare('DELETE FROM ingredients WHERE id = ?').bind(ingId).run();
-      return json({ message: 'Deleted' });
+      return json({ message: 'Deleted' }, 200, cors);
     }
+  }
+
+  // ===================================================================
+  // ASSETS (Asset Management)
+  // ===================================================================
+  if (path === '/api/assets' && method === 'GET') {
+    if (!user) return error('Unauthorized', 401, cors);
+    let sql = 'SELECT * FROM assets WHERE 1=1';
+    const params = [];
+
+    const category = searchParams.get('category');
+    if (category && category !== 'All') {
+      sql += ' AND category = ?';
+      params.push(category);
+    }
+    const condition = searchParams.get('condition');
+    if (condition && condition !== 'All') {
+      sql += ' AND condition = ?';
+      params.push(condition);
+    }
+    const status = searchParams.get('status');
+    if (status && status !== 'All') {
+      sql += ' AND status = ?';
+      params.push(status);
+    }
+    const search = searchParams.get('search');
+    if (search) {
+      sql += ' AND (name LIKE ? OR assetCode LIKE ? OR location LIKE ? OR serialNumber LIKE ?)';
+      const term = `%${search}%`;
+      params.push(term, term, term, term);
+    }
+
+    sql += ' ORDER BY createdAt DESC';
+    const { results } = await DB.prepare(sql).bind(...params).all();
+    return json(results, 200, cors);
+  }
+
+  if (path === '/api/assets' && method === 'POST') {
+    if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403, cors);
+    if (!body.name) return error('Asset name is required', 400, cors);
+
+    if (!body.assetCode) {
+      const catPrefix = (body.category || 'GEN').substring(0, 3).toUpperCase();
+      const randNum = Math.floor(1000 + Math.random() * 9000);
+      body.assetCode = `AST-${catPrefix}-${randNum}`;
+    }
+
+    body.purchasePrice = parseFloat(body.purchasePrice || 0);
+    body.condition = (body.condition || 'GOOD').toUpperCase();
+    body.status = (body.status || 'ACTIVE').toUpperCase();
+    body.createdAt = nowISO();
+    body.updatedAt = nowISO();
+
+    const sanitized = pickFields(body, TABLE_COLUMNS.assets);
+    const id = uid();
+    sanitized.id = id;
+    const cols = Object.keys(sanitized);
+    const vals = cols.map(() => '?');
+    await DB.prepare(`INSERT INTO assets (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(...Object.values(sanitized)).run();
+    return json(sanitized, 201, cors);
+  }
+
+  const assetMatch = path.match(/^\/api\/assets\/([^/]+)$/);
+  if (assetMatch) {
+    const assetId = assetMatch[1];
+    if (method === 'GET') {
+      if (!user) return error('Unauthorized', 401, cors);
+      const item = await DB.prepare('SELECT * FROM assets WHERE id = ?').bind(assetId).first();
+      if (!item) return error('Asset not found', 404, cors);
+      return json(item, 200, cors);
+    }
+    if (method === 'PUT') {
+      if (!user) return error('Unauthorized', 401, cors);
+      if (body.purchasePrice !== undefined) body.purchasePrice = parseFloat(body.purchasePrice || 0);
+      if (body.condition) body.condition = body.condition.toUpperCase();
+      if (body.status) body.status = body.status.toUpperCase();
+      body.updatedAt = nowISO();
+
+      const sanitized = pickFields(body, TABLE_COLUMNS.assets);
+      if (Object.keys(sanitized).length === 0) return error('No valid fields to update', 400, cors);
+      const setClauses = Object.keys(sanitized).map(k => `${k} = ?`).join(', ');
+      await DB.prepare(`UPDATE assets SET ${setClauses} WHERE id = ?`).bind(...Object.values(sanitized), assetId).run();
+      return json({ message: 'Asset updated' }, 200, cors);
+    }
+    if (method === 'DELETE') {
+      if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403, cors);
+      await DB.prepare('DELETE FROM assets WHERE id = ?').bind(assetId).run();
+      return json({ message: 'Asset deleted' }, 200, cors);
+    }
+  }
+
+  // ===================================================================
+  // RECIPES (BOM - Bill of Materials)
+  // ===================================================================
+  if (path === '/api/recipes' && method === 'GET') {
+    if (!user) return error('Unauthorized', 401, cors);
+    let sql = 'SELECT * FROM recipes WHERE 1=1';
+    const params = [];
+    const menuId = searchParams.get('menuId');
+    if (menuId) {
+      sql += ' AND menuId = ?';
+      params.push(menuId);
+    }
+    sql += ' ORDER BY createdAt DESC';
+    const { results } = await DB.prepare(sql).bind(...params).all();
+    return json(results, 200, cors);
+  }
+
+  if (path === '/api/recipes' && method === 'POST') {
+    if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403, cors);
+    if (!body.menuId || !body.ingredientId || !body.amount) {
+      return error('menuId, ingredientId, and amount are required', 400, cors);
+    }
+    body.amount = parseFloat(body.amount);
+    body.createdAt = nowISO();
+    const sanitized = pickFields(body, TABLE_COLUMNS.recipes);
+    const id = uid();
+    sanitized.id = id;
+    const cols = Object.keys(sanitized);
+    const vals = cols.map(() => '?');
+    await DB.prepare(`INSERT INTO recipes (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(...Object.values(sanitized)).run();
+    return json(sanitized, 201, cors);
+  }
+
+  const recipeMatch = path.match(/^\/api\/recipes\/([^/]+)$/);
+  if (recipeMatch && method === 'DELETE') {
+    if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403, cors);
+    await DB.prepare('DELETE FROM recipes WHERE id = ?').bind(recipeMatch[1]).run();
+    return json({ message: 'Recipe deleted' }, 200, cors);
   }
 
   // ===================================================================
   // NOTES
   // ===================================================================
   if (path === '/api/notes' && method === 'GET') {
-    if (!user) return error('Unauthorized', 401);
+    if (!user) return error('Unauthorized', 401, cors);
     const { results } = await DB.prepare('SELECT * FROM notes').all();
-    return json(results);
+    return json(results, 200, cors);
   }
 
   if (path === '/api/notes/dashboard' && method === 'GET') {
-    if (!user) return error('Unauthorized', 401);
+    if (!user) return error('Unauthorized', 401, cors);
     const existing = await DB.prepare('SELECT * FROM notes LIMIT 1').first();
-    if (existing) return json(existing);
+    if (existing) return json(existing, 200, cors);
     const id = uid();
     await DB.prepare('INSERT INTO notes (id, content, lastUpdatedBy, updatedAt) VALUES (?, ?, ?, ?)')
       .bind(id, 'Welcome to Siap Nyafe!', 'system', nowISO()).run();
-    return json({ id, content: 'Welcome to Siap Nyafe!', lastUpdatedBy: 'system', updatedAt: nowISO() });
+    return json({ id, content: 'Welcome to Siap Nyafe!', lastUpdatedBy: 'system', updatedAt: nowISO() }, 200, cors);
   }
 
   if (path === '/api/notes/dashboard' && method === 'POST') {
-    if (!user) return error('Unauthorized', 401);
+    if (!user) return error('Unauthorized', 401, cors);
     const existing = await DB.prepare('SELECT * FROM notes LIMIT 1').first();
-    const noteData = { content: body.content, lastUpdatedBy: user.email || user.name || 'unknown', updatedAt: nowISO() };
+    const noteData = { content: body.content || '', lastUpdatedBy: user.email || user.name || 'unknown', updatedAt: nowISO() };
+    const sanitized = pickFields(noteData, TABLE_COLUMNS.notes);
     if (existing) {
-      const setClauses = Object.keys(noteData).map(k => `${k} = ?`).join(', ');
-      await DB.prepare(`UPDATE notes SET ${setClauses} WHERE id = ?`).bind(...Object.values(noteData), existing.id).run();
+      const setClauses = Object.keys(sanitized).map(k => `${k} = ?`).join(', ');
+      await DB.prepare(`UPDATE notes SET ${setClauses} WHERE id = ?`).bind(...Object.values(sanitized), existing.id).run();
     } else {
       const id = uid();
-      const cols = ['id', ...Object.keys(noteData)];
-      const vals = ['?', ...Object.keys(noteData).map(() => '?')];
-      await DB.prepare(`INSERT INTO notes (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(id, ...Object.values(noteData)).run();
+      sanitized.id = id;
+      const cols = Object.keys(sanitized);
+      const vals = cols.map(() => '?');
+      await DB.prepare(`INSERT INTO notes (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(...Object.values(sanitized)).run();
     }
-    return json({ message: 'Note saved' });
+    return json({ message: 'Note saved' }, 200, cors);
   }
 
   if (path === '/api/notes' && method === 'POST') {
-    if (!user) return error('Unauthorized', 401);
-    const id = uid();
-      body.lastUpdatedBy = user.email || user.name || 'unknown';
+    if (!user) return error('Unauthorized', 401, cors);
+    body.lastUpdatedBy = user.email || user.name || 'unknown';
     body.updatedAt = nowISO();
-    const cols = ['id', ...Object.keys(body)];
-    const vals = ['?', ...Object.keys(body).map(() => '?')];
-    await DB.prepare(`INSERT INTO notes (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(id, ...Object.values(body)).run();
-    return json({ id, ...body }, 201);
+    const sanitized = pickFields(body, TABLE_COLUMNS.notes);
+    const id = uid();
+    sanitized.id = id;
+    const cols = Object.keys(sanitized);
+    const vals = cols.map(() => '?');
+    await DB.prepare(`INSERT INTO notes (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(...Object.values(sanitized)).run();
+    return json({ id, ...sanitized }, 201, cors);
   }
 
   const noteMatch = path.match(/^\/api\/notes\/([^/]+)$/);
   if (noteMatch) {
     const noteId = noteMatch[1];
     if (method === 'PUT') {
-      if (!user) return error('Unauthorized', 401);
+      if (!user) return error('Unauthorized', 401, cors);
       body.updatedAt = nowISO();
-    body.lastUpdatedBy = user.email || user.name || 'unknown';
-      const setClauses = Object.keys(body).map(k => `${k} = ?`).join(', ');
-      await DB.prepare(`UPDATE notes SET ${setClauses} WHERE id = ?`).bind(...Object.values(body), noteId).run();
-      return json({ message: 'Updated' });
+      body.lastUpdatedBy = user.email || user.name || 'unknown';
+      const sanitized = pickFields(body, TABLE_COLUMNS.notes);
+      if (Object.keys(sanitized).length === 0) return error('No valid fields to update', 400, cors);
+      const setClauses = Object.keys(sanitized).map(k => `${k} = ?`).join(', ');
+      await DB.prepare(`UPDATE notes SET ${setClauses} WHERE id = ?`).bind(...Object.values(sanitized), noteId).run();
+      return json({ message: 'Updated' }, 200, cors);
     }
     if (method === 'DELETE') {
-      if (!user) return error('Unauthorized', 401);
+      if (!user) return error('Unauthorized', 401, cors);
       await DB.prepare('DELETE FROM notes WHERE id = ?').bind(noteId).run();
-      return json({ message: 'Deleted' });
+      return json({ message: 'Deleted' }, 200, cors);
     }
   }
 
@@ -709,26 +1110,28 @@ async function handleApi(request, env) {
   // NOTIFICATIONS
   // ===================================================================
   if (path === '/api/notifications' && method === 'GET') {
-    if (!user) return error('Unauthorized', 401);
+    if (!user) return error('Unauthorized', 401, cors);
     const { results } = await DB.prepare('SELECT * FROM notifications WHERE read = 0 ORDER BY timestamp DESC LIMIT 50').all();
-    return json(results);
+    return json(results, 200, cors);
   }
 
   if (path === '/api/notifications' && method === 'POST') {
-    const id = uid();
     body.timestamp = nowISO();
     body.read = 0;
-    const cols = ['id', ...Object.keys(body)];
-    const vals = ['?', ...Object.keys(body).map(() => '?')];
-    await DB.prepare(`INSERT INTO notifications (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(id, ...Object.values(body)).run();
-    return json({ id, ...body }, 201);
+    const sanitized = pickFields(body, TABLE_COLUMNS.notifications);
+    const id = uid();
+    sanitized.id = id;
+    const cols = Object.keys(sanitized);
+    const vals = cols.map(() => '?');
+    await DB.prepare(`INSERT INTO notifications (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(...Object.values(sanitized)).run();
+    return json({ id, ...sanitized }, 201, cors);
   }
 
   const notifMatch = path.match(/^\/api\/notifications\/([^/]+)\/read$/);
   if (notifMatch && method === 'PUT') {
-    if (!user) return error('Unauthorized', 401);
+    if (!user) return error('Unauthorized', 401, cors);
     await DB.prepare('UPDATE notifications SET read = 1 WHERE id = ?').bind(notifMatch[1]).run();
-    return json({ message: 'Marked as read' });
+    return json({ message: 'Marked as read' }, 200, cors);
   }
 
   // ===================================================================
@@ -736,53 +1139,59 @@ async function handleApi(request, env) {
   // ===================================================================
   if (path === '/api/feedbacks' && method === 'GET') {
     const { results } = await DB.prepare('SELECT * FROM feedbacks ORDER BY timestamp DESC').all();
-    return json(results.map(parseJsonFields));
+    return json(results.map(parseJsonFields), 200, cors);
   }
 
   if (path === '/api/feedbacks' && method === 'POST') {
-    const jakarta = getJakartaDate();
-    const h = jakarta.getUTCHours();
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const dayOfWeek = DAY_MAP[dayNames[jakarta.getUTCDay()]];
+    const { hour } = getJakartaHoursMinutes();
+    const dayOfWeek = getDayOfWeek();
     let shiftType = 'MORNING';
-    if (h >= 15 && h < 22) shiftType = 'AFTERNOON';
-    else if (h >= 22 || h < 7) shiftType = 'EVENING';
+    if (hour >= 15 && hour < 23) shiftType = 'AFTERNOON';
+    else if (hour >= 23 || hour < 7) shiftType = 'EVENING';
+
     const { results: shiftDocs } = await DB.prepare('SELECT * FROM shift_schedules WHERE dayOfWeek = ? AND shiftType = ?').bind(dayOfWeek, shiftType).all();
     body.shiftEmployees = JSON.stringify(shiftDocs.map(s => s.employeeName).filter(Boolean));
     body.timestamp = nowISO();
+
+    const sanitized = pickFields(body, TABLE_COLUMNS.feedbacks);
     const id = uid();
-    const cols = ['id', ...Object.keys(body)];
-    const vals = ['?', ...Object.keys(body).map(() => '?')];
-    await DB.prepare(`INSERT INTO feedbacks (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(id, ...Object.values(body)).run();
-    return json({ id, ...body }, 201);
+    sanitized.id = id;
+    const cols = Object.keys(sanitized);
+    const vals = cols.map(() => '?');
+    await DB.prepare(`INSERT INTO feedbacks (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(...Object.values(sanitized)).run();
+    return json(sanitized, 201, cors);
   }
 
   const fbMatch = path.match(/^\/api\/feedbacks\/([^/]+)$/);
   if (fbMatch && method === 'DELETE') {
-    if (!user) return error('Unauthorized', 401);
+    if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403, cors);
     await DB.prepare('DELETE FROM feedbacks WHERE id = ?').bind(fbMatch[1]).run();
-    return json({ message: 'Deleted' });
+    return json({ message: 'Deleted' }, 200, cors);
   }
 
+  // ===================================================================
   // ===================================================================
   // ATTENDANCE
   // ===================================================================
   if (path === '/api/attendance' && method === 'GET') {
-    if (!user) return error('Unauthorized', 401);
+    if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403, cors);
     const { results } = await DB.prepare(`
       SELECT ar.*, e.employeeId, e.name AS employeeName, e.position
       FROM attendance_records ar
       JOIN employees e ON ar.employee_id = e.id
       ORDER BY ar.date DESC
     `).all();
-    return json(results);
+    return json(results, 200, cors);
   }
 
   const attHistoryMatch = path.match(/^\/api\/attendance\/history\/([^/]+)$/);
   if (attHistoryMatch && method === 'GET') {
-    if (!user) return error('Unauthorized', 401);
+    if (!user) return error('Unauthorized', 401, cors);
+    if (!requireRole(user, ['Manager']) && user.employeeId !== attHistoryMatch[1]) {
+      return error('Forbidden', 403, cors);
+    }
     const emp = await DB.prepare('SELECT * FROM employees WHERE employeeId = ?').bind(attHistoryMatch[1]).first();
-    if (!emp) return error('Not found', 404);
+    if (!emp) return error('Not found', 404, cors);
     const { results } = await DB.prepare(`
       SELECT ar.*, e.employeeId, e.name AS employeeName, e.position
       FROM attendance_records ar
@@ -790,22 +1199,35 @@ async function handleApi(request, env) {
       WHERE e.employeeId = ?
       ORDER BY ar.date DESC
     `).bind(attHistoryMatch[1]).all();
-    return json(results);
+    return json(results, 200, cors);
   }
 
   const attTodayMatch = path.match(/^\/api\/attendance\/today\/([^/]+)$/);
   if (attTodayMatch && method === 'GET') {
-    if (!user) return error('Unauthorized', 401);
+    if (!user) return error('Unauthorized', 401, cors);
+    if (!requireRole(user, ['Manager']) && user.employeeId !== attTodayMatch[1]) {
+      return error('Forbidden', 403, cors);
+    }
     const emp = await DB.prepare('SELECT * FROM employees WHERE employeeId = ?').bind(attTodayMatch[1]).first();
-    if (!emp) return json(null);
+    if (!emp) return json(null, 200, cors);
     const today = getJakartaDateStr();
-    const rec = await DB.prepare('SELECT * FROM attendance_records WHERE employee_id = ? AND date = ?').bind(emp.id, today).first();
-    return json(rec || null);
+    let rec = await DB.prepare('SELECT ar.*, e.employeeId, e.name AS employeeName, e.position FROM attendance_records ar JOIN employees e ON ar.employee_id = e.id WHERE ar.employee_id = ? AND ar.date = ?').bind(emp.id, today).first();
+    if (!rec) {
+      const { totalMin } = getJakartaHoursMinutes();
+      if (totalMin < 720) {
+        const yesterdayDate = getYesterdayJakartaDateStr();
+        const yRec = await DB.prepare('SELECT ar.*, e.employeeId, e.name AS employeeName, e.position FROM attendance_records ar JOIN employees e ON ar.employee_id = e.id WHERE ar.employee_id = ? AND ar.date = ?').bind(emp.id, yesterdayDate).first();
+        if (yRec && !yRec.clockOutTime) {
+          rec = yRec;
+        }
+      }
+    }
+    return json(rec || null, 200, cors);
   }
 
   // ===================================================================
   // ATTENDANCE LOGIC
-  // Shift windows (matching ShiftPage display):
+  // Shift windows:
   //   MORNING:   07:00 - 15:00
   //   AFTERNOON: 15:00 - 23:00
   //   EVENING:   23:00 - 07:00
@@ -821,101 +1243,143 @@ async function handleApi(request, env) {
   const SHIFT_END   = { MORNING: 15, AFTERNOON: 23, EVENING: 7 };
 
   if (path === '/api/attendance/clock-in' && method === 'POST') {
-    if (!user) return error('Unauthorized', 401);
-    const { employeeId } = body;
-    if (!employeeId) return error('employeeId required');
+    if (!user) return error('Unauthorized', 401, cors);
+    const employeeId = body.employeeId || user.employeeId;
+    if (!employeeId) return error('employeeId required', 400, cors);
+    if (!requireRole(user, ['Manager']) && user.employeeId !== employeeId) {
+      return error('Forbidden: You can only clock in for yourself', 403, cors);
+    }
     const emp = await DB.prepare('SELECT * FROM employees WHERE employeeId = ?').bind(employeeId).first();
-    if (!emp) return error('Employee not found', 404);
+    if (!emp) return error('Employee not found', 404, cors);
 
-    const today = getJakartaDateStr();
+    const { totalMin } = getJakartaHoursMinutes();
+    let today = getJakartaDateStr();
+    let dayOfWeek = getDayOfWeek();
+
+    // Determine target shift date and schedule:
+    // If it's early morning (00:00 - 04:00) and employee had an EVENING shift yesterday:
+    let scheduledShift = null;
+    if (totalMin < 240) {
+      const yesterdayDay = getDayOfWeek(-1);
+      const yesterdayDate = getYesterdayJakartaDateStr();
+      const yShift = await DB.prepare('SELECT * FROM shift_schedules WHERE employeeId = ? AND dayOfWeek = ? AND shiftType = ?')
+        .bind(employeeId, yesterdayDay, 'EVENING').first();
+      if (yShift) {
+        const yRec = await DB.prepare('SELECT * FROM attendance_records WHERE employee_id = ? AND date = ?').bind(emp.id, yesterdayDate).first();
+        if (!yRec) {
+          scheduledShift = yShift;
+          today = yesterdayDate;
+          dayOfWeek = yesterdayDay;
+        }
+      }
+    }
+
+    if (!scheduledShift) {
+      scheduledShift = await DB.prepare('SELECT * FROM shift_schedules WHERE employeeId = ? AND dayOfWeek = ?').bind(employeeId, dayOfWeek).first();
+    }
+
     const existingToday = await DB.prepare('SELECT * FROM attendance_records WHERE employee_id = ? AND date = ?').bind(emp.id, today).first();
-    if (existingToday) return error('Already clocked in today', 400);
-
-    const jDate = getJakartaDate();
-    const totalMin = jDate.getUTCHours() * 60 + jDate.getUTCMinutes();
-    const dayOfWeek = getDayOfWeek();
-    const scheduledShift = await DB.prepare('SELECT * FROM shift_schedules WHERE employeeId = ? AND dayOfWeek = ?').bind(employeeId, dayOfWeek).first();
+    if (existingToday) return error('Already clocked in today', 400, cors);
 
     let shiftType = 'UNSCHEDULED';
     let status = 'UNSCHEDULED';
     let minutesLate = 0;
     let lateAlert = false;
-    let clockInTime = jDate.toISOString();
+    let clockInTime = nowISO();
     let present = 1;
 
-    if (scheduledShift) {
+    if (scheduledShift && scheduledShift.shiftType !== 'OFF') {
       shiftType = scheduledShift.shiftType || 'UNSCHEDULED';
       const startHour = SHIFT_START[shiftType];
       if (startHour !== undefined) {
+        let effectiveMin = totalMin;
+        if (shiftType === 'EVENING' && totalMin < 720) {
+          effectiveMin = totalMin + 1440;
+        }
+
         const earliestMin = startHour * 60 - 10;
         const shiftStartMin = startHour * 60;
         const autoAbsenMin = shiftStartMin + 120; // 2 jam setelah shift start
 
-        if (totalMin < earliestMin) {
-          return error('Belum waktu clock in. Clock in dapat dilakukan 10 menit sebelum jam shift dimulai.', 400);
+        if (effectiveMin < earliestMin) {
+          const earliestHourStr = String(Math.floor(earliestMin / 60) % 24).padStart(2, '0');
+          const earliestMinStr = String(earliestMin % 60).padStart(2, '0');
+          return error(`Belum waktu clock in. Clock in dapat dilakukan 10 menit sebelum jam shift dimulai (${earliestHourStr}:${earliestMinStr}).`, 400, cors);
         }
 
-        if (totalMin > autoAbsenMin) {
+        if (effectiveMin > autoAbsenMin) {
           // > 2 jam: auto-record tidak absen masuk
           status = 'TIDAK ABSEN MASUK';
           clockInTime = '';
           present = 0;
-        } else if (totalMin > shiftStartMin) {
+        } else if (effectiveMin > shiftStartMin) {
           // 1 menit - 2 jam: LATE
-          minutesLate = totalMin - shiftStartMin;
+          minutesLate = effectiveMin - shiftStartMin;
           status = 'LATE';
           lateAlert = true;
         } else {
           status = 'ON_TIME';
         }
       }
+    } else {
+      status = 'ON_TIME';
     }
 
     const id = uid();
     await DB.prepare(
-      'INSERT INTO attendance_records (id, employee_id, date, present, clockInTime, shiftType, status, minutesLate, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    ).bind(id, emp.id, today, present, clockInTime, shiftType, status, minutesLate, '').run();
+      'INSERT INTO attendance_records (id, employee_id, employeeName, date, present, clockInTime, shiftType, status, minutesLate, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).bind(id, emp.id, emp.name, today, present, clockInTime, shiftType, status, minutesLate, '').run();
 
-    const record = { id, date: today, present, clockInTime, shiftType, status, minutesLate, lateAlert };
-    return json({ message: status === 'TIDAK ABSEN MASUK' ? 'Tidak absen masuk' : 'Clocked in', record });
+    const record = { id, employee_id: emp.id, employeeId: emp.employeeId, employeeName: emp.name, date: today, present, clockInTime, shiftType, status, minutesLate, lateAlert };
+    return json({ message: status === 'TIDAK ABSEN MASUK' ? 'Tidak absen masuk' : 'Clocked in', record }, 200, cors);
   }
 
   if (path === '/api/attendance/clock-out' && method === 'POST') {
-    if (!user) return error('Unauthorized', 401);
-    const { employeeId } = body;
-    if (!employeeId) return error('employeeId required');
-    const emp = await DB.prepare('SELECT * FROM employees WHERE employeeId = ?').bind(employeeId).first();
-    if (!emp) return error('Employee not found', 404);
-
-    const jDate = getJakartaDate();
-    const today = getJakartaDateStr();
-    const totalMin = jDate.getUTCHours() * 60 + jDate.getUTCMinutes();
-
-    // Try today's record; if early morning (before 12:00), also try yesterday
-    // (handles EVENING shift ending at 07:00 next day, and AFTERNOON clock-out past midnight)
-    let record = await DB.prepare('SELECT * FROM attendance_records WHERE employee_id = ? AND date = ?').bind(emp.id, today).first();
-    if (!record && totalMin < 720) {
-      const yesterdayDate = getYesterdayJakartaDateStr();
-      record = await DB.prepare('SELECT * FROM attendance_records WHERE employee_id = ? AND date = ?').bind(emp.id, yesterdayDate).first();
+    if (!user) return error('Unauthorized', 401, cors);
+    const employeeId = body.employeeId || user.employeeId;
+    if (!employeeId) return error('employeeId required', 400, cors);
+    if (!requireRole(user, ['Manager']) && user.employeeId !== employeeId) {
+      return error('Forbidden: You can only clock out for yourself', 403, cors);
     }
-    if (!record) return error('No clock-in record found', 400);
+    const emp = await DB.prepare('SELECT * FROM employees WHERE employeeId = ?').bind(employeeId).first();
+    if (!emp) return error('Employee not found', 404, cors);
+
+    const { totalMin } = getJakartaHoursMinutes();
+    const today = getJakartaDateStr();
+
+    let record = await DB.prepare('SELECT * FROM attendance_records WHERE employee_id = ? AND date = ?').bind(emp.id, today).first();
+    if ((!record || record.clockOutTime) && totalMin < 720) {
+      const yesterdayDate = getYesterdayJakartaDateStr();
+      const yRecord = await DB.prepare('SELECT * FROM attendance_records WHERE employee_id = ? AND date = ?').bind(emp.id, yesterdayDate).first();
+      if (yRecord && !yRecord.clockOutTime) {
+        record = yRecord;
+      }
+    }
+    if (!record) return error('No clock-in record found', 400, cors);
+    if (record.clockOutTime) return error('Already clocked out', 400, cors);
 
     const shiftType = record.shiftType || 'UNSCHEDULED';
-    if (shiftType !== 'UNSCHEDULED') {
+    if (shiftType !== 'UNSCHEDULED' && shiftType !== 'OFF') {
       const endHour = SHIFT_END[shiftType];
       if (endHour !== undefined) {
-        const endMin = endHour * 60;
-        const maxOutMin = endMin + 120; // 2 jam setelah shift selesai
-
-        if (totalMin < endMin) {
-          return error('Belum waktu clock out. Tunggu sampai jam shift selesai.', 400);
+        let effectiveMin = totalMin;
+        if (shiftType === 'AFTERNOON' && totalMin < 720) {
+          effectiveMin = totalMin + 1440;
         }
 
-        if (totalMin > maxOutMin) {
+        const endMin = (shiftType === 'AFTERNOON' ? 23 : endHour) * 60;
+        const maxOutMin = endMin + 120; // 2 jam setelah shift selesai
+
+        if (effectiveMin < endMin) {
+          const hStr = String(endHour).padStart(2, '0');
+          return error(`Belum waktu clock out. Tunggu sampai jam shift selesai (${hStr}:00).`, 400, cors);
+        }
+
+        if (effectiveMin > maxOutMin) {
           // > 2 jam: auto-record tidak absen keluar
           await DB.prepare('UPDATE attendance_records SET clockOutTime = ?, hoursWorked = NULL, status = ? WHERE id = ?')
             .bind('', 'TIDAK ABSEN KELUAR', record.id).run();
-          return json({ message: 'Tidak absen keluar', record: { ...record, clockOutTime: '', hoursWorked: null, status: 'TIDAK ABSEN KELUAR' } });
+          return json({ message: 'Tidak absen keluar', record: { ...record, clockOutTime: '', hoursWorked: null, status: 'TIDAK ABSEN KELUAR' } }, 200, cors);
         }
       }
     }
@@ -923,13 +1387,14 @@ async function handleApi(request, env) {
     const clockIn = record.clockInTime;
     let hoursWorked = null;
     if (clockIn) {
-      const diffMs = jDate.getTime() - new Date(clockIn).getTime();
-      hoursWorked = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100;
+      const diffMs = Date.now() - new Date(clockIn).getTime();
+      hoursWorked = Math.max(0, Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100);
     }
+    const outTime = nowISO();
     await DB.prepare('UPDATE attendance_records SET clockOutTime = ?, hoursWorked = ? WHERE id = ?')
-      .bind(jDate.toISOString(), hoursWorked, record.id).run();
+      .bind(outTime, hoursWorked, record.id).run();
 
-    return json({ message: 'Clocked out', record: { ...record, clockOutTime: jDate.toISOString(), hoursWorked } });
+    return json({ message: 'Clocked out', record: { ...record, clockOutTime: outTime, hoursWorked } }, 200, cors);
   }
 
   // ===================================================================
@@ -1159,7 +1624,49 @@ async function handleApi(request, env) {
       ).bind(uid(), p.title, slug, p.content, p.excerpt, p.category, p.status, p.status === 'PUBLISHED' ? now : null, p.createdAt, now).run();
     }
 
-    return json({ message: `Seeded ${menus.length} menu items and ${posts.length} blog posts` });
+    // Seed initial ingredients if none exist
+    const existingIng = await DB.prepare('SELECT id FROM ingredients LIMIT 1').first();
+    if (!existingIng) {
+      const defaultIngredients = [
+        { name: 'Espresso Beans', category: 'Coffee', stock: 15000, quantity: 15000, unit: 'g', minStock: 2500, minThreshold: 2500, price: 250000, supplier: 'Koperasi Kopi Gayo' },
+        { name: 'Fresh Milk', category: 'Dairy', stock: 25000, quantity: 25000, unit: 'ml', minStock: 5000, minThreshold: 5000, price: 22000, supplier: 'Greenfields' },
+        { name: 'Oat Milk', category: 'Dairy Alternative', stock: 12000, quantity: 12000, unit: 'ml', minStock: 2000, minThreshold: 2000, price: 42000, supplier: 'Oatside' },
+        { name: 'Gula Aren Cair', category: 'Sweetener', stock: 8000, quantity: 8000, unit: 'ml', minStock: 1500, minThreshold: 1500, price: 35000, supplier: 'Gula Nusantara' },
+        { name: 'Chocolate Powder', category: 'Powder', stock: 5000, quantity: 5000, unit: 'g', minStock: 800, minThreshold: 800, price: 120000, supplier: 'Van Houten' },
+        { name: 'Matcha Powder', category: 'Powder', stock: 3000, quantity: 3000, unit: 'g', minStock: 500, minThreshold: 500, price: 180000, supplier: 'Uji Kyoto' },
+        { name: 'Caramel Syrup', category: 'Syrup', stock: 3000, quantity: 3000, unit: 'ml', minStock: 600, minThreshold: 600, price: 85000, supplier: 'Monin' },
+        { name: 'Vanilla Syrup', category: 'Syrup', stock: 3000, quantity: 3000, unit: 'ml', minStock: 600, minThreshold: 600, price: 85000, supplier: 'Monin' },
+        { name: 'Paper Cup 12oz', category: 'Packaging', stock: 500, quantity: 500, unit: 'pcs', minStock: 100, minThreshold: 100, price: 800, supplier: 'Packindo' },
+        { name: 'Frozen French Fries', category: 'Food', stock: 12000, quantity: 12000, unit: 'g', minStock: 2500, minThreshold: 2500, price: 35000, supplier: 'Aviko' },
+      ];
+      for (const ing of defaultIngredients) {
+        await DB.prepare('INSERT INTO ingredients (id, name, category, stock, quantity, unit, minStock, minThreshold, price, supplier, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+          .bind(uid(), ing.name, ing.category, ing.stock, ing.quantity, ing.unit, ing.minStock, ing.minThreshold, ing.price, ing.supplier, now, now).run();
+      }
+    }
+
+    // Seed initial assets if none exist
+    const existingAsset = await DB.prepare('SELECT id FROM assets LIMIT 1').first();
+    if (!existingAsset) {
+      const defaultAssets = [
+        { assetCode: 'AST-EQP-001', name: 'La Marzocco Linea PB 2-Group Espresso Machine', category: 'Equipment', purchaseDate: '2024-01-15', purchasePrice: 165000000, condition: 'GOOD', status: 'ACTIVE', location: 'Bar Area', serialNumber: 'LM-PB2-98421', notes: 'Servis rutin tiap 6 bulan' },
+        { assetCode: 'AST-EQP-002', name: 'Mahlkönig EK43 Commercial Coffee Grinder', category: 'Equipment', purchaseDate: '2024-01-20', purchasePrice: 48000000, condition: 'GOOD', status: 'ACTIVE', location: 'Bar Area', serialNumber: 'MK-EK43-7712', notes: 'Kalibrasi burr tiap minggu' },
+        { assetCode: 'AST-EQP-003', name: 'Mazzer Super Jolly Espresso Grinder', category: 'Equipment', purchaseDate: '2024-02-01', purchasePrice: 18500000, condition: 'GOOD', status: 'ACTIVE', location: 'Bar Area', serialNumber: 'MZ-SJ-5501', notes: 'Grinder cadangan espresso' },
+        { assetCode: 'AST-EQP-004', name: 'Vitamix The Quiet One Commercial Blender', category: 'Equipment', purchaseDate: '2024-02-10', purchasePrice: 26000000, condition: 'GOOD', status: 'ACTIVE', location: 'Bar Area', serialNumber: 'VX-QO-3341', notes: 'Cover peredam suara' },
+        { assetCode: 'AST-EQP-005', name: 'Hoshizaki Crescent Cube Ice Maker 120kg', category: 'Equipment', purchaseDate: '2024-01-10', purchasePrice: 42000000, condition: 'NEEDS_MAINTENANCE', status: 'ACTIVE', location: 'Kitchen', serialNumber: 'HZ-IM-120-88', notes: 'Penggantian filter air terjadwal' },
+        { assetCode: 'AST-ELC-001', name: 'Sunmi T2s Dual Screen Android POS Terminal', category: 'Electronics', purchaseDate: '2024-01-25', purchasePrice: 9500000, condition: 'GOOD', status: 'ACTIVE', location: 'Cashier Station', serialNumber: 'SM-T2S-0044', notes: 'Terminal kasir utama' },
+        { assetCode: 'AST-ELC-002', name: 'Epson TM-T82X Thermal Receipt Printer', category: 'Electronics', purchaseDate: '2024-01-25', purchasePrice: 2200000, condition: 'GOOD', status: 'ACTIVE', location: 'Cashier Station', serialNumber: 'EP-T82-9901', notes: 'Printer struk kasir 80mm' },
+        { assetCode: 'AST-ELC-003', name: 'Daikin Inverter Cassette AC 3 PK', category: 'Electronics', purchaseDate: '2024-01-05', purchasePrice: 18000000, condition: 'GOOD', status: 'ACTIVE', location: 'Main Dining Hall', serialNumber: 'DK-CAS-3PK-12', notes: 'Pembersihan AC tiap 3 bulan' },
+        { assetCode: 'AST-FUR-001', name: 'Industrial Solid Teak Dining Table & 4 Chairs Set', category: 'Furniture', purchaseDate: '2024-01-08', purchasePrice: 6500000, condition: 'GOOD', status: 'ACTIVE', location: 'Main Dining Hall', serialNumber: 'FUR-TBL-01', notes: 'Meja nomor 1-5' },
+        { assetCode: 'AST-FUR-002', name: 'Bar Stool Steel Frame Leather Cushion', category: 'Furniture', purchaseDate: '2024-01-08', purchasePrice: 4800000, condition: 'GOOD', status: 'ACTIVE', location: 'Bar Counter', serialNumber: 'FUR-STL-01', notes: '6 unit kursi bar' },
+      ];
+      for (const a of defaultAssets) {
+        await DB.prepare('INSERT INTO assets (id, assetCode, name, category, purchaseDate, purchasePrice, condition, status, location, serialNumber, notes, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+          .bind(uid(), a.assetCode, a.name, a.category, a.purchaseDate, a.purchasePrice, a.condition, a.status, a.location, a.serialNumber, a.notes, now, now).run();
+      }
+    }
+
+    return json({ message: `Seeded ${menus.length} menu items, ${posts.length} blog posts, ingredients, and assets` });
   }
 
   // ===================================================================
@@ -1169,7 +1676,7 @@ async function handleApi(request, env) {
     return json({ message: 'Siap Nyafe API is running (Cloudflare Worker + D1)' });
   }
 
-  return json({ message: 'API Route Not Found' }, 404);
+  return json({ message: 'API Route Not Found' }, 404, cors);
 }
 
 export default {
@@ -1182,7 +1689,7 @@ export default {
         return await handleApi(request, env);
       } catch (err) {
         console.error('API Error:', err);
-        return json({ message: err.message || 'Internal error', stack: err.stack }, 500);
+        return json({ message: err.message || 'Internal error' }, 500, corsHeaders(request));
       }
     }
 
