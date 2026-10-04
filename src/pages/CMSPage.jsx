@@ -138,8 +138,10 @@ export default function CMSPage() {
         // Desktop Wheel
         const handleWheel = (e) => {
             if (isMenuOpen || isInfoOpen) return;
-            if (e.deltaY > 50) setIsPromoOpen(true);
-            else if (e.deltaY < -50) setIsPromoOpen(false);
+            // Only trigger opening from the Home page when scrolling down
+            if (!isPromoOpen && e.deltaY > 50) {
+                setIsPromoOpen(true);
+            }
         };
 
         // Mobile Touch
@@ -152,20 +154,32 @@ export default function CMSPage() {
             const touchEndY = e.changedTouches[0].clientY;
             const deltaY = touchStartY - touchEndY;
 
-            if (deltaY > 50) setIsPromoOpen(true); // Swipe Up -> Open Promo
-            else if (deltaY < -50) setIsPromoOpen(false); // Swipe Down -> Close Promo
+            // Only trigger opening from the Home page when swiping up
+            if (!isPromoOpen && deltaY > 50) {
+                setIsPromoOpen(true); // Swipe Up -> Open Promo
+            }
+        };
+
+        // Keyboard navigation (ESC to close modal or latest drops)
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                if (selectedPost) setSelectedPost(null);
+                else if (isPromoOpen) setIsPromoOpen(false);
+            }
         };
 
         window.addEventListener('wheel', handleWheel);
         window.addEventListener('touchstart', handleTouchStart);
         window.addEventListener('touchend', handleTouchEnd);
+        window.addEventListener('keydown', handleKeyDown);
 
         return () => {
             window.removeEventListener('wheel', handleWheel);
             window.removeEventListener('touchstart', handleTouchStart);
             window.removeEventListener('touchend', handleTouchEnd);
+            window.removeEventListener('keydown', handleKeyDown);
         };
-    }, [isMenuOpen, isInfoOpen, isPromoOpen]);
+    }, [isMenuOpen, isInfoOpen, isPromoOpen, selectedPost]);
 
 
     return (
