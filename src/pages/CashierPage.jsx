@@ -210,6 +210,14 @@ export default function CashierPage({ user, shopConfig }) {
                         display: none !important;
                     }
                 }
+                @media (max-width: 1024px) {
+                    .pos-split-layout {
+                        grid-template-columns: 1fr !important;
+                    }
+                    .pos-checkout-sidebar {
+                        position: static !important;
+                    }
+                }
             `}</style>
 
             <Alert
@@ -255,9 +263,9 @@ export default function CashierPage({ user, shopConfig }) {
             </div>
 
             {/* MAIN SPLIT POS LAYOUT */}
-            <div style={{
+            <div className="pos-split-layout" style={{
                 display: 'grid',
-                gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)',
+                gridTemplateColumns: 'minmax(0, 1.4fr) minmax(360px, 1fr)',
                 gap: '20px',
                 alignItems: 'start'
             }}>
@@ -271,8 +279,20 @@ export default function CashierPage({ user, shopConfig }) {
                         padding: '15px',
                         marginBottom: '15px'
                     }}>
-                        <div style={{ position: 'relative', marginBottom: '12px' }}>
-                            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }} />
+                        <div style={{ position: 'relative', marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
+                            <Search
+                                size={18}
+                                strokeWidth={2.5}
+                                style={{
+                                    position: 'absolute',
+                                    left: '14px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    color: 'black',
+                                    opacity: 0.6,
+                                    pointerEvents: 'none'
+                                }}
+                            />
                             <input
                                 type="text"
                                 placeholder="FAST SEARCH MENU (e.g. Latte, Croissant, Aglio)..."
@@ -280,14 +300,40 @@ export default function CashierPage({ user, shopConfig }) {
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 style={{
                                     width: '100%',
-                                    padding: '10px 12px 10px 38px',
+                                    height: '44px',
+                                    boxSizing: 'border-box',
+                                    padding: searchQuery ? '0 38px 0 42px' : '0 14px 0 42px',
                                     border: '2px solid black',
                                     fontSize: '0.95rem',
                                     fontWeight: 'bold',
                                     fontFamily: 'monospace',
-                                    outline: 'none'
+                                    outline: 'none',
+                                    background: '#fafafa'
                                 }}
                             />
+                            {searchQuery && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSearchQuery('')}
+                                    style={{
+                                        position: 'absolute',
+                                        right: '12px',
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        background: 'none',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        padding: '4px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: '#666'
+                                    }}
+                                    title="Clear search"
+                                >
+                                    <X size={16} />
+                                </button>
+                            )}
                         </div>
 
                         {/* Category Buttons */}
@@ -295,6 +341,7 @@ export default function CashierPage({ user, shopConfig }) {
                             {categories.map(cat => (
                                 <button
                                     key={cat}
+                                    type="button"
                                     onClick={() => setActiveCategory(cat)}
                                     style={{
                                         padding: '8px 14px',
@@ -314,14 +361,11 @@ export default function CashierPage({ user, shopConfig }) {
                         </div>
                     </div>
 
-                    {/* Products Grid */}
+                    {/* Products Grid - Natural full-page scrolling without clipping */}
                     <div style={{
                         display: 'grid',
                         gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-                        gap: '12px',
-                        maxHeight: 'calc(100vh - 280px)',
-                        overflowY: 'auto',
-                        paddingRight: '5px'
+                        gap: '12px'
                     }}>
                         {filteredMenus.map(menu => {
                             const cartItem = cart.find(i => i.id === menu.id);
@@ -404,12 +448,14 @@ export default function CashierPage({ user, shopConfig }) {
                                         <div style={{
                                             background: 'black',
                                             color: 'white',
-                                            padding: '4px',
+                                            width: '26px',
+                                            height: '26px',
                                             display: 'flex',
                                             alignItems: 'center',
-                                            justifyContent: 'center'
+                                            justifyContent: 'center',
+                                            boxSizing: 'border-box'
                                         }}>
-                                            <Plus size={14} />
+                                            <Plus size={16} strokeWidth={2.5} />
                                         </div>
                                     </div>
                                 </div>
@@ -419,14 +465,17 @@ export default function CashierPage({ user, shopConfig }) {
                 </div>
 
                 {/* RIGHT: LIVE BILL & CASHIER CHECKOUT */}
-                <div style={{
+                <div className="pos-checkout-sidebar" style={{
                     background: 'white',
                     border: '4px solid black',
                     boxShadow: '6px 6px 0 0 black',
                     padding: '20px',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '15px'
+                    gap: '15px',
+                    position: 'sticky',
+                    top: '20px',
+                    zIndex: 10
                 }}>
                     {/* Order Mode & Table Selector */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -469,7 +518,12 @@ export default function CashierPage({ user, shopConfig }) {
                     </div>
 
                     {/* Table Number & Customer Name */}
-                    <div style={{ display: 'grid', gridTemplateColumns: orderType === 'DINE_IN' ? '1fr 2fr' : '1fr', gap: '10px' }}>
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: orderType === 'DINE_IN' ? '1fr 2fr' : '1fr',
+                        gap: '10px',
+                        alignItems: 'end'
+                    }}>
                         {orderType === 'DINE_IN' && (
                             <div>
                                 <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '900', marginBottom: '4px' }}>TABLE #</label>
@@ -478,10 +532,15 @@ export default function CashierPage({ user, shopConfig }) {
                                     onChange={(e) => setTableNumber(e.target.value)}
                                     style={{
                                         width: '100%',
-                                        padding: '8px',
+                                        height: '42px',
+                                        boxSizing: 'border-box',
+                                        padding: '0 10px',
                                         border: '2px solid black',
                                         fontWeight: '900',
-                                        fontFamily: 'monospace'
+                                        fontFamily: 'monospace',
+                                        fontSize: '0.9rem',
+                                        background: 'white',
+                                        outline: 'none'
                                     }}
                                 >
                                     {Array.from({ length: 20 }, (_, i) => i + 1).map(n => (
@@ -507,10 +566,14 @@ export default function CashierPage({ user, shopConfig }) {
                                 onChange={(e) => setCustomerName(e.target.value)}
                                 style={{
                                     width: '100%',
-                                    padding: '8px 10px',
+                                    height: '42px',
+                                    boxSizing: 'border-box',
+                                    padding: '0 12px',
                                     border: '2px solid black',
                                     fontWeight: 'bold',
-                                    fontSize: '0.9rem'
+                                    fontSize: '0.9rem',
+                                    background: 'white',
+                                    outline: 'none'
                                 }}
                             />
                         </div>
@@ -551,41 +614,53 @@ export default function CashierPage({ user, shopConfig }) {
                                     {/* Qty Stepper */}
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                         <button
+                                            type="button"
                                             onClick={() => updateQuantity(item.id, -1)}
                                             style={{
-                                                width: '24px',
-                                                height: '24px',
-                                                border: '1.5px solid black',
+                                                width: '28px',
+                                                height: '28px',
+                                                padding: 0,
+                                                margin: 0,
+                                                boxSizing: 'border-box',
+                                                border: '2px solid black',
                                                 background: '#fee2e2',
                                                 cursor: 'pointer',
                                                 fontWeight: 'bold',
                                                 display: 'flex',
                                                 alignItems: 'center',
-                                                justifyContent: 'center'
+                                                justifyContent: 'center',
+                                                color: '#000000'
                                             }}
+                                            title="Decrease quantity"
                                         >
-                                            <Minus size={12} />
+                                            <Minus size={15} strokeWidth={3} color="#000000" />
                                         </button>
 
-                                        <span style={{ fontWeight: '900', fontFamily: 'monospace', minWidth: '20px', textAlign: 'center' }}>
+                                        <span style={{ fontWeight: '900', fontFamily: 'monospace', minWidth: '22px', textAlign: 'center', fontSize: '0.9rem' }}>
                                             {item.quantity}
                                         </span>
 
                                         <button
+                                            type="button"
                                             onClick={() => updateQuantity(item.id, 1)}
                                             style={{
-                                                width: '24px',
-                                                height: '24px',
-                                                border: '1.5px solid black',
+                                                width: '28px',
+                                                height: '28px',
+                                                padding: 0,
+                                                margin: 0,
+                                                boxSizing: 'border-box',
+                                                border: '2px solid black',
                                                 background: '#dcfce7',
                                                 cursor: 'pointer',
                                                 fontWeight: 'bold',
                                                 display: 'flex',
                                                 alignItems: 'center',
-                                                justifyContent: 'center'
+                                                justifyContent: 'center',
+                                                color: '#000000'
                                             }}
+                                            title="Increase quantity"
                                         >
-                                            <Plus size={12} />
+                                            <Plus size={15} strokeWidth={3} color="#000000" />
                                         </button>
 
                                         <div style={{ minWidth: '75px', textAlign: 'right', fontWeight: '900', fontFamily: 'monospace' }}>
@@ -593,14 +668,19 @@ export default function CashierPage({ user, shopConfig }) {
                                         </div>
 
                                         <button
+                                            type="button"
                                             onClick={() => removeItem(item.id)}
                                             style={{
                                                 background: 'none',
                                                 border: 'none',
                                                 cursor: 'pointer',
                                                 color: '#ef4444',
-                                                padding: '2px'
+                                                padding: '4px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center'
                                             }}
+                                            title="Remove item"
                                         >
                                             <Trash2 size={16} />
                                         </button>
