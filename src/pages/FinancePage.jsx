@@ -68,7 +68,7 @@ export default function FinancePage({ user }) {
             setIsModalOpen(false);
             fetchTransactions();
         } catch (e) {
-            alert('Failed to save transaction');
+            setAlertMsg({ type: 'error', message: 'FAILED TO SAVE TRANSACTION' });
         }
     };
 

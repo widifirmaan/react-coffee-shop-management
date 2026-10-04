@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import axios from 'axios';
+import { Alert } from '../components/ui/Alert';
 
 function LoginPage({ onLogin }) {
     const [identifier, setIdentifier] = useState('');
@@ -128,6 +129,7 @@ function LoginPage({ onLogin }) {
                     <div className="gate-leaf gate-leaf-right"></div>
                 </div>
             )}
+            {error && <Alert type="error" message={error} onClose={() => setError('')} />}
         </div>
     );
 }

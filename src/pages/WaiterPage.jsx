@@ -6,6 +6,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { NotificationCard } from '../components/ui/NotificationCard';
 import { Modal } from '../components/ui/Modal';
+import { Alert } from '../components/ui/Alert';
 
 const playWaiterAlertSound = () => {
     try {
@@ -38,6 +39,7 @@ export default function WaiterPage() {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [confirmId, setConfirmId] = useState(null);
+    const [alertMsg, setAlertMsg] = useState(null);
 
     const [soundAlert, setSoundAlert] = useState(() => localStorage.getItem('waiter_sound_alert') !== 'false');
     const knownNotifIdsRef = useRef(new Set());
@@ -90,9 +92,10 @@ export default function WaiterPage() {
         try {
             await axios.put(`/api/notifications/${confirmId}/read`);
             setNotifications(prev => prev.filter(n => n.id !== confirmId));
+            setAlertMsg({ type: 'success', message: 'REQUEST RESOLVED!' });
             setConfirmId(null);
         } catch (e) {
-            console.error(e);
+            setAlertMsg({ type: 'error', message: 'FAILED TO RESOLVE NOTIFICATION' });
         }
     };
 
@@ -142,6 +145,8 @@ export default function WaiterPage() {
                     <Button variant="primary" onClick={confirmDismiss} style={{ flex: 1 }}>YES, RESOLVE</Button>
                 </div>
             </Modal>
+
+            {alertMsg && <Alert type={alertMsg.type} message={alertMsg.message} onClose={() => setAlertMsg(null)} />}
         </div>
     );
 }
