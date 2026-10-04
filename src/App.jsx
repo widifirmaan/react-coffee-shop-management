@@ -28,8 +28,20 @@ import AssetManagementPage from './pages/AssetManagementPage';
 import CashierPage from './pages/CashierPage';
 
 function ManagerOnlyRoute({ user, children }) {
-    const isManager = (user?.role || '').toUpperCase() === 'MANAGER';
+    const isManager = (user?.role || user?.position || '').toUpperCase() === 'MANAGER';
     if (!isManager) {
+        return <Navigate to="/dashboard" replace />;
+    }
+    return children;
+}
+
+function RoleRoute({ user, allowedRoles, children }) {
+    const userRole = (user?.role || user?.position || '').toUpperCase();
+    if (userRole === 'MANAGER') {
+        return children; // Manager can access all internal routes
+    }
+    const isAllowed = allowedRoles.some(r => r.toUpperCase() === userRole);
+    if (!isAllowed) {
         return <Navigate to="/dashboard" replace />;
     }
     return children;
@@ -99,12 +111,12 @@ function AppContent() {
             <div className="container" style={{ position: 'relative', zIndex: 1 }}>
                 <Routes>
                     <Route path="/dashboard" element={<DashboardPage user={user} />} />
-                    <Route path="/cashier" element={<CashierPage user={user} shopConfig={shopConfig} />} />
+                    <Route path="/cashier" element={<RoleRoute user={user} allowedRoles={['CASHIER']}><CashierPage user={user} shopConfig={shopConfig} /></RoleRoute>} />
                     <Route path="/menu" element={<MenuPage user={user} />} />
-                    <Route path="/kitchen" element={<KitchenPage user={user} />} />
-                    <Route path="/waiter" element={<WaiterPage />} />
-                    <Route path="/feedback" element={<FeedbackPage />} />
-                    <Route path="/inventory" element={<InventoryPage user={user} />} />
+                    <Route path="/kitchen" element={<RoleRoute user={user} allowedRoles={['BARISTA', 'KITCHEN', 'KITCHEN STAFF']}><KitchenPage user={user} /></RoleRoute>} />
+                    <Route path="/waiter" element={<RoleRoute user={user} allowedRoles={['WAITER']}><WaiterPage /></RoleRoute>} />
+                    <Route path="/feedback" element={<RoleRoute user={user} allowedRoles={['CASHIER', 'WAITER']}><FeedbackPage /></RoleRoute>} />
+                    <Route path="/inventory" element={<RoleRoute user={user} allowedRoles={['BARISTA', 'KITCHEN', 'KITCHEN STAFF']}><InventoryPage user={user} /></RoleRoute>} />
 
                     {/* Manager Only Routes */}
                     <Route path="/assets" element={<ManagerOnlyRoute user={user}><AssetManagementPage user={user} /></ManagerOnlyRoute>} />
