@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { DollarSign, TrendingUp, TrendingDown, Plus, Download, Calendar, Filter, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, Plus, Download, Calendar, Filter, ArrowUpRight, ArrowDownRight, Trash2 } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { Input, Select } from '../components/ui/Input';
 import { TableContainer, Table, Thead, Tbody, Tr, Th, Td } from '../components/ui/Table';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
+import { Alert } from '../components/ui/Alert';
 import Pagination from '../components/ui/Pagination';
 import SearchBar from '../components/ui/SearchBar';
 import PageHeader from '../components/ui/PageHeader';
@@ -18,6 +20,7 @@ const CATEGORIES = [
 ];
 
 export default function FinancePage({ user }) {
+    const isManager = (user?.role || '').toUpperCase() === 'MANAGER';
     const [transactions, setTransactions] = useState([]);
     const [newTrans, setNewTrans] = useState({
         type: 'EXPENSE',
@@ -27,6 +30,8 @@ export default function FinancePage({ user }) {
         date: new Date().toISOString().split('T')[0]
     });
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [confirmDialog, setConfirmDialog] = useState(null);
+    const [alertMsg, setAlertMsg] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [timeFilter, setTimeFilter] = useState('ALL'); // 'ALL', 'TODAY', 'WEEK', 'MONTH'
     const [typeFilter, setTypeFilter] = useState('ALL'); // 'ALL', 'INCOME', 'EXPENSE'
@@ -102,7 +107,22 @@ export default function FinancePage({ user }) {
 
     const income = filtered.filter(t => t.type === 'INCOME').reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
     const expense = filtered.filter(t => t.type === 'EXPENSE').reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
-    const profit = income - expense;
+    const handleDelete = (t) => {
+        setConfirmDialog({
+            title: 'DELETE TRANSACTION?',
+            message: `Hapus transaksi ${t.type} "${t.description || t.category}" sebesar ${formatRupiah(t.amount)}?`,
+            onConfirm: async () => {
+                try {
+                    await axios.delete(`/api/transactions/${t.id}`);
+                    setAlertMsg({ type: 'success', message: 'TRANSACTION DELETED!' });
+                    fetchTransactions();
+                } catch (e) {
+                    setAlertMsg({ type: 'error', message: 'FAILED TO DELETE TRANSACTION' });
+                }
+                setConfirmDialog(null);
+            }
+        });
+    };
 
     // Export CSV
     const exportCSV = () => {
@@ -111,7 +131,7 @@ export default function FinancePage({ user }) {
             new Date(t.date || t.createdAt).toLocaleDateString('id-ID'),
             t.type,
             `"${t.category || 'General'}"`,
-            `"${t.description.replace(/"/g, '""')}"`,
+            `"${(t.description || '').replace(/"/g, '""')}"`,
             t.amount,
             t.employeeId || 'System'
         ]);
@@ -139,7 +159,7 @@ export default function FinancePage({ user }) {
                 description="REAL-TIME REVENUE, EXPENSES & NET PROFIT TRACKER"
                 icon={DollarSign}
                 color="#d1fae5"
-                actionButton={
+                action={
                     <div style={{ display: 'flex', gap: '10px' }}>
                         <Button
                             onClick={exportCSV}
@@ -280,6 +300,7 @@ export default function FinancePage({ user }) {
                             <Th>DESCRIPTION</Th>
                             <Th>TYPE</Th>
                             <Th style={{ textAlign: 'right' }}>AMOUNT</Th>
+                            {isManager && <Th style={{ textAlign: 'center' }}>ACTION</Th>}
                         </Tr>
                     </Thead>
                     <Tbody>
@@ -314,11 +335,23 @@ export default function FinancePage({ user }) {
                                     {t.type === 'INCOME' ? '+ ' : '- '}
                                     {formatRupiah(t.amount)}
                                 </Td>
+                                {isManager && (
+                                    <Td align="center">
+                                        <Button
+                                            onClick={() => handleDelete(t)}
+                                            variant="danger"
+                                            style={{ padding: '6px 10px' }}
+                                            title="Delete Transaction"
+                                        >
+                                            <Trash2 size={16} />
+                                        </Button>
+                                    </Td>
+                                )}
                             </Tr>
                         ))}
                         {filtered.length === 0 && (
                             <Tr>
-                                <Td colSpan={5} style={{ padding: '40px', textAlign: 'center', opacity: 0.5, fontWeight: 'bold' }}>
+                                <Td colSpan={isManager ? 6 : 5} style={{ padding: '40px', textAlign: 'center', opacity: 0.5, fontWeight: 'bold' }}>
                                     NO TRANSACTIONS FOUND MATCHING FILTER CRITERIA
                                 </Td>
                             </Tr>
@@ -435,6 +468,20 @@ export default function FinancePage({ user }) {
                     </div>
                 </form>
             </Modal>
+
+            {confirmDialog && (
+                <ConfirmDialog
+                    isOpen={!!confirmDialog}
+                    title={confirmDialog.title}
+                    message={confirmDialog.message}
+                    confirmText="DELETE"
+                    cancelText="CANCEL"
+                    variant="danger"
+                    onConfirm={confirmDialog.onConfirm}
+                    onCancel={() => setConfirmDialog(null)}
+                />
+            )}
+            {alertMsg && <Alert type={alertMsg.type} message={alertMsg.message} onClose={() => setAlertMsg(null)} />}
         </div>
     );
 }

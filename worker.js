@@ -737,8 +737,8 @@ async function handleApi(request, env) {
   if (path === '/api/posts' && method === 'POST') {
     if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403, cors);
     if (!body.slug) body.slug = (body.title || 'untitled').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now();
-    if (body.status === 'PUBLISHED') body.publishedAt = nowISO();
-    body.createdAt = nowISO();
+    if (body.status === 'PUBLISHED') body.publishedAt = body.publishedAt || nowISO();
+    body.createdAt = body.createdAt ? new Date(body.createdAt).toISOString() : nowISO();
     body.updatedAt = nowISO();
     stringifyJsonFields(body);
 
@@ -890,6 +890,13 @@ async function handleApi(request, env) {
     const vals = cols.map(() => '?');
     await DB.prepare(`INSERT INTO transactions (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(...Object.values(sanitized)).run();
     return json(sanitized, 201, cors);
+  }
+
+  const transMatch = path.match(/^\/api\/transactions\/([^/]+)$/);
+  if (transMatch && method === 'DELETE') {
+    if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403, cors);
+    await DB.prepare('DELETE FROM transactions WHERE id = ?').bind(transMatch[1]).run();
+    return json({ message: 'Deleted' }, 200, cors);
   }
 
   // ===================================================================

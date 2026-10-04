@@ -248,7 +248,7 @@ export default function AssetManagementPage({ user }) {
                 description="EQUIPMENT, MACHINERY, ELECTRONICS & FURNITURE REGISTRY"
                 icon={Wrench}
                 color="#fcd34d"
-                actionButton={isManager ? (
+                action={isManager ? (
                     <Button
                         onClick={() => { resetForm(); setIsFormModalOpen(true); }}
                         variant="primary"

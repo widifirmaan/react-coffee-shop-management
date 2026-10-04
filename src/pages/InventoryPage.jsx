@@ -219,7 +219,7 @@ export default function InventoryPage({ user }) {
                 description="RAW MATERIALS STOCK & AUTOMATIC RECIPE (BOM) DEDUCTION"
                 icon={Package}
                 color="#e0f2fe"
-                actionButton={
+                action={
                     <div style={{ display: 'flex', gap: '10px' }}>
                         {activeTab === 'STOCK' ? (
                             <Button

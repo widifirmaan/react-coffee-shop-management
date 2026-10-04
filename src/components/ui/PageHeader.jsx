@@ -1,6 +1,7 @@
 import React from 'react';
 
-export default function PageHeader({ title, description, icon: Icon, color = 'white', action }) {
+export default function PageHeader({ title, description, icon: Icon, color = 'white', action, actionButton }) {
+    const actionElement = action || actionButton;
     return (
         <div className="page-header-container" style={{
             background: color,
@@ -35,9 +36,9 @@ export default function PageHeader({ title, description, icon: Icon, color = 'wh
                     </p>
                 )}
             </div>
-            {action && (
+            {actionElement && (
                 <div>
-                    {action}
+                    {actionElement}
                 </div>
             )}
         </div>
