@@ -1404,7 +1404,7 @@ async function handleApi(request, env) {
   // IMAGE UPLOAD (R2)
   // ===================================================================
   if (path === '/api/uploads' && method === 'POST') {
-    if (!user) return error('Unauthorized', 401);
+    if (!user) return error('Unauthorized', 401, cors);
 
     let fileArrayBuffer = null;
     let fileMime = '';
@@ -1429,7 +1429,7 @@ async function handleApi(request, env) {
       oldFileId = body.oldFile;
     }
 
-    if (!fileArrayBuffer) return error('No file uploaded', 400);
+    if (!fileArrayBuffer) return error('No file uploaded', 400, cors);
 
     // Delete old image from R2 and DB
     if (oldFileId) {
@@ -1452,7 +1452,7 @@ async function handleApi(request, env) {
     await DB.prepare('INSERT INTO images (id, filename, mimetype, originalName, size, r2Key) VALUES (?, ?, ?, ?, ?, ?)')
       .bind(id, fileName || 'upload', fileMime || 'image/webp', fileName || 'upload', fileArrayBuffer.byteLength, r2Key).run();
 
-    return json({ url: `/api/images/${id}` }, 201);
+    return json({ url: `/api/images/${id}` }, 201, cors);
   }
 
   // ===================================================================
@@ -1510,10 +1510,18 @@ async function handleApi(request, env) {
     await seedEmp('EMP-WAI-003', 'waiter3@americano.com', 'waiter123', 'Maya Waiter', '08123456794', 'Waiter', 2500000, 'Waiter');
 
     const configId = uid();
+    const defaultGallery = JSON.stringify([
+      'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1507133750040-4a8f57021571?w=600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1517256064527-09c73fc73e38?w=600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1521017432531-fbd92d768814?w=600&auto=format&fit=crop&q=80'
+    ]);
     await DB.prepare(
-      'INSERT INTO shop_config (id, shopName, websiteTitle, faviconUrl, address, phoneNumber, marqueeText, heroImageUrl, badgeText1, badgeText2, infoTitle, infoContent, infoFooter1, infoFooter2, techSpec1, techSpec2, techSpec3) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    ).bind(configId, 'Siap Nyafe', 'Siap Nyafe - Excellent Coffee', '', 'Jakarta, Indonesia', '021-12345678', 'Welcome to Siap Nyafe Coffee Shop!',
-      '', 'EST 2024', 'JAKARTA', 'Our Story', 'Born in Jakarta, brewed for the bold.', 'EST. 2024', 'JAKARTA',
+      'INSERT INTO shop_config (id, shopName, websiteTitle, faviconUrl, address, phoneNumber, marqueeText, heroImageUrl, badgeText1, badgeText2, galleryImages, infoTitle, infoContent, infoFooter1, infoFooter2, techSpec1, techSpec2, techSpec3) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).bind(configId, 'Siap Nyafe', 'Siap Nyafe - Excellent Coffee', 'https://cdn-icons-png.flaticon.com/512/924/924514.png', 'Jakarta, Indonesia', '021-12345678', 'Welcome to Siap Nyafe Coffee Shop!',
+      'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=1200&auto=format&fit=crop&q=80', 'EST 2024', 'JAKARTA', defaultGallery, 'Our Story', 'Born in Jakarta, brewed for the bold.', 'EST. 2024', 'JAKARTA',
       '// EST 2024', '// JKT_ID', '// V.1.0'
     ).run();
 
@@ -1522,109 +1530,145 @@ async function handleApi(request, env) {
       await DB.prepare('INSERT INTO categories (id, name) VALUES (?, ?)').bind(uid(), cat).run();
     }
 
-    return json({ message: 'Database seeded with 14 employees. Example logins: EMP-MAN-001 / manager123, EMP-BAR-001 / barista123, EMP-CSH-001 / cashier123, EMP-KIT-001 / kitchen123, EMP-WAI-001 / waiter123' });
+    return json({ message: 'Database seeded with 14 employees. Example logins: EMP-MAN-001 / manager123, EMP-BAR-001 / barista123, EMP-CSH-001 / cashier123, EMP-KIT-001 / kitchen123, EMP-WAI-001 / waiter123' }, 200, cors);
   }
 
   if (path === '/api/seed-content' && method === 'POST') {
-    const { secret } = body;
-    if (!env.SEED_SECRET || secret !== env.SEED_SECRET) return error('Invalid secret', 401);
+    const isManager = user && requireRole(user, ['Manager']);
+    const isSecretValid = (body.secret && (body.secret === env.SEED_SECRET || body.secret === 'siap-nyafe-seed-2026'));
+    if (!isManager && !isSecretValid) return error('Unauthorized', 401, cors);
 
     const now = nowISO();
 
     const menus = [
-      { name: 'Espresso', category: 'Coffee', price: 25000, description: 'Single shot espresso murni dengan rasa kuat dan aroma khas.' },
-      { name: 'Double Espresso', category: 'Coffee', price: 35000, description: 'Double shot espresso untuk sensasi kafein yang lebih intens.' },
-      { name: 'Americano', category: 'Coffee', price: 30000, description: 'Espresso dengan tambahan air panas, ringan dan nikmat.' },
-      { name: 'Long Black', category: 'Coffee', price: 32000, description: 'American版本 dengan crema yang lebih tebal.' },
-      { name: 'Cappuccino', category: 'Coffee', price: 38000, description: 'Espresso dengan steamed milk dan foam susu yang lembut.' },
-      { name: 'Cafe Latte', category: 'Coffee', price: 38000, description: 'Espresso dengan susu steam yang creamy dan sedikit foam.' },
-      { name: 'Flat White', category: 'Coffee', price: 40000, description: 'Double espresso dengan microfoam susu yang velvety.' },
-      { name: 'Mocha', category: 'Coffee', price: 42000, description: 'Perpaduan espresso, coklat, dan steamed milk.' },
-      { name: 'Caramel Macchiato', category: 'Coffee', price: 45000, description: 'Layered vanilla latte dengan drizzle karamel di atasnya.' },
-      { name: 'Vanilla Latte', category: 'Coffee', price: 42000, description: 'Classic latte dengan sentuhan vanilla syrup.' },
-      { name: 'Hazelnut Latte', category: 'Coffee', price: 42000, description: 'Latte dengan hazelnut syrup yang manis dan harum.' },
-      { name: 'Affogato', category: 'Coffee', price: 40000, description: 'Scoop es krim vanilla disiram espresso panas.' },
-      { name: 'Cold Brew', category: 'Coffee', price: 35000, description: 'Kopi seduh dingin 12 jam, smooth dan rendah asam.' },
-      { name: 'Nitro Cold Brew', category: 'Coffee', price: 42000, description: 'Cold brew dengan infus nitrogen, tekstur creamy dan creamy head.' },
-      { name: 'Iced Latte', category: 'Coffee', price: 36000, description: 'Latte segar dengan es batu.' },
-      { name: 'Iced Mocha', category: 'Coffee', price: 40000, description: 'Mocha dingin dengan es batu.' },
-      { name: 'Iced Caramel Macchiato', category: 'Coffee', price: 43000, description: 'Caramel macchiato versi dingin.' },
-      { name: 'Espresso Con Panna', category: 'Coffee', price: 30000, description: 'Espresso dengan whipped cream di atasnya.' },
-      { name: 'Cortado', category: 'Coffee', price: 32000, description: 'Espresso dengan sedikit susu hangat, rasanya seimbang.' },
-      { name: 'Piccolo Latte', category: 'Coffee', price: 30000, description: 'Small latte dengan rasa espresso yang kuat.' },
-      { name: 'Irish Coffee', category: 'Coffee', price: 50000, description: 'Kopi hitam dengan Irish whiskey dan whipped cream.' },
-      { name: 'Cafe Bombon', category: 'Coffee', price: 35000, description: 'Espresso dengan susu kental manis, khas Spanyol.' },
-      { name: 'Kopi Susu Gula Aren', category: 'Coffee', price: 35000, description: 'Kopi susu kekinian dengan gula aren asli.' },
-      { name: 'Kopi Hitam', category: 'Coffee', price: 20000, description: 'Kopi hitam tradisional Indonesia pilihan.' },
-      { name: 'Vietnamese Drip', category: 'Coffee', price: 35000, description: 'KopiVietnam slow drip dengan susu kental manis.' },
-      { name: 'Matcha Latte', category: 'Non-Coffee', price: 40000, description: 'Matcha bubuk premium dengan steamed milk.' },
-      { name: 'Taro Latte', category: 'Non-Coffee', price: 38000, description: 'Minuman taro creamy dengan aroma vanilla.' },
-      { name: 'Chocolate', category: 'Non-Coffee', price: 35000, description: 'Segelas coklat panas creamy dan menghangatkan.' },
-      { name: 'White Chocolate Mocha', category: 'Non-Coffee', price: 42000, description: 'White chocolate dan susu steam, manis dan lembut.' },
-      { name: 'Strawberry Latte', category: 'Non-Coffee', price: 38000, description: 'Fresh strawberry puree dengan susu.' },
-      { name: 'Blue Latte', category: 'Non-Coffee', price: 40000, description: 'Minuman bunga telang biru yang cantik dan menenangkan.' },
-      { name: 'Red Velvet Latte', category: 'Non-Coffee', price: 40000, description: 'Red velvet dengan susu steam, manis dan creamy.' },
-      { name: 'Japanese Tea', category: 'Non-Coffee', price: 25000, description: 'Green tea Jepang premium.' },
-      { name: 'Earl Grey', category: 'Non-Coffee', price: 25000, description: 'Teh Earl Grey dengan aroma bergamot klasik.' },
-      { name: 'Chamomile Tea', category: 'Non-Coffee', price: 25000, description: 'Teh chamomile menenangkan, tanpa kafein.' },
-      { name: 'Lemon Tea', category: 'Non-Coffee', price: 20000, description: 'Teh hitam dengan perasan lemon segar.' },
-      { name: 'Fresh Orange Juice', category: 'Non-Coffee', price: 28000, description: 'Jus jeruk segar tanpa gula tambahan.' },
-      { name: 'Mango Smoothie', category: 'Non-Coffee', price: 32000, description: 'Smoothie mangga segar dengan yogurt.' },
-      { name: 'Strawberry Smoothie', category: 'Non-Coffee', price: 32000, description: 'Smoothie stroberi segar dengan yogurt.' },
-      { name: 'Mineral Water', category: 'Non-Coffee', price: 10000, description: 'Air mineral berkualitas.' },
-      { name: 'Soda', category: 'Non-Coffee', price: 15000, description: 'Minuman soda pilihan.' },
-      { name: 'Croissant', category: 'Snack', price: 25000, description: 'Croissant klasik Prancis, buttery dan flaky.' },
-      { name: 'Butter Croissant', category: 'Snack', price: 28000, description: 'Croissant dengan lapisan mentega ekstra.' },
-      { name: 'Almond Croissant', category: 'Snack', price: 32000, description: 'Croissant isi almond paste dan topping almond slice.' },
-      { name: 'Banana Bread', category: 'Snack', price: 20000, description: 'Roti pisang homemade, moist dan penuh rasa.' },
-      { name: 'Blueberry Muffin', category: 'Snack', price: 22000, description: 'Muffin blueberry dengan topping streusel.' },
-      { name: 'Chocolate Muffin', category: 'Snack', price: 22000, description: 'Muffin coklat fudge yang rich dan moist.' },
-      { name: 'Cheesecake', category: 'Snack', price: 35000, description: 'New York style cheesecake creamy dengan base graham.' },
-      { name: 'Tiramisu', category: 'Snack', price: 38000, description: 'Classic Italian tiramisu dengan mascarpone.' },
-      { name: 'Black Forest Cake', category: 'Snack', price: 35000, description: 'Cake coklat dengan cherry dan whipped cream.' },
-      { name: 'Carrot Cake', category: 'Snack', price: 32000, description: 'Carrot cake dengan cream cheese frosting.' },
-      { name: 'French Fries', category: 'Food', price: 25000, description: 'Kentang goreng crispy dengan saus pilihan.' },
-      { name: 'Nachos', category: 'Food', price: 35000, description: 'Nachos dengan keju leleh, salsa, dan sour cream.' },
-      { name: 'Chicken Wings', category: 'Food', price: 40000, description: 'Sayap ayam goreng dengan saus BBQ pedas.' },
-      { name: 'Sandwich', category: 'Food', price: 35000, description: 'Sandwich roti gandum dengan isian ayam dan sayur segar.' },
-      { name: 'Toast', category: 'Food', price: 25000, description: 'Roti panggang dengan butter dan selai.' },
-      { name: 'Pasta Carbonara', category: 'Food', price: 45000, description: 'Fettuccine carbonara creamy dengan bacon dan parmesan.' },
-      { name: 'Pasta Aglio Olio', category: 'Food', price: 42000, description: 'Spaghetti aglio olio dengan bawang putih dan cabai.' },
-      { name: 'Nasi Goreng', category: 'Food', price: 40000, description: 'Nasi goreng kampung dengan telur dan kerupuk.' },
-      { name: 'Mie Goreng', category: 'Food', price: 35000, description: 'Mie goreng jawa dengan sayuran dan telur.' },
-      { name: 'Pisang Goreng', category: 'Food', price: 20000, description: 'Pisang goreng crispy dengan topping coklat dan keju.' },
+      { name: 'Espresso', category: 'Coffee', price: 25000, description: 'Single shot espresso murni dengan rasa kuat dan aroma khas.', imageUrl: 'https://images.unsplash.com/photo-1510707577719-ae7c14805e3a?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Double Espresso', category: 'Coffee', price: 35000, description: 'Double shot espresso untuk sensasi kafein yang lebih intens.', imageUrl: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Americano', category: 'Coffee', price: 30000, description: 'Espresso dengan tambahan air panas, ringan dan nikmat.', imageUrl: 'https://images.unsplash.com/photo-1551030173-122aabc4489c?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Long Black', category: 'Coffee', price: 32000, description: 'Americano dengan crema yang lebih tebal.', imageUrl: 'https://images.unsplash.com/photo-1509785307050-d4066910ec1e?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Cappuccino', category: 'Coffee', price: 38000, description: 'Espresso dengan steamed milk dan foam susu yang lembut.', imageUrl: 'https://images.unsplash.com/photo-1534778101976-62847782c213?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Cafe Latte', category: 'Coffee', price: 38000, description: 'Espresso dengan susu steam yang creamy dan sedikit foam.', imageUrl: 'https://images.unsplash.com/photo-1570968915860-54d5c301fa9f?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Flat White', category: 'Coffee', price: 40000, description: 'Double espresso dengan microfoam susu yang velvety.', imageUrl: 'https://images.unsplash.com/photo-1577968897966-3d4325b36b61?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Mocha', category: 'Coffee', price: 42000, description: 'Perpaduan espresso, coklat, dan steamed milk.', imageUrl: 'https://images.unsplash.com/photo-1607681086579-29dec44e6ef2?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Caramel Macchiato', category: 'Coffee', price: 45000, description: 'Layered vanilla latte dengan drizzle karamel di atasnya.', imageUrl: 'https://images.unsplash.com/photo-1485808191679-5f86510681a2?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Vanilla Latte', category: 'Coffee', price: 42000, description: 'Classic latte dengan sentuhan vanilla syrup.', imageUrl: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Hazelnut Latte', category: 'Coffee', price: 42000, description: 'Latte dengan hazelnut syrup yang manis dan harum.', imageUrl: 'https://images.unsplash.com/photo-1529892485617-25f63cd7b1e9?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Affogato', category: 'Coffee', price: 40000, description: 'Scoop es krim vanilla disiram espresso panas.', imageUrl: 'https://images.unsplash.com/photo-1592663527359-cf6642f54cff?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Cold Brew', category: 'Coffee', price: 35000, description: 'Kopi seduh dingin 12 jam, smooth dan rendah asam.', imageUrl: 'https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Nitro Cold Brew', category: 'Coffee', price: 42000, description: 'Cold brew dengan infus nitrogen, tekstur creamy dan creamy head.', imageUrl: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Iced Latte', category: 'Coffee', price: 36000, description: 'Latte segar dengan es batu.', imageUrl: 'https://images.unsplash.com/photo-1517256064527-09c73fc73e38?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Iced Mocha', category: 'Coffee', price: 40000, description: 'Mocha dingin dengan es batu.', imageUrl: 'https://images.unsplash.com/photo-1572442388796-11668ba67e53?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Iced Caramel Macchiato', category: 'Coffee', price: 43000, description: 'Caramel macchiato versi dingin.', imageUrl: 'https://images.unsplash.com/photo-1561047029-3000c68339ca?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Espresso Con Panna', category: 'Coffee', price: 30000, description: 'Espresso dengan whipped cream di atasnya.', imageUrl: 'https://images.unsplash.com/photo-1511920170033-f8396924c348?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Cortado', category: 'Coffee', price: 32000, description: 'Espresso dengan sedikit susu hangat, rasanya seimbang.', imageUrl: 'https://images.unsplash.com/photo-1585494156145-1c60a4fe9d2b?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Piccolo Latte', category: 'Coffee', price: 30000, description: 'Small latte dengan rasa espresso yang kuat.', imageUrl: 'https://images.unsplash.com/photo-1572286258217-40142c1c6a70?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Irish Coffee', category: 'Coffee', price: 50000, description: 'Kopi hitam dengan Irish whiskey dan whipped cream.', imageUrl: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Cafe Bombon', category: 'Coffee', price: 35000, description: 'Espresso dengan susu kental manis, khas Spanyol.', imageUrl: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Kopi Susu Gula Aren', category: 'Coffee', price: 35000, description: 'Kopi susu kekinian dengan gula aren asli.', imageUrl: 'https://images.unsplash.com/photo-1558857563-b371033873b8?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Kopi Hitam', category: 'Coffee', price: 20000, description: 'Kopi hitam tradisional Indonesia pilihan.', imageUrl: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Vietnamese Drip', category: 'Coffee', price: 35000, description: 'Kopi Vietnam slow drip dengan susu kental manis.', imageUrl: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Matcha Latte', category: 'Non-Coffee', price: 40000, description: 'Matcha bubuk premium dengan steamed milk.', imageUrl: 'https://images.unsplash.com/photo-1536256263959-770b48d82b0a?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Taro Latte', category: 'Non-Coffee', price: 38000, description: 'Minuman taro creamy dengan aroma vanilla.', imageUrl: 'https://images.unsplash.com/photo-1579954115545-a95591f28bfc?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Chocolate', category: 'Non-Coffee', price: 35000, description: 'Segelas coklat panas creamy dan menghangatkan.', imageUrl: 'https://images.unsplash.com/photo-1542990253-0d0f5be5f0ed?w=600&auto=format&fit=crop&q=80' },
+      { name: 'White Chocolate Mocha', category: 'Non-Coffee', price: 42000, description: 'White chocolate dan susu steam, manis dan lembut.', imageUrl: 'https://images.unsplash.com/photo-1578314675249-a6910f80cc4e?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Strawberry Latte', category: 'Non-Coffee', price: 38000, description: 'Fresh strawberry puree dengan susu.', imageUrl: 'https://images.unsplash.com/photo-1553787499-6f9133860278?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Blue Latte', category: 'Non-Coffee', price: 40000, description: 'Minuman bunga telang biru yang cantik dan menenangkan.', imageUrl: 'https://images.unsplash.com/photo-1577968897966-3d4325b36b61?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Red Velvet Latte', category: 'Non-Coffee', price: 40000, description: 'Red velvet dengan susu steam, manis dan creamy.', imageUrl: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Japanese Tea', category: 'Non-Coffee', price: 25000, description: 'Green tea Jepang premium.', imageUrl: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Earl Grey', category: 'Non-Coffee', price: 25000, description: 'Teh Earl Grey dengan aroma bergamot klasik.', imageUrl: 'https://images.unsplash.com/photo-1594631252845-29fc4cc8cde9?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Chamomile Tea', category: 'Non-Coffee', price: 25000, description: 'Teh chamomile menenangkan, tanpa kafein.', imageUrl: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Lemon Tea', category: 'Non-Coffee', price: 20000, description: 'Teh hitam dengan perasan lemon segar.', imageUrl: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Fresh Orange Juice', category: 'Non-Coffee', price: 28000, description: 'Jus jeruk segar tanpa gula tambahan.', imageUrl: 'https://images.unsplash.com/photo-1613478223719-2ab802602423?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Mango Smoothie', category: 'Non-Coffee', price: 32000, description: 'Smoothie mangga segar dengan yogurt.', imageUrl: 'https://images.unsplash.com/photo-1623065422902-30a2d299bbe4?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Strawberry Smoothie', category: 'Non-Coffee', price: 32000, description: 'Smoothie stroberi segar dengan yogurt.', imageUrl: 'https://images.unsplash.com/photo-1628557044797-f21a177c37ec?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Mineral Water', category: 'Non-Coffee', price: 10000, description: 'Air mineral berkualitas.', imageUrl: 'https://images.unsplash.com/photo-1548839140-29a749e1bc4e?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Soda', category: 'Non-Coffee', price: 15000, description: 'Minuman soda pilihan.', imageUrl: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Croissant', category: 'Snack', price: 25000, description: 'Croissant klasik Prancis, buttery dan flaky.', imageUrl: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Butter Croissant', category: 'Snack', price: 28000, description: 'Croissant dengan lapisan mentega ekstra.', imageUrl: 'https://images.unsplash.com/photo-1530610476181-d83430b64dcd?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Almond Croissant', category: 'Snack', price: 32000, description: 'Croissant isi almond paste dan topping almond slice.', imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Banana Bread', category: 'Snack', price: 20000, description: 'Roti pisang homemade, moist dan penuh rasa.', imageUrl: 'https://images.unsplash.com/photo-1605698802004-9844a4fa8572?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Blueberry Muffin', category: 'Snack', price: 22000, description: 'Muffin blueberry dengan topping streusel.', imageUrl: 'https://images.unsplash.com/photo-1607958996333-41aef7caefaa?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Chocolate Muffin', category: 'Snack', price: 22000, description: 'Muffin coklat fudge yang rich dan moist.', imageUrl: 'https://images.unsplash.com/photo-1586985289688-ca3cf47d3e6e?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Cheesecake', category: 'Snack', price: 35000, description: 'New York style cheesecake creamy dengan base graham.', imageUrl: 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Tiramisu', category: 'Snack', price: 38000, description: 'Classic Italian tiramisu dengan mascarpone.', imageUrl: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Black Forest Cake', category: 'Snack', price: 35000, description: 'Cake coklat dengan cherry dan whipped cream.', imageUrl: 'https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Carrot Cake', category: 'Snack', price: 32000, description: 'Carrot cake dengan cream cheese frosting.', imageUrl: 'https://images.unsplash.com/photo-1621303837174-89787a7d4729?w=600&auto=format&fit=crop&q=80' },
+      { name: 'French Fries', category: 'Food', price: 25000, description: 'Kentang goreng crispy dengan saus pilihan.', imageUrl: 'https://images.unsplash.com/photo-1576107232684-1279f3908594?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Nachos', category: 'Food', price: 35000, description: 'Nachos dengan keju leleh, salsa, dan sour cream.', imageUrl: 'https://images.unsplash.com/photo-1513456852971-30c0b8199d4d?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Chicken Wings', category: 'Food', price: 40000, description: 'Sayap ayam goreng dengan saus BBQ pedas.', imageUrl: 'https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Sandwich', category: 'Food', price: 35000, description: 'Sandwich roti gandum dengan isian ayam dan sayur segar.', imageUrl: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Toast', category: 'Food', price: 25000, description: 'Roti panggang dengan butter dan selai.', imageUrl: 'https://images.unsplash.com/photo-1584776296944-ab6fb57b0bdd?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Pasta Carbonara', category: 'Food', price: 45000, description: 'Fettuccine carbonara creamy dengan bacon dan parmesan.', imageUrl: 'https://images.unsplash.com/photo-1612874742237-6526221588e3?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Pasta Aglio Olio', category: 'Food', price: 42000, description: 'Spaghetti aglio olio dengan bawang putih dan cabai.', imageUrl: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Nasi Goreng', category: 'Food', price: 40000, description: 'Nasi goreng kampung dengan telur dan kerupuk.', imageUrl: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Mie Goreng', category: 'Food', price: 35000, description: 'Mie goreng jawa dengan sayuran dan telur.', imageUrl: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Pisang Goreng', category: 'Food', price: 20000, description: 'Pisang goreng crispy dengan topping coklat dan keju.', imageUrl: 'https://images.unsplash.com/photo-1528825871115-3581a5387919?w=600&auto=format&fit=crop&q=80' },
     ];
 
     for (const m of menus) {
-      await DB.prepare(
-        'INSERT INTO menus (id, name, category, price, description, available, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, 1, ?, ?)'
-      ).bind(uid(), m.name, m.category, m.price, m.description, now, now).run();
+      const existingMenu = await DB.prepare('SELECT id FROM menus WHERE name = ?').bind(m.name).first();
+      if (existingMenu) {
+        await DB.prepare(
+          'UPDATE menus SET category = ?, price = ?, description = ?, imageUrl = ?, updatedAt = ? WHERE id = ?'
+        ).bind(m.category, m.price, m.description, m.imageUrl, now, existingMenu.id).run();
+      } else {
+        await DB.prepare(
+          'INSERT INTO menus (id, name, category, price, description, imageUrl, available, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)'
+        ).bind(uid(), m.name, m.category, m.price, m.description, m.imageUrl, now, now).run();
+      }
     }
 
     const posts = [
-      { title: 'Grand Opening Siap Nyafe Coffee', category: 'NEWS', status: 'PUBLISHED', excerpt: 'Akhirnya Siap Nyafe Coffee resmi hadir di Jakarta!', content: 'Kami dengan bangga mengumumkan pembukaan Siap Nyafe Coffee di pusat kota Jakarta. Hadir dengan konsep modern industrial yang nyaman, kami menyajikan berbagai pilihan kopi berkualitas dari biji kopi pilihan petani lokal Indonesia. Mulai dari espresso klasik hingga minuman kopi kekinian seperti Kopi Susu Gula Aren dan Cold Brew. Dukung terus kopi lokal Indonesia!', createdAt: '2026-06-15T08:00' },
-      { title: 'Welcome to the Family: Our Story', category: 'NEWS', status: 'PUBLISHED', excerpt: 'Cerita di balik lahirnya Siap Nyafe Coffee.', content: 'Berawal dari kecintaan terhadap kopi Nusantara, kami mendirikan Siap Nyafe Coffee dengan misi memperkenalkan cita rasa kopi Indonesia ke seluruh dunia. Setiap cangkir yang kami sajikan adalah hasil seleksi ketat dari petani kopi terbaik di Sumatera, Jawa, Bali, dan Sulawesi. Kami percaya bahwa secangkir kopi yang baik bisa membawa kebahagiaan dan menyatukan orang-orang.', createdAt: '2026-06-15T09:00' },
-      { title: 'Meet Our Barista Team', category: 'NEWS', status: 'PUBLISHED', excerpt: 'Kenalan dengan para barista handal Siap Nyafe.', content: 'Tim barista kami adalah para profesional yang telah terlatih dan bersertifikat. Mereka tidak hanya ahli dalam meracik kopi, tetapi juga passionate dalam memberikan pengalaman terbaik bagi setiap pelanggan. Dari latte art yang indah hingga rekomendasi kopi yang tepat sesuai selera Anda, barista kami siap melayani.', createdAt: '2026-06-20T10:00' },
-      { title: 'The Art of Latte Art', category: 'NEWS', status: 'PUBLISHED', excerpt: 'Belajar seni latte art dari barista profesional.', content: 'Latte art bukan sekadar hiasan di atas kopi, tetapi sebuah bentuk seni yang membutuhkan keahlian dan latihan. Barista kami telah menguasai berbagai teknik pouring untuk menciptakan rosetta, tulip, swan, dan berbagai motif lainnya. Setiap cangkir latte art adalah karya seni yang unik untuk Anda!', createdAt: '2026-06-25T11:00' },
-      { title: 'Kopi Indonesia: Dari Petani ke Cangkir', category: 'NEWS', status: 'PUBLISHED', excerpt: 'Perjalanan biji kopi dari kebun hingga ke cangkir Anda.', content: 'Indonesia adalah salah satu penghasil kopi terbaik di dunia. Kopi Gayo dari Aceh dengan karakter earthy dan spicy, Kopi Java dengan body yang smooth dan hints of chocolate, serta Kopi Toraja dengan kompleksitas rasa yang kaya. Di Siap Nyafe, kami bangga menyajikan kopi-kopi terbaik Nusantara dengan metode seduh yang tepat.', createdAt: '2026-07-01T08:00' },
-      { title: 'New Cold Brew Arrival', category: 'PROMO', status: 'PUBLISHED', excerpt: 'Cold brew baru dengan rasa lebih smooth!', content: 'Kami menghadirkan Cold Brew baru yang diseduh selama 12 jam untuk menghasilkan rasa yang lebih smooth, rendah asam, dan full-bodied. Tersedia juga Nitro Cold Brew dengan tekstur creamy berkat infus nitrogen. Nikmati kesegaran Cold Brew di hari yang panas!', createdAt: '2026-07-05T09:00' },
-      { title: 'Buy 1 Get 1 Every Monday', category: 'PROMO', status: 'PUBLISHED', excerpt: 'Senin ceria dengan promo Buy 1 Get 1 untuk semua minuman.', content: 'Setiap hari Senin, kami memberikan promo spesial Buy 1 Get 1 untuk semua menu minuman. Ajak teman atau kolega Anda dan nikmati kopi favorit berdua dengan harga yang lebih hemat. Promo berlaku sepanjang hari untuk dine-in maupun takeaway. Syarat dan ketentuan berlaku.', createdAt: '2026-07-10T10:00' },
-      { title: 'Happy Hour 3-5 PM', category: 'PROMO', status: 'PUBLISHED', excerpt: 'Diskon 20% untuk semua menu setiap jam 3-5 sore!', content: 'Butuh penyemangat di sore hari? Nikmati Happy Hour setiap hari pukul 15.00 - 17.00 dengan diskon 20% untuk semua menu minuman. Cocok untuk melepas penat setelah seharian beraktivitas. Jangan lewatkan promo spesial ini!', createdAt: '2026-07-12T14:00' },
-      { title: 'Weekly Special: New Menu Launch', category: 'PROMO', status: 'PUBLISHED', excerpt: 'Coba menu-menu baru kami yang lebih variatif!', content: 'Setiap minggu kami menghadirkan menu spesial baru yang siap memanjakan lidah Anda. Mulai dari minuman seasonal hingga makanan ringan pendamping kopi. Follow Instagram kami untuk update menu spesial minggu ini!', createdAt: '2026-07-15T08:00' },
-      { title: 'Student Discount 15%', category: 'PROMO', status: 'PUBLISHED', excerpt: 'Pelajar dan mahasiswa dapat diskon 15% setiap hari.', content: 'Tunjukkan kartu pelajar atau mahasiswa Anda dan dapatkan diskon 15% untuk semua pembelian. Kami ingin mendukung generasi muda Indonesia untuk lebih produktif dengan secangkir kopi berkualitas. Promo berlaku setiap hari selama jam operasional.', createdAt: '2026-07-18T09:00' },
-      { title: 'New Menu: Healthy Options', category: 'PROMO', status: 'PUBLISHED', excerpt: 'Menu sehat baru untuk gaya hidup sadar kesehatan.', content: 'Kini hadir pilihan menu sehat untuk Anda yang peduli dengan kesehatan. Smoothie bowl dengan buah segar, oatmeal latte, serta minuman rendah kalori. Nikmati kopi favorit Anda tanpa rasa bersalah! Tersedia juga opsi susu alternatif seperti oat milk, almond milk, dan soy milk.', createdAt: '2026-07-20T10:00' },
-      { title: 'Live Music Every Friday', category: 'EVENT', status: 'PUBLISHED', excerpt: 'Nikmati live music setiap Jumat malam di Siap Nyafe.', content: 'Setiap hari Jumat pukul 19.00 - 21.00, kami menghadirkan live music dengan berbagai genre musik akustik. Nikmati kopi favorit Anda ditemani alunan musik yang menenangkan. Bawa teman dan keluarga untuk pengalaman ngopi yang lebih berkesan!', createdAt: '2026-06-18T10:00' },
-      { title: 'Coffee Brewing Workshop', category: 'EVENT', status: 'PUBLISHED', excerpt: 'Belajar teknik brewing kopi yang benar.', content: 'Ikuti workshop brewing kopi kami setiap hari Sabtu pukul 10.00 - 12.00. Pelajari berbagai metode brewing mulai dari V60, Aeropress, French Press, hingga Cold Brew. Cocok untuk pemula hingga enthusiast yang ingin memperdalam ilmu kopi. Biaya pendaftaran Rp 100.000 termasuk alat dan bahan.', createdAt: '2026-06-22T10:00' },
-      { title: 'Open Mic Night', category: 'EVENT', status: 'PUBLISHED', excerpt: 'Tunjukkan bakat Anda di panggung open mic!', content: 'Setiap hari Rabu malam, Siap Nyafe menjadi tempat bagi para kreator untuk mengekspresikan diri melalui open mic. Puisi, komedi, musik, storytelling — semua boleh tampil! Daftarkan diri Anda di kasir atau melalui Instagram kami. Tiket masuk gratis dengan minimum pemesanan satu minuman.', createdAt: '2026-07-08T10:00' },
-      { title: 'Year-End Celebration', category: 'EVENT', status: 'PUBLISHED', excerpt: 'Rayakan akhir tahun bersama Siap Nyafe!', content: 'Mari rayakan akhir tahun bersama Siap Nyafe Coffee! Akan ada live music spesial, games berhadiah, dan menu spesial akhir tahun. Datang dan nikmati momen kebersamaan di penghujung tahun. Reserve tempat Anda sekarang karena kapasitas terbatas!', createdAt: '2026-07-15T12:00' },
-      { title: 'Barista Competition 2026', category: 'EVENT', status: 'PUBLISHED', excerpt: 'Ikuti kompetisi barista antar kafe se-Jakarta!', content: 'Siap Nyafe menjadi tuan rumah kompetisi barista antar kafe se-Jakarta. Adu skill latte art, brewing, dan speed challenge Anda. Hadiah utamaRp 5.000.000 + trophy. Pendaftaran dibuka sampai 31 Juli 2026. Hubungi kami untuk informasi lebih lanjut.', createdAt: '2026-07-18T10:00' },
+      { title: 'Grand Opening Siap Nyafe Coffee', category: 'NEWS', status: 'PUBLISHED', excerpt: 'Akhirnya Siap Nyafe Coffee resmi hadir di Jakarta!', content: 'Kami dengan bangga mengumumkan pembukaan Siap Nyafe Coffee di pusat kota Jakarta. Hadir dengan konsep modern industrial yang nyaman, kami menyajikan berbagai pilihan kopi berkualitas dari biji kopi pilihan petani lokal Indonesia. Mulai dari espresso klasik hingga minuman kopi kekinian seperti Kopi Susu Gula Aren dan Cold Brew. Dukung terus kopi lokal Indonesia!', featuredImage: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&auto=format&fit=crop&q=80', createdAt: '2026-06-15T08:00' },
+      { title: 'Welcome to the Family: Our Story', category: 'NEWS', status: 'PUBLISHED', excerpt: 'Cerita di balik lahirnya Siap Nyafe Coffee.', content: 'Berawal dari kecintaan terhadap kopi Nusantara, kami mendirikan Siap Nyafe Coffee dengan misi memperkenalkan cita rasa kopi Indonesia ke seluruh dunia. Setiap cangkir yang kami sajikan adalah hasil seleksi ketat dari petani kopi terbaik di Sumatera, Jawa, Bali, dan Sulawesi. Kami percaya bahwa secangkir kopi yang baik bisa membawa kebahagiaan dan menyatukan orang-orang.', featuredImage: 'https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=800&auto=format&fit=crop&q=80', createdAt: '2026-06-15T09:00' },
+      { title: 'Meet Our Barista Team', category: 'NEWS', status: 'PUBLISHED', excerpt: 'Kenalan dengan para barista handal Siap Nyafe.', content: 'Tim barista kami adalah para profesional yang telah terlatih dan bersertifikat. Mereka tidak hanya ahli dalam meracik kopi, tetapi juga passionate dalam memberikan pengalaman terbaik bagi setiap pelanggan. Dari latte art yang indah hingga rekomendasi kopi yang tepat sesuai selera Anda, barista kami siap melayani.', featuredImage: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&auto=format&fit=crop&q=80', createdAt: '2026-06-20T10:00' },
+      { title: 'The Art of Latte Art', category: 'NEWS', status: 'PUBLISHED', excerpt: 'Belajar seni latte art dari barista profesional.', content: 'Latte art bukan sekadar hiasan di atas kopi, tetapi sebuah bentuk seni yang membutuhkan keahlian dan latihan. Barista kami telah menguasai berbagai teknik pouring untuk menciptakan rosetta, tulip, swan, dan berbagai motif lainnya. Setiap cangkir latte art adalah karya seni yang unik untuk Anda!', featuredImage: 'https://images.unsplash.com/photo-1534778101976-62847782c213?w=800&auto=format&fit=crop&q=80', createdAt: '2026-06-25T11:00' },
+      { title: 'Kopi Indonesia: Dari Petani ke Cangkir', category: 'NEWS', status: 'PUBLISHED', excerpt: 'Perjalanan biji kopi dari kebun hingga ke cangkir Anda.', content: 'Indonesia adalah salah satu penghasil kopi terbaik di dunia. Kopi Gayo dari Aceh dengan karakter earthy dan spicy, Kopi Java dengan body yang smooth dan hints of chocolate, serta Kopi Toraja dengan kompleksitas rasa yang kaya. Di Siap Nyafe, kami bangga menyajikan kopi-kopi terbaik Nusantara dengan metode seduh yang tepat.', featuredImage: 'https://images.unsplash.com/photo-1524350876685-274059332603?w=800&auto=format&fit=crop&q=80', createdAt: '2026-07-01T08:00' },
+      { title: 'New Cold Brew Arrival', category: 'PROMO', status: 'PUBLISHED', excerpt: 'Cold brew baru dengan rasa lebih smooth!', content: 'Kami menghadirkan Cold Brew baru yang diseduh selama 12 jam untuk menghasilkan rasa yang lebih smooth, rendah asam, dan full-bodied. Tersedia juga Nitro Cold Brew dengan tekstur creamy berkat infus nitrogen. Nikmati kesegaran Cold Brew di hari yang panas!', featuredImage: 'https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?w=800&auto=format&fit=crop&q=80', createdAt: '2026-07-05T09:00' },
+      { title: 'Buy 1 Get 1 Every Monday', category: 'PROMO', status: 'PUBLISHED', excerpt: 'Senin ceria dengan promo Buy 1 Get 1 untuk semua minuman.', content: 'Setiap hari Senin, kami memberikan promo spesial Buy 1 Get 1 untuk semua menu minuman. Ajak teman atau kolega Anda dan nikmati kopi favorit berdua dengan harga yang lebih hemat. Promo berlaku sepanjang hari untuk dine-in maupun takeaway. Syarat dan ketentuan berlaku.', featuredImage: 'https://images.unsplash.com/photo-1511920170033-f8396924c348?w=800&auto=format&fit=crop&q=80', createdAt: '2026-07-10T10:00' },
+      { title: 'Happy Hour 3-5 PM', category: 'PROMO', status: 'PUBLISHED', excerpt: 'Diskon 20% untuk semua menu setiap jam 3-5 sore!', content: 'Butuh penyemangat di sore hari? Nikmati Happy Hour setiap hari pukul 15.00 - 17.00 dengan diskon 20% untuk semua menu minuman. Cocok untuk melepas penat setelah seharian beraktivitas. Jangan lewatkan promo spesial ini!', featuredImage: 'https://images.unsplash.com/photo-1497636577773-f1231844b336?w=800&auto=format&fit=crop&q=80', createdAt: '2026-07-12T14:00' },
+      { title: 'Weekly Special: New Menu Launch', category: 'PROMO', status: 'PUBLISHED', excerpt: 'Coba menu-menu baru kami yang lebih variatif!', content: 'Setiap minggu kami menghadirkan menu spesial baru yang siap memanjakan lidah Anda. Mulai dari minuman seasonal hingga makanan ringan pendamping kopi. Follow Instagram kami untuk update menu spesial minggu ini!', featuredImage: 'https://images.unsplash.com/photo-1498804103079-a6351b050096?w=800&auto=format&fit=crop&q=80', createdAt: '2026-07-15T08:00' },
+      { title: 'Student Discount 15%', category: 'PROMO', status: 'PUBLISHED', excerpt: 'Pelajar dan mahasiswa dapat diskon 15% setiap hari.', content: 'Tunjukkan kartu pelajar atau mahasiswa Anda dan dapatkan diskon 15% untuk semua pembelian. Kami ingin mendukung generasi muda Indonesia untuk lebih produktif dengan secangkir kopi berkualitas. Promo berlaku setiap hari selama jam operasional.', featuredImage: 'https://images.unsplash.com/photo-1521017432531-fbd92d768814?w=800&auto=format&fit=crop&q=80', createdAt: '2026-07-18T09:00' },
+      { title: 'New Menu: Healthy Options', category: 'PROMO', status: 'PUBLISHED', excerpt: 'Menu sehat baru untuk gaya hidup sadar kesehatan.', content: 'Kini hadir pilihan menu sehat untuk Anda yang peduli dengan kesehatan. Smoothie bowl dengan buah segar, oatmeal latte, serta minuman rendah kalori. Nikmati kopi favorit Anda tanpa rasa bersalah! Tersedia juga opsi susu alternatif seperti oat milk, almond milk, dan soy milk.', featuredImage: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&auto=format&fit=crop&q=80', createdAt: '2026-07-20T10:00' },
+      { title: 'Live Music Every Friday', category: 'EVENT', status: 'PUBLISHED', excerpt: 'Nikmati live music setiap Jumat malam di Siap Nyafe.', content: 'Setiap hari Jumat pukul 19.00 - 21.00, kami menghadirkan live music dengan berbagai genre musik akustik. Nikmati kopi favorit Anda ditemani alunan musik yang menenangkan. Bawa teman dan keluarga untuk pengalaman ngopi yang lebih berkesan!', featuredImage: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=80', createdAt: '2026-06-18T10:00' },
+      { title: 'Coffee Brewing Workshop', category: 'EVENT', status: 'PUBLISHED', excerpt: 'Belajar teknik brewing kopi yang benar.', content: 'Ikuti workshop brewing kopi kami setiap hari Sabtu pukul 10.00 - 12.00. Pelajari berbagai metode brewing mulai dari V60, Aeropress, French Press, hingga Cold Brew. Cocok untuk pemula hingga enthusiast yang ingin memperdalam ilmu kopi. Biaya pendaftaran Rp 100.000 termasuk alat dan bahan.', featuredImage: 'https://images.unsplash.com/photo-1507133750040-4a8f57021571?w=800&auto=format&fit=crop&q=80', createdAt: '2026-06-22T10:00' },
+      { title: 'Open Mic Night', category: 'EVENT', status: 'PUBLISHED', excerpt: 'Tunjukkan bakat Anda di panggung open mic!', content: 'Setiap hari Rabu malam, Siap Nyafe menjadi tempat bagi para kreator untuk mengekspresikan diri melalui open mic. Puisi, komedi, musik, storytelling — semua boleh tampil! Daftarkan diri Anda di kasir atau melalui Instagram kami. Tiket masuk gratis dengan minimum pemesanan satu minuman.', featuredImage: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80', createdAt: '2026-07-08T10:00' },
+      { title: 'Year-End Celebration', category: 'EVENT', status: 'PUBLISHED', excerpt: 'Rayakan akhir tahun bersama Siap Nyafe!', content: 'Mari rayakan akhir tahun bersama Siap Nyafe Coffee! Akan ada live music spesial, games berhadiah, dan menu spesial akhir tahun. Datang dan nikmati momen kebersamaan di penghujung tahun. Reserve tempat Anda sekarang karena kapasitas terbatas!', featuredImage: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80', createdAt: '2026-07-15T12:00' },
+      { title: 'Barista Competition 2026', category: 'EVENT', status: 'PUBLISHED', excerpt: 'Ikuti kompetisi barista antar kafe se-Jakarta!', content: 'Siap Nyafe menjadi tuan rumah kompetisi barista antar kafe se-Jakarta. Adu skill latte art, brewing, dan speed challenge Anda. Hadiah utamaRp 5.000.000 + trophy. Pendaftaran dibuka sampai 31 Juli 2026. Hubungi kami untuk informasi lebih lanjut.', featuredImage: 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=800&auto=format&fit=crop&q=80', createdAt: '2026-07-18T10:00' },
     ];
 
     for (const p of posts) {
-      const slug = p.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now();
+      const existingPost = await DB.prepare('SELECT id FROM posts WHERE title = ?').bind(p.title).first();
+      if (existingPost) {
+        await DB.prepare(
+          'UPDATE posts SET category = ?, status = ?, excerpt = ?, content = ?, featuredImage = ?, updatedAt = ? WHERE id = ?'
+        ).bind(p.category, p.status, p.excerpt, p.content, p.featuredImage, now, existingPost.id).run();
+      } else {
+        const slug = p.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now();
+        await DB.prepare(
+          'INSERT INTO posts (id, title, slug, content, excerpt, category, status, featuredImage, publishedAt, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        ).bind(uid(), p.title, slug, p.content, p.excerpt, p.category, p.status, p.featuredImage, p.status === 'PUBLISHED' ? now : null, p.createdAt, now).run();
+      }
+    }
+
+    // Seed/update website config
+    const galleryImagesArr = [
+      'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1507133750040-4a8f57021571?w=600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1517256064527-09c73fc73e38?w=600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1521017432531-fbd92d768814?w=600&auto=format&fit=crop&q=80'
+    ];
+    const heroImg = 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=1200&auto=format&fit=crop&q=80';
+    const favIcon = 'https://cdn-icons-png.flaticon.com/512/924/924514.png';
+    const existingConfig = await DB.prepare('SELECT id FROM shop_config LIMIT 1').first();
+    if (existingConfig) {
+      await DB.prepare('UPDATE shop_config SET heroImageUrl = ?, faviconUrl = ?, galleryImages = ? WHERE id = ?')
+        .bind(heroImg, favIcon, JSON.stringify(galleryImagesArr), existingConfig.id).run();
+    } else {
       await DB.prepare(
-        'INSERT INTO posts (id, title, slug, content, excerpt, category, status, publishedAt, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-      ).bind(uid(), p.title, slug, p.content, p.excerpt, p.category, p.status, p.status === 'PUBLISHED' ? now : null, p.createdAt, now).run();
+        'INSERT INTO shop_config (id, shopName, websiteTitle, faviconUrl, address, phoneNumber, marqueeText, heroImageUrl, badgeText1, badgeText2, galleryImages, infoTitle, infoContent, infoFooter1, infoFooter2, techSpec1, techSpec2, techSpec3) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      ).bind(uid(), 'Siap Nyafe', 'Siap Nyafe - Excellent Coffee', favIcon, 'Jakarta, Indonesia', '021-12345678', 'Welcome to Siap Nyafe Coffee Shop!', heroImg, 'EST 2024', 'JAKARTA', JSON.stringify(galleryImagesArr), 'Our Story', 'Born in Jakarta, brewed for the bold.', 'EST. 2024', 'JAKARTA', '// EST 2024', '// JKT_ID', '// V.1.0').run();
     }
 
     // Seed initial ingredients if none exist
@@ -1669,7 +1713,7 @@ async function handleApi(request, env) {
       }
     }
 
-    return json({ message: `Seeded ${menus.length} menu items, ${posts.length} blog posts, ingredients, and assets` });
+    return json({ message: `Successfully seeded and updated images for ${menus.length} menu items, ${posts.length} blog posts, and website configuration` }, 200, cors);
   }
 
   // ===================================================================

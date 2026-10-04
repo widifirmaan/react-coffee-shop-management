@@ -28,8 +28,8 @@ const GalleryGrid = ({ isEditable, menuForm, setMenuForm, handleFileUpload }) =>
             )}
             {isEditable && (
                 <div style={{ position: 'absolute', bottom: '10px', right: '10px', display: 'flex', gap: '5px' }}>
-                    <label style={{ background: 'white', border: '2px solid black', padding: '5px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                        <Upload size={16} style={{ marginRight: '5px' }} /> CHANGE
+                    <label style={{ background: 'white', border: '2px solid black', padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', fontWeight: 'bold', fontSize: '0.85rem' }}>
+                        <Upload size={16} style={{ marginRight: '5px' }} /> UPLOAD
                         <input type="file" style={{ display: 'none' }} onChange={(e) => handleFileUpload(e, -1)} />
                     </label>
                     {menuForm.imageUrl && (
@@ -38,6 +38,22 @@ const GalleryGrid = ({ isEditable, menuForm, setMenuForm, handleFileUpload }) =>
                 </div>
             )}
         </div>
+
+        {/* Main Image URL Input */}
+        {isEditable && (
+            <div>
+                <label style={{ fontSize: '0.8rem', fontWeight: '900', display: 'block', marginBottom: '5px', textTransform: 'uppercase' }}>
+                    IMAGE URL (OR UPLOAD ABOVE)
+                </label>
+                <Input
+                    placeholder="https://images.unsplash.com/..."
+                    value={menuForm.imageUrl || ''}
+                    onChange={(e) => setMenuForm(prev => ({ ...prev, imageUrl: e.target.value }))}
+                    style={{ container: { marginBottom: 0 }, input: { padding: '8px 12px' } }}
+                    maxLength={500}
+                />
+            </div>
+        )}
 
         {/* Gallery Section */}
         <div>
@@ -54,6 +70,7 @@ const GalleryGrid = ({ isEditable, menuForm, setMenuForm, handleFileUpload }) =>
                                 />
                                 {isEditable && (
                                     <button
+                                        type="button"
                                         onClick={() => {
                                             const newGallery = [...menuForm.gallery];
                                             newGallery.splice(i, 1);
@@ -75,7 +92,7 @@ const GalleryGrid = ({ isEditable, menuForm, setMenuForm, handleFileUpload }) =>
                     </div>
                 ))}
 
-                {/* Add New Button */}
+                {/* Add New Button via upload */}
                 {isEditable && (
                     <label style={{
                         border: '2px dashed black', display: 'flex', flexDirection: 'column',
@@ -83,7 +100,7 @@ const GalleryGrid = ({ isEditable, menuForm, setMenuForm, handleFileUpload }) =>
                         background: '#fff', aspectRatio: '1/1', hover: { background: '#f0f0f0' }
                     }}>
                         <Plus size={24} />
-                        <span style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>ADD</span>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>UPLOAD</span>
                         <input type="file" multiple style={{ display: 'none' }} onChange={(e) => {
                             const files = Array.from(e.target.files);
                             files.forEach(async (file) => {
@@ -98,6 +115,41 @@ const GalleryGrid = ({ isEditable, menuForm, setMenuForm, handleFileUpload }) =>
                     </label>
                 )}
             </div>
+
+            {/* Add Gallery URL */}
+            {isEditable && (
+                <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                    <Input
+                        placeholder="Add gallery image URL (https://...)"
+                        id="new-gallery-url-input"
+                        style={{ container: { marginBottom: 0, flex: 1 }, input: { padding: '6px 10px', fontSize: '0.85rem' } }}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const val = e.target.value.trim();
+                                if (val) {
+                                    setMenuForm(prev => ({ ...prev, gallery: [...(prev.gallery || []), val] }));
+                                    e.target.value = '';
+                                }
+                            }
+                        }}
+                    />
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        style={{ padding: '6px 12px', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
+                        onClick={() => {
+                            const input = document.getElementById('new-gallery-url-input');
+                            if (input && input.value.trim()) {
+                                setMenuForm(prev => ({ ...prev, gallery: [...(prev.gallery || []), input.value.trim()] }));
+                                input.value = '';
+                            }
+                        }}
+                    >
+                        ADD URL
+                    </Button>
+                </div>
+            )}
         </div>
     </div>
 );
@@ -228,6 +280,19 @@ export default function MenuPage({ user }) {
         } catch (e) {
             setAlertMsg({ type: 'error', message: 'UPDATE FAILED' });
         }
+    };
+
+    const handleOpenDetail = (menu) => {
+        setViewingMenu(menu);
+        setMenuForm({
+            name: menu.name || '',
+            category: menu.category || '',
+            price: menu.price !== undefined ? menu.price : '',
+            description: menu.description || '',
+            imageUrl: menu.imageUrl || menu.image || '',
+            available: menu.available !== undefined ? menu.available : true,
+            gallery: Array.isArray(menu.gallery) ? [...menu.gallery] : []
+        });
     };
 
     const handlePlaceOrder = async () => {
@@ -371,7 +436,7 @@ export default function MenuPage({ user }) {
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px', alignItems: 'stretch' }}>
                             {items.map(menu => (
-                                <Card key={menu.id} style={{ opacity: menu.available ? 1 : 0.6, cursor: 'pointer', padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%', marginBottom: 0 }} onClick={() => setViewingMenu(menu)}>
+                                <Card key={menu.id} style={{ opacity: menu.available ? 1 : 0.6, cursor: 'pointer', padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%', marginBottom: 0 }} onClick={() => handleOpenDetail(menu)}>
                                     <div style={{ height: '200px', background: '#ccc', borderBottom: '4px solid black' }}>
                                         {menu.imageUrl && <img src={menu.imageUrl} alt={menu.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400?text=No+Image" }} />}
                                     </div>
