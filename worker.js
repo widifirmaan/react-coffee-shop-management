@@ -366,6 +366,65 @@ async function syncOrderToFinance(DB, order, user) {
     .bind(id, 'INCOME', 'Sales', grandTotal, desc, nowISO(), user?.employeeId || order.employeeId || 'POS').run();
 }
 
+async function getClockedInStaffForCurrentShift(DB) {
+  const { hour } = getJakartaHoursMinutes();
+  let currentShiftType = 'MORNING';
+  let shiftDate = getJakartaDateStr();
+  if (hour >= 15 && hour < 23) {
+    currentShiftType = 'AFTERNOON';
+  } else if (hour >= 23 || hour < 7) {
+    currentShiftType = 'EVENING';
+    if (hour < 7) {
+      shiftDate = getYesterdayJakartaDateStr();
+    }
+  }
+
+  try {
+    // 1. Check actively clocked in staff (without clockOutTime)
+    const activeStaff = await DB.prepare(`
+      SELECT ar.employee_id, ar.employeeName, ar.shiftType, ar.clockInTime, e.name, e.position, e.role
+      FROM attendance_records ar
+      LEFT JOIN employees e ON (ar.employee_id = e.id OR ar.employee_id = e.employeeId)
+      WHERE (ar.date = ? OR ar.date = ?)
+        AND ar.shiftType = ?
+        AND ar.clockInTime IS NOT NULL AND ar.clockInTime != ''
+        AND (ar.status IS NULL OR ar.status NOT IN ('TIDAK ABSEN MASUK', 'TIDAK ABSEN KELUAR'))
+        AND (ar.clockOutTime IS NULL OR ar.clockOutTime = '')
+      ORDER BY ar.clockInTime ASC
+    `).bind(shiftDate, getJakartaDateStr(), currentShiftType).all();
+
+    if (activeStaff.results && activeStaff.results.length > 0) {
+      return activeStaff.results.map(r => ({
+        name: r.name || r.employeeName || 'Staff',
+        role: r.role || r.position || 'Staff'
+      }));
+    }
+
+    // 2. Check any staff who clocked in for this shift today (even if clocked out)
+    const anyClockedIn = await DB.prepare(`
+      SELECT ar.employee_id, ar.employeeName, ar.shiftType, ar.clockInTime, e.name, e.position, e.role
+      FROM attendance_records ar
+      LEFT JOIN employees e ON (ar.employee_id = e.id OR ar.employee_id = e.employeeId)
+      WHERE (ar.date = ? OR ar.date = ?)
+        AND ar.shiftType = ?
+        AND ar.clockInTime IS NOT NULL AND ar.clockInTime != ''
+        AND (ar.status IS NULL OR ar.status NOT IN ('TIDAK ABSEN MASUK'))
+      ORDER BY ar.clockInTime ASC
+    `).bind(shiftDate, getJakartaDateStr(), currentShiftType).all();
+
+    if (anyClockedIn.results && anyClockedIn.results.length > 0) {
+      return anyClockedIn.results.map(r => ({
+        name: r.name || r.employeeName || 'Staff',
+        role: r.role || r.position || 'Staff'
+      }));
+    }
+  } catch (err) {
+    console.warn('Error querying clocked-in shift staff:', err);
+  }
+
+  return [];
+}
+
 async function handleApi(request, env) {
   const url = new URL(request.url);
   const method = request.method;
@@ -689,6 +748,25 @@ async function handleApi(request, env) {
     body.status = (body.status || 'PENDING').toUpperCase();
     body.createdAt = nowISO();
     body.updatedAt = nowISO();
+
+    // Automatically resolve shiftStaff: staff on the current shift who have clocked in
+    let resolvedStaff = await getClockedInStaffForCurrentShift(DB);
+
+    if (resolvedStaff.length === 0 && Array.isArray(body.shiftStaff) && body.shiftStaff.length > 0) {
+      resolvedStaff = body.shiftStaff.map(s => {
+        if (typeof s === 'string') return { name: s, role: '' };
+        return { name: s.name || s.employeeName || 'Staff', role: s.role || s.position || '' };
+      });
+    }
+
+    if (resolvedStaff.length === 0 && user) {
+      resolvedStaff.push({
+        name: user.name || user.employeeId || 'Staff',
+        role: user.role || user.position || 'Staff'
+      });
+    }
+
+    body.shiftStaff = resolvedStaff;
 
     const rawItems = Array.isArray(body.items) ? [...body.items] : [];
     const shouldDeduct = sanitizedStatus => sanitizedStatus === 'PREPARING' || sanitizedStatus === 'COMPLETED';

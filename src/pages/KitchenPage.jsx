@@ -12,6 +12,7 @@ import SearchBar from '../components/ui/SearchBar';
 import { TableContainer, Table, Thead, Tbody, Tr, Th, Td } from '../components/ui/Table';
 import PageHeader from '../components/ui/PageHeader';
 import { Badge } from '../components/ui/Badge';
+import { parseShiftStaff } from '../utils/staffUtils';
 
 const playChimeSound = () => {
     try {
@@ -187,11 +188,13 @@ export default function KitchenPage() {
     };
     // Filter and Paginate History
     const searchLower = (searchTerm || '').toLowerCase();
-    const filteredHistory = completedOrders.filter(o =>
-        (o.customerName || '').toLowerCase().includes(searchLower) ||
-        (o.id || '').toLowerCase().includes(searchLower) ||
-        (o.orderNumber || '').toLowerCase().includes(searchLower)
-    );
+    const filteredHistory = completedOrders.filter(o => {
+        const staffNames = parseShiftStaff(o.shiftStaff).map(s => `${s.name} ${s.role}`).join(' ').toLowerCase();
+        return (o.customerName || '').toLowerCase().includes(searchLower) ||
+               (o.id || '').toLowerCase().includes(searchLower) ||
+               (o.orderNumber || '').toLowerCase().includes(searchLower) ||
+               staffNames.includes(searchLower);
+    });
     const totalHistoryPages = Math.ceil(filteredHistory.length / itemsPerPage);
     const paginatedHistory = filteredHistory.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
@@ -279,16 +282,27 @@ export default function KitchenPage() {
                         </div>
 
                         {/* Staff Info */}
-                        {order.shiftStaff && (
-                            <div style={{ marginBottom: '15px', fontSize: '0.85rem', background: '#dbeafe', padding: '10px', border: '2px solid black' }}>
-                                <div style={{ fontWeight: 'bold', marginBottom: '5px' }}><Users size={16} /> STAFF:</div>
-                                {Object.entries(order.shiftStaff).map(([role, name]) => name && (
-                                    <div key={role} style={{ textTransform: 'capitalize' }}>
-                                        {role.replace(/([A-Z])/g, ' $1')}: <b>{name}</b>
+                        {(() => {
+                            const staffList = parseShiftStaff(order.shiftStaff);
+                            if (staffList.length === 0) return null;
+                            return (
+                                <div style={{ marginBottom: '15px', fontSize: '0.85rem', background: '#dbeafe', padding: '10px', border: '2px solid black' }}>
+                                    <div style={{ fontWeight: 'bold', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <Users size={16} /> SHIFT STAFF:
                                     </div>
-                                ))}
-                            </div>
-                        )}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                        {staffList.map((s, sIdx) => (
+                                            <div key={sIdx} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: sIdx < staffList.length - 1 ? '1px dashed #93c5fd' : 'none', paddingBottom: '2px' }}>
+                                                <span style={{ textTransform: 'capitalize', color: '#1e3a8a', fontWeight: s.role ? '600' : 'normal' }}>
+                                                    {s.role ? `${s.role}:` : 'Staff:'}
+                                                </span>
+                                                <b>{s.name}</b>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })()}
 
                         {/* Actions */}
                         <div style={{ display: 'flex', gap: '10px' }}>
@@ -340,14 +354,14 @@ export default function KitchenPage() {
                             <SearchBar
                                 value={searchTerm}
                                 onChange={setSearchTerm}
-                                placeholder="SEARCH BY CUSTOMER OR ID..."
+                                placeholder="SEARCH BY CUSTOMER, ID, OR STAFF..."
                             />
                         </div>
                         <TableContainer>
                             <Table>
                                 <Thead>
                                     <Tr>
-                                        {['ID', 'CUSTOMER', 'TABLE', 'ITEMS', 'TOTAL', 'ACTION'].map(h => <Th key={h}>{h}</Th>)}
+                                        {['ID', 'CUSTOMER', 'TABLE', 'ITEMS', 'SHIFT STAFF', 'TOTAL', 'ACTION'].map(h => <Th key={h}>{h}</Th>)}
                                     </Tr>
                                 </Thead>
                                 <Tbody>
@@ -357,6 +371,29 @@ export default function KitchenPage() {
                                             <Td>{order.customerName}</Td>
                                             <Td>{order.tableNumber}</Td>
                                             <Td>{order.items?.map(i => `${i.quantity}x ${i.menuName}`).join(', ')}</Td>
+                                            <Td style={{ fontSize: '0.85rem' }}>
+                                                {(() => {
+                                                    const staffList = parseShiftStaff(order.shiftStaff);
+                                                    if (staffList.length === 0) return <span style={{ opacity: 0.5, fontStyle: 'italic' }}>-</span>;
+                                                    return (
+                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                                            {staffList.map((s, sIdx) => (
+                                                                <span key={sIdx} style={{
+                                                                    display: 'inline-block',
+                                                                    padding: '2px 6px',
+                                                                    background: '#e0e7ff',
+                                                                    border: '1.5px solid black',
+                                                                    fontSize: '0.75rem',
+                                                                    fontWeight: 'bold',
+                                                                    whiteSpace: 'nowrap'
+                                                                }}>
+                                                                    {s.role ? `${s.name} (${s.role})` : s.name}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    );
+                                                })()}
+                                            </Td>
                                             <Td>Rp {order.grandTotal?.toLocaleString()}</Td>
                                             <Td>
                                                 <Button className="brutalist-tooltip" data-tooltip="REQUEUE ORDER" onClick={() => handleStatusChange(order.id, 'PENDING')} variant="secondary" style={{ padding: '5px 10px', fontSize: '0.8rem' }}>↻</Button>
@@ -365,7 +402,7 @@ export default function KitchenPage() {
                                     ))}
                                     {filteredHistory.length === 0 && (
                                         <Tr>
-                                            <Td colSpan="6" style={{ padding: '40px', textAlign: 'center', fontWeight: 'bold', opacity: 0.5 }}>
+                                            <Td colSpan="7" style={{ padding: '40px', textAlign: 'center', fontWeight: 'bold', opacity: 0.5 }}>
                                                 NO COMPLETED ORDERS FOUND.
                                             </Td>
                                         </Tr>

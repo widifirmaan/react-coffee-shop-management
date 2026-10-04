@@ -153,7 +153,7 @@ export default function CashierPage({ user, shopConfig }) {
                 changeAmount: paymentMethod === 'CASH' ? changeAmount : 0,
                 status: 'PREPARING', // Sent straight to Kitchen & Bar queue
                 employeeId: user?.employeeId || '',
-                shiftStaff: user?.name || user?.employeeId || 'Cashier',
+                shiftStaff: user ? [{ name: user.name || user.employeeId || 'Cashier', role: user.role || user.position || 'Cashier' }] : [],
                 notes: orderNotes
             };
 
@@ -976,8 +976,18 @@ export default function CashierPage({ user, shopConfig }) {
                             <span>{new Date(completedOrder?.createdAt || Date.now()).toLocaleString('id-ID')}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span>CASHIER:</span>
-                            <span>{completedOrder?.shiftStaff || user?.name || 'Cashier'}</span>
+                            <span>CASHIER / STAFF:</span>
+                            <span style={{ fontWeight: 'bold' }}>
+                                {(() => {
+                                    if (Array.isArray(completedOrder?.shiftStaff) && completedOrder.shiftStaff.length > 0) {
+                                        return completedOrder.shiftStaff.map(s => s.name || s).join(', ');
+                                    }
+                                    if (typeof completedOrder?.shiftStaff === 'string' && completedOrder.shiftStaff) {
+                                        return completedOrder.shiftStaff;
+                                    }
+                                    return user?.name || user?.employeeId || 'Cashier';
+                                })()}
+                            </span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                             <span>TYPE / TABLE:</span>
