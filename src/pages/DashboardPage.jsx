@@ -42,16 +42,20 @@ export default function DashboardPage({ user }) {
     // Schedule Helper
     const days = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
     const getWeekDates = () => {
-        const d = new Date();
-        const dayIdx = d.getDay(); // 0=Sun
-        const currentDayIdx = dayIdx === 0 ? 6 : dayIdx - 1;
-        const diff = d.getDate() - currentDayIdx;
-        const monday = new Date(d.setDate(diff));
+        const now = new Date();
+        const shortDay = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Jakarta', weekday: 'short' }).format(now);
+        const dayMap = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6 };
+        const currentIdx = dayMap[shortDay] ?? 0;
         const weekDates = {};
         days.forEach((day, i) => {
-            const nd = new Date(monday);
-            nd.setDate(monday.getDate() + i);
-            weekDates[day] = nd.toLocaleDateString('en-CA');
+            const diffDays = i - currentIdx;
+            const targetDate = new Date(now.getTime() + diffDays * 86400000);
+            weekDates[day] = new Intl.DateTimeFormat('en-CA', {
+                timeZone: 'Asia/Jakarta',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            }).format(targetDate);
         });
         return weekDates;
     };
@@ -109,7 +113,12 @@ export default function DashboardPage({ user }) {
                 });
 
                 // Set Today Status
-                const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
+                const todayStr = new Intl.DateTimeFormat('en-CA', {
+                    timeZone: 'Asia/Jakarta',
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                }).format(new Date());
                 const todayAtt = emp.attendanceHistory[todayStr];
                 emp.todayStatus = todayAtt ? todayAtt.status : null;
             });
@@ -124,9 +133,12 @@ export default function DashboardPage({ user }) {
         if (!user || !user.employeeId) return;
         try {
             const shiftRes = await axios.get('/api/shifts');
-            const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+            const today = new Intl.DateTimeFormat('en-US', {
+                timeZone: 'Asia/Jakarta',
+                weekday: 'long'
+            }).format(new Date()).toUpperCase();
             const userShift = shiftRes.data.find(s => s.employeeId === user.employeeId && s.dayOfWeek === today);
-            setTodayShift(userShift);
+            setTodayShift(userShift || null);
         } catch (e) {
             console.error('Failed to fetch today shift', e);
         }
@@ -184,7 +196,7 @@ export default function DashboardPage({ user }) {
                         setLateModal({
                             type: 'blocked',
                             message: 'TIDAK ABSEN MASUK',
-                            details: 'Anda tidak clock in. Silahkan hubungi manager.'
+                            details: 'Anda melewati batas clock in lebih dari 2 jam. Status dicatat sebagai TIDAK ABSEN MASUK. Silahkan hubungi manager.'
                         });
                         setAlertMsg({ type: 'error', message: 'TIDAK ABSEN MASUK!' });
                         setAttendance(rec);
@@ -193,9 +205,9 @@ export default function DashboardPage({ user }) {
                         setLateModal({
                             type: 'late',
                             message: 'ANDA TERLAMBAT!',
-                            details: 'Anda terlambat, silahkan hubungi manager.'
+                            details: `Anda terlambat ${rec.minutesLate} menit. Silahkan hubungi manager.`
                         });
-                        setAlertMsg({ type: 'error', message: 'ANDA TERLAMBAT!' });
+                        setAlertMsg({ type: 'error', message: `ANDA TERLAMBAT ${rec.minutesLate} MENIT!` });
                         setAttendance(rec);
                         fetchShiftData();
                     } else {
@@ -230,7 +242,7 @@ export default function DashboardPage({ user }) {
                         setLateModal({
                             type: 'blocked',
                             message: 'TIDAK ABSEN KELUAR',
-                            details: 'Anda tidak clock out. Silahkan hubungi manager.'
+                            details: 'Waktu clock out telah melewati batas lebih dari 2 jam. Status dicatat sebagai TIDAK ABSEN KELUAR. Silahkan hubungi manager.'
                         });
                         setAlertMsg({ type: 'error', message: 'TIDAK ABSEN KELUAR!' });
                     } else {
@@ -241,7 +253,7 @@ export default function DashboardPage({ user }) {
                 } catch (error) {
                     const msg = error.response?.data?.message || 'CLOCK OUT FAILED!';
                     const isEarly = msg.includes('Belum waktu clock out');
-                    const isLate = msg.includes('Waktu clock out sudah lewat');
+                    const isLate = msg.includes('Waktu clock out sudah lewat') || msg.includes('melewati batas');
                     if (isEarly || isLate) {
                         setLateModal({
                             type: isEarly ? 'early' : 'late',
@@ -356,20 +368,82 @@ export default function DashboardPage({ user }) {
                         </h1>
                     </div>
 
-                    {todayShift && todayShift.shiftType !== 'OFF' && (
+                    {/* Shift Banner */}
+                    {attendance && attendance.shiftType && attendance.shiftType !== 'OFF' ? (
                         <div style={{
                             background: 'rgba(0,0,0,0.1)',
                             padding: '8px',
-                            marginBottom: '15px',
+                            marginBottom: '10px',
                             border: '2px solid black',
                             textAlign: 'center'
                         }}>
-                            <div style={{ fontSize: '0.75rem', opacity: 0.7, fontWeight: 'bold', marginBottom: '2px' }}>YOUR SHIFT TODAY</div>
+                            <div style={{ fontSize: '0.75rem', opacity: 0.7, fontWeight: 'bold', marginBottom: '2px' }}>
+                                SHIFT AKTIF ({attendance.shiftType})
+                            </div>
+                            <div style={{ fontSize: '1rem', fontWeight: '900' }}>
+                                {attendance.shiftType === 'MORNING' && '07:00 - 15:00'}
+                                {attendance.shiftType === 'AFTERNOON' && '15:00 - 23:00'}
+                                {attendance.shiftType === 'EVENING' && '23:00 - 07:00'}
+                            </div>
+                        </div>
+                    ) : todayShift && todayShift.shiftType !== 'OFF' ? (
+                        <div style={{
+                            background: 'rgba(0,0,0,0.1)',
+                            padding: '8px',
+                            marginBottom: '10px',
+                            border: '2px solid black',
+                            textAlign: 'center'
+                        }}>
+                            <div style={{ fontSize: '0.75rem', opacity: 0.7, fontWeight: 'bold', marginBottom: '2px' }}>
+                                JADWAL HARI INI ({todayShift.shiftType})
+                            </div>
                             <div style={{ fontSize: '1rem', fontWeight: '900' }}>
                                 {todayShift.shiftType === 'MORNING' && '07:00 - 15:00'}
                                 {todayShift.shiftType === 'AFTERNOON' && '15:00 - 23:00'}
                                 {todayShift.shiftType === 'EVENING' && '23:00 - 07:00'}
                             </div>
+                        </div>
+                    ) : todayShift && todayShift.shiftType === 'OFF' ? (
+                        <div style={{
+                            background: '#fee2e2',
+                            padding: '8px',
+                            marginBottom: '10px',
+                            border: '2px solid black',
+                            textAlign: 'center'
+                        }}>
+                            <div style={{ fontSize: '0.75rem', opacity: 0.7, fontWeight: 'bold', marginBottom: '2px' }}>JADWAL HARI INI</div>
+                            <div style={{ fontSize: '1rem', fontWeight: '900', color: '#b91c1c' }}>
+                                LIBUR (OFF)
+                            </div>
+                        </div>
+                    ) : (
+                        <div style={{
+                            background: 'rgba(0,0,0,0.05)',
+                            padding: '8px',
+                            marginBottom: '10px',
+                            border: '2px dashed black',
+                            textAlign: 'center'
+                        }}>
+                            <div style={{ fontSize: '0.75rem', opacity: 0.7, fontWeight: 'bold', marginBottom: '2px' }}>JADWAL HARI INI</div>
+                            <div style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#4b5563' }}>
+                                TIDAK ADA JADWAL SHIFT
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Attendance Status Banner */}
+                    {attendance?.status && (
+                        <div style={{
+                            margin: '0 0 15px 0',
+                            padding: '6px',
+                            fontWeight: '900',
+                            fontSize: '0.85rem',
+                            textAlign: 'center',
+                            border: '2px solid black',
+                            background: attendance.status === 'ON_TIME' ? '#bbf7d0' : attendance.status === 'LATE' ? '#fef08a' : '#fecaca',
+                            color: attendance.status === 'ON_TIME' ? '#166534' : attendance.status === 'LATE' ? '#854d0e' : '#991b1b'
+                        }}>
+                            STATUS: {attendance.status} {attendance.minutesLate > 0 ? `(${attendance.minutesLate} MENIT)` : ''}
                         </div>
                     )}
 
@@ -395,8 +469,8 @@ export default function DashboardPage({ user }) {
                             </div>
                             <Button
                                 onClick={handleClockOut}
-                                disabled={!attendance || !!attendance.clockOutTime}
-                                variant={(!attendance || attendance.clockOutTime) ? 'secondary' : 'primary'}
+                                disabled={!attendance || !attendance.clockInTime || !!attendance.clockOutTime || attendance.status === 'TIDAK ABSEN MASUK'}
+                                variant={(!attendance || !attendance.clockInTime || attendance.clockOutTime || attendance.status === 'TIDAK ABSEN MASUK') ? 'secondary' : 'primary'}
                                 style={{ width: '100%', fontSize: '1rem', padding: '10px' }}
                             >
                                 OUT
@@ -623,7 +697,7 @@ export default function DashboardPage({ user }) {
                     backdropFilter: 'blur(5px)'
                 }}>
                     <div style={{
-                        background: '#ef4444',
+                        background: lateModal.type === 'early' ? '#f59e0b' : '#ef4444',
                         border: '6px solid black',
                         boxShadow: '15px 15px 0 0 black',
                         padding: '40px',

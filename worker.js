@@ -192,12 +192,12 @@ function getJakartaHoursMinutes(d = new Date()) {
     if (p.type === 'hour') hour = parseInt(p.value, 10);
     if (p.type === 'minute') minute = parseInt(p.value, 10);
   }
+  hour = hour % 24;
   return { hour, minute, totalMin: hour * 60 + minute };
 }
 
 function getJakartaDateStr(offsetDays = 0) {
-  const d = new Date();
-  if (offsetDays !== 0) d.setDate(d.getDate() + offsetDays);
+  const d = new Date(Date.now() + offsetDays * 86400000);
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Asia/Jakarta',
     year: 'numeric',
@@ -211,13 +211,40 @@ function getYesterdayJakartaDateStr() {
 }
 
 function getDayOfWeek(offsetDays = 0) {
-  const d = new Date();
-  if (offsetDays !== 0) d.setDate(d.getDate() + offsetDays);
+  const d = new Date(Date.now() + offsetDays * 86400000);
   const dayName = new Intl.DateTimeFormat('en-US', {
     timeZone: 'Asia/Jakarta',
     weekday: 'short',
   }).format(d);
   return DAY_MAP[dayName] || 'MONDAY';
+}
+
+function addDaysToDateStr(dateStr, days = 1) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d + days, 12, 0, 0));
+  return date.toISOString().slice(0, 10);
+}
+
+function isAttendanceExpired(record, todayDateStr, currentTotalMin) {
+  if (!record || record.clockOutTime || record.status === 'TIDAK ABSEN MASUK' || record.status === 'TIDAK ABSEN KELUAR') {
+    return false;
+  }
+  const recDate = record.date;
+  const shiftType = record.shiftType;
+  
+  if (shiftType === 'MORNING') {
+    if (todayDateStr > recDate) return true;
+    if (todayDateStr === recDate && currentTotalMin > 1020) return true;
+  } else if (shiftType === 'AFTERNOON') {
+    const nextDay = addDaysToDateStr(recDate, 1);
+    if (todayDateStr > nextDay) return true;
+    if (todayDateStr === nextDay && currentTotalMin > 60) return true;
+  } else if (shiftType === 'EVENING') {
+    const nextDay = addDaysToDateStr(recDate, 1);
+    if (todayDateStr > nextDay) return true;
+    if (todayDateStr === nextDay && currentTotalMin > 540) return true;
+  }
+  return false;
 }
 
 function nowISO() {
@@ -1176,13 +1203,32 @@ async function handleApi(request, env) {
   // ===================================================================
   // ATTENDANCE
   // ===================================================================
+  // ATTENDANCE
+  // ===================================================================
   if (path === '/api/attendance' && method === 'GET') {
-    if (!user || !requireRole(user, ['Manager'])) return error('Forbidden', 403, cors);
+    if (!user) return error('Unauthorized', 401, cors);
+    const today = getJakartaDateStr();
+    const { totalMin } = getJakartaHoursMinutes();
+
+    // Auto-expire any stale attendance records
+    const staleRecords = await DB.prepare(`
+      SELECT * FROM attendance_records
+      WHERE clockInTime IS NOT NULL AND clockInTime != ''
+        AND (clockOutTime IS NULL OR clockOutTime = '')
+        AND status NOT IN ('TIDAK ABSEN MASUK', 'TIDAK ABSEN KELUAR')
+    `).all();
+
+    for (const r of (staleRecords.results || [])) {
+      if (isAttendanceExpired(r, today, totalMin)) {
+        await DB.prepare("UPDATE attendance_records SET clockOutTime = '', hoursWorked = NULL, status = 'TIDAK ABSEN KELUAR' WHERE id = ?").bind(r.id).run();
+      }
+    }
+
     const { results } = await DB.prepare(`
       SELECT ar.*, e.employeeId, e.name AS employeeName, e.position
       FROM attendance_records ar
       JOIN employees e ON ar.employee_id = e.id
-      ORDER BY ar.date DESC
+      ORDER BY ar.date DESC, ar.clockInTime DESC
     `).all();
     return json(results, 200, cors);
   }
@@ -1200,7 +1246,7 @@ async function handleApi(request, env) {
       FROM attendance_records ar
       JOIN employees e ON ar.employee_id = e.id
       WHERE e.employeeId = ?
-      ORDER BY ar.date DESC
+      ORDER BY ar.date DESC, ar.clockInTime DESC
     `).bind(attHistoryMatch[1]).all();
     return json(results, 200, cors);
   }
@@ -1214,15 +1260,25 @@ async function handleApi(request, env) {
     const emp = await DB.prepare('SELECT * FROM employees WHERE employeeId = ?').bind(attTodayMatch[1]).first();
     if (!emp) return json(null, 200, cors);
     const today = getJakartaDateStr();
+    const { totalMin } = getJakartaHoursMinutes();
+
     let rec = await DB.prepare('SELECT ar.*, e.employeeId, e.name AS employeeName, e.position FROM attendance_records ar JOIN employees e ON ar.employee_id = e.id WHERE ar.employee_id = ? AND ar.date = ?').bind(emp.id, today).first();
     if (!rec) {
-      const { totalMin } = getJakartaHoursMinutes();
-      if (totalMin < 720) {
-        const yesterdayDate = getYesterdayJakartaDateStr();
-        const yRec = await DB.prepare('SELECT ar.*, e.employeeId, e.name AS employeeName, e.position FROM attendance_records ar JOIN employees e ON ar.employee_id = e.id WHERE ar.employee_id = ? AND ar.date = ?').bind(emp.id, yesterdayDate).first();
-        if (yRec && !yRec.clockOutTime) {
+      const yesterdayDate = getYesterdayJakartaDateStr();
+      const yRec = await DB.prepare('SELECT ar.*, e.employeeId, e.name AS employeeName, e.position FROM attendance_records ar JOIN employees e ON ar.employee_id = e.id WHERE ar.employee_id = ? AND ar.date = ?').bind(emp.id, yesterdayDate).first();
+      if (yRec && !yRec.clockOutTime && yRec.status !== 'TIDAK ABSEN MASUK' && yRec.status !== 'TIDAK ABSEN KELUAR') {
+        if (isAttendanceExpired(yRec, today, totalMin)) {
+          await DB.prepare("UPDATE attendance_records SET clockOutTime = '', hoursWorked = NULL, status = 'TIDAK ABSEN KELUAR' WHERE id = ?").bind(yRec.id).run();
+        } else {
           rec = yRec;
         }
+      }
+    } else {
+      if (isAttendanceExpired(rec, today, totalMin)) {
+        await DB.prepare("UPDATE attendance_records SET clockOutTime = '', hoursWorked = NULL, status = 'TIDAK ABSEN KELUAR' WHERE id = ?").bind(rec.id).run();
+        rec.status = 'TIDAK ABSEN KELUAR';
+        rec.clockOutTime = '';
+        rec.hoursWorked = null;
       }
     }
     return json(rec || null, 200, cors);
@@ -1231,19 +1287,10 @@ async function handleApi(request, env) {
   // ===================================================================
   // ATTENDANCE LOGIC
   // Shift windows:
-  //   MORNING:   07:00 - 15:00
-  //   AFTERNOON: 15:00 - 23:00
-  //   EVENING:   23:00 - 07:00
-  // Clock-in:
-  //   [start -10min, start]         → ON_TIME
-  //   (start, start + 2hr]          → LATE (alert "anda terlambat")
-  //   > start + 2hr                 → auto-record TIDAK ABSEN MASUK
-  // Clock-out:
-  //   [end, end + 2hr]              → normal clock-out
-  //   > end + 2hr                   → auto-record TIDAK ABSEN KELUAR
+  //   MORNING:   07:00 - 15:00 (Early in: 06:50, Late: 07:01-09:00, Absent: >09:00, Out: 15:00-17:00)
+  //   AFTERNOON: 15:00 - 23:00 (Early in: 14:50, Late: 15:01-17:00, Absent: >17:00, Out: 23:00-01:00)
+  //   EVENING:   23:00 - 07:00 (Early in: 22:50, Late: 23:01-01:00, Absent: >01:00, Out: 07:00-09:00)
   // ===================================================================
-  const SHIFT_START = { MORNING: 7, AFTERNOON: 15, EVENING: 23 };
-  const SHIFT_END   = { MORNING: 15, AFTERNOON: 23, EVENING: 7 };
 
   if (path === '/api/attendance/clock-in' && method === 'POST') {
     if (!user) return error('Unauthorized', 401, cors);
@@ -1258,10 +1305,10 @@ async function handleApi(request, env) {
     const { totalMin } = getJakartaHoursMinutes();
     let today = getJakartaDateStr();
     let dayOfWeek = getDayOfWeek();
+    let scheduledShift = null;
 
     // Determine target shift date and schedule:
-    // If it's early morning (00:00 - 04:00) and employee had an EVENING shift yesterday:
-    let scheduledShift = null;
+    // If it's early morning (00:00 - 04:00) and employee had an EVENING shift yesterday that was not clocked in:
     if (totalMin < 240) {
       const yesterdayDay = getDayOfWeek(-1);
       const yesterdayDate = getYesterdayJakartaDateStr();
@@ -1281,51 +1328,83 @@ async function handleApi(request, env) {
       scheduledShift = await DB.prepare('SELECT * FROM shift_schedules WHERE employeeId = ? AND dayOfWeek = ?').bind(employeeId, dayOfWeek).first();
     }
 
-    const existingToday = await DB.prepare('SELECT * FROM attendance_records WHERE employee_id = ? AND date = ?').bind(emp.id, today).first();
-    if (existingToday) return error('Already clocked in today', 400, cors);
+    // STRICT SHIFT ADHERENCE
+    if (!scheduledShift) {
+      return error(`Anda tidak memiliki jadwal shift hari ini (${dayOfWeek}). Silahkan hubungi manager.`, 400, cors);
+    }
+    if (scheduledShift.shiftType === 'OFF') {
+      return error('Hari ini jadwal Anda LIBUR (OFF). Tidak perlu melakukan absensi.', 400, cors);
+    }
+    if (!['MORNING', 'AFTERNOON', 'EVENING'].includes(scheduledShift.shiftType)) {
+      return error(`Jadwal shift Anda tidak valid (${scheduledShift.shiftType}). Silahkan hubungi manager.`, 400, cors);
+    }
 
-    let shiftType = 'UNSCHEDULED';
-    let status = 'UNSCHEDULED';
+    const existingToday = await DB.prepare('SELECT * FROM attendance_records WHERE employee_id = ? AND date = ?').bind(emp.id, today).first();
+    if (existingToday) return error('Sudah melakukan absensi untuk jadwal hari ini.', 400, cors);
+
+    const shiftType = scheduledShift.shiftType;
+    let status = 'ON_TIME';
     let minutesLate = 0;
     let lateAlert = false;
     let clockInTime = nowISO();
     let present = 1;
 
-    if (scheduledShift && scheduledShift.shiftType !== 'OFF') {
-      shiftType = scheduledShift.shiftType || 'UNSCHEDULED';
-      const startHour = SHIFT_START[shiftType];
-      if (startHour !== undefined) {
-        let effectiveMin = totalMin;
-        if (shiftType === 'EVENING' && totalMin < 720) {
-          effectiveMin = totalMin + 1440;
-        }
-
-        const earliestMin = startHour * 60 - 10;
-        const shiftStartMin = startHour * 60;
-        const autoAbsenMin = shiftStartMin + 120; // 2 jam setelah shift start
-
-        if (effectiveMin < earliestMin) {
-          const earliestHourStr = String(Math.floor(earliestMin / 60) % 24).padStart(2, '0');
-          const earliestMinStr = String(earliestMin % 60).padStart(2, '0');
-          return error(`Belum waktu clock in. Clock in dapat dilakukan 10 menit sebelum jam shift dimulai (${earliestHourStr}:${earliestMinStr}).`, 400, cors);
-        }
-
-        if (effectiveMin > autoAbsenMin) {
-          // > 2 jam: auto-record tidak absen masuk
-          status = 'TIDAK ABSEN MASUK';
-          clockInTime = '';
-          present = 0;
-        } else if (effectiveMin > shiftStartMin) {
-          // 1 menit - 2 jam: LATE
-          minutesLate = effectiveMin - shiftStartMin;
-          status = 'LATE';
-          lateAlert = true;
-        } else {
-          status = 'ON_TIME';
-        }
+    if (shiftType === 'MORNING') {
+      // 07:00 - 15:00
+      if (totalMin < 410) {
+        return error('Belum waktu clock in. Shift MORNING dapat clock in mulai pukul 06:50.', 400, cors);
+      } else if (totalMin <= 420) {
+        status = 'ON_TIME';
+        minutesLate = 0;
+      } else if (totalMin <= 540) {
+        status = 'LATE';
+        minutesLate = totalMin - 420;
+        lateAlert = true;
+      } else {
+        status = 'TIDAK ABSEN MASUK';
+        minutesLate = totalMin - 420;
+        clockInTime = '';
+        present = 0;
       }
-    } else {
-      status = 'ON_TIME';
+    } else if (shiftType === 'AFTERNOON') {
+      // 15:00 - 23:00
+      if (totalMin < 890) {
+        return error('Belum waktu clock in. Shift AFTERNOON dapat clock in mulai pukul 14:50.', 400, cors);
+      } else if (totalMin <= 900) {
+        status = 'ON_TIME';
+        minutesLate = 0;
+      } else if (totalMin <= 1020) {
+        status = 'LATE';
+        minutesLate = totalMin - 900;
+        lateAlert = true;
+      } else {
+        status = 'TIDAK ABSEN MASUK';
+        minutesLate = totalMin - 900;
+        clockInTime = '';
+        present = 0;
+      }
+    } else if (shiftType === 'EVENING') {
+      // 23:00 - 07:00
+      let effectiveMin = totalMin;
+      if (totalMin < 720) {
+        effectiveMin = totalMin + 1440;
+      }
+
+      if (effectiveMin < 1370) {
+        return error('Belum waktu clock in. Shift EVENING dapat clock in mulai pukul 22:50.', 400, cors);
+      } else if (effectiveMin <= 1380) {
+        status = 'ON_TIME';
+        minutesLate = 0;
+      } else if (effectiveMin <= 1500) {
+        status = 'LATE';
+        minutesLate = effectiveMin - 1380;
+        lateAlert = true;
+      } else {
+        status = 'TIDAK ABSEN MASUK';
+        minutesLate = effectiveMin - 1380;
+        clockInTime = '';
+        present = 0;
+      }
     }
 
     const id = uid();
@@ -1334,7 +1413,14 @@ async function handleApi(request, env) {
     ).bind(id, emp.id, emp.name, today, present, clockInTime, shiftType, status, minutesLate, '').run();
 
     const record = { id, employee_id: emp.id, employeeId: emp.employeeId, employeeName: emp.name, date: today, present, clockInTime, shiftType, status, minutesLate, lateAlert };
-    return json({ message: status === 'TIDAK ABSEN MASUK' ? 'Tidak absen masuk' : 'Clocked in', record }, 200, cors);
+    return json({
+      message: status === 'TIDAK ABSEN MASUK'
+        ? 'Anda melewati batas clock in lebih dari 2 jam. Status dicatat sebagai TIDAK ABSEN MASUK.'
+        : status === 'LATE'
+        ? `Clock in berhasil. Anda tercatat TERLAMBAT ${minutesLate} menit.`
+        : 'Clock in berhasil (TEPAT WAKTU).',
+      record
+    }, 200, cors);
   }
 
   if (path === '/api/attendance/clock-out' && method === 'POST') {
@@ -1351,42 +1437,54 @@ async function handleApi(request, env) {
     const today = getJakartaDateStr();
 
     let record = await DB.prepare('SELECT * FROM attendance_records WHERE employee_id = ? AND date = ?').bind(emp.id, today).first();
-    if ((!record || record.clockOutTime) && totalMin < 720) {
+    if (!record || record.clockOutTime) {
       const yesterdayDate = getYesterdayJakartaDateStr();
       const yRecord = await DB.prepare('SELECT * FROM attendance_records WHERE employee_id = ? AND date = ?').bind(emp.id, yesterdayDate).first();
-      if (yRecord && !yRecord.clockOutTime) {
+      if (yRecord && !yRecord.clockOutTime && yRecord.status !== 'TIDAK ABSEN MASUK' && yRecord.status !== 'TIDAK ABSEN KELUAR') {
         record = yRecord;
       }
     }
-    if (!record) return error('No clock-in record found', 400, cors);
-    if (record.clockOutTime) return error('Already clocked out', 400, cors);
 
-    const shiftType = record.shiftType || 'UNSCHEDULED';
-    if (shiftType !== 'UNSCHEDULED' && shiftType !== 'OFF') {
-      const endHour = SHIFT_END[shiftType];
-      if (endHour !== undefined) {
-        let effectiveMin = totalMin;
-        if (shiftType === 'AFTERNOON' && totalMin < 720) {
-          effectiveMin = totalMin + 1440;
-        }
+    if (!record) return error('Tidak ditemukan catatan clock in aktif.', 400, cors);
+    if (record.status === 'TIDAK ABSEN MASUK' || !record.clockInTime) {
+      return error('Anda tercatat TIDAK ABSEN MASUK, tidak dapat melakukan clock out. Silahkan hubungi manager.', 400, cors);
+    }
+    if (record.clockOutTime) return error('Sudah melakukan clock out sebelumnya.', 400, cors);
 
-        const endMin = (shiftType === 'AFTERNOON' ? 23 : endHour) * 60;
-        const maxOutMin = endMin + 120; // 2 jam setelah shift selesai
+    const shiftType = record.shiftType;
+    const recDate = record.date;
 
-        if (effectiveMin < endMin) {
-          const hStr = String(endHour).padStart(2, '0');
-          return error(`Belum waktu clock out. Tunggu sampai jam shift selesai (${hStr}:00).`, 400, cors);
-        }
+    // Check expiration (> 2 hours after shift end)
+    if (isAttendanceExpired(record, today, totalMin)) {
+      await DB.prepare("UPDATE attendance_records SET clockOutTime = '', hoursWorked = NULL, status = 'TIDAK ABSEN KELUAR' WHERE id = ?").bind(record.id).run();
+      return json({
+        message: 'Waktu clock out telah melewati batas (lebih dari 2 jam setelah shift berakhir). Status dicatat sebagai TIDAK ABSEN KELUAR.',
+        record: { ...record, clockOutTime: '', hoursWorked: null, status: 'TIDAK ABSEN KELUAR' }
+      }, 200, cors);
+    }
 
-        if (effectiveMin > maxOutMin) {
-          // > 2 jam: auto-record tidak absen keluar
-          await DB.prepare('UPDATE attendance_records SET clockOutTime = ?, hoursWorked = NULL, status = ? WHERE id = ?')
-            .bind('', 'TIDAK ABSEN KELUAR', record.id).run();
-          return json({ message: 'Tidak absen keluar', record: { ...record, clockOutTime: '', hoursWorked: null, status: 'TIDAK ABSEN KELUAR' } }, 200, cors);
-        }
+    // Check too early clock out:
+    if (shiftType === 'MORNING') {
+      // 07:00 - 15:00
+      if (today === recDate && totalMin < 900) {
+        return error('Belum waktu clock out. Shift MORNING selesai pukul 15:00.', 400, cors);
+      }
+    } else if (shiftType === 'AFTERNOON') {
+      // 15:00 - 23:00
+      if (today === recDate && totalMin < 1380) {
+        return error('Belum waktu clock out. Shift AFTERNOON selesai pukul 23:00.', 400, cors);
+      }
+    } else if (shiftType === 'EVENING') {
+      // 23:00 - 07:00 next day
+      if (today === recDate) {
+        return error('Belum waktu clock out. Shift EVENING selesai pukul 07:00 besok pagi.', 400, cors);
+      }
+      if (today === addDaysToDateStr(recDate, 1) && totalMin < 420) {
+        return error('Belum waktu clock out. Shift EVENING selesai pukul 07:00.', 400, cors);
       }
     }
 
+    // Success clock-out: calculate hours worked
     const clockIn = record.clockInTime;
     let hoursWorked = null;
     if (clockIn) {
