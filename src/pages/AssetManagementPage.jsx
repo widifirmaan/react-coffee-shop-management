@@ -177,7 +177,7 @@ export default function AssetManagementPage({ user }) {
     const filteredAssets = assets.filter(a => {
         const matchesCategory = selectedCategory === 'All' || a.category === selectedCategory;
         const matchesCondition = selectedCondition === 'All' || a.condition === selectedCondition;
-        const searchLower = searchTerm.toLowerCase();
+        const searchLower = (searchTerm || '').toLowerCase();
         const matchesSearch = !searchTerm ||
             (a.name && a.name.toLowerCase().includes(searchLower)) ||
             (a.assetCode && a.assetCode.toLowerCase().includes(searchLower)) ||

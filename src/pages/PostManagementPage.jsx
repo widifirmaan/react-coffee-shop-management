@@ -170,9 +170,10 @@ export default function PostManagementPage({ user }) {
         setModalOpen(true);
     };
 
+    const searchLower = (searchTerm || '').toLowerCase();
     const filteredPosts = posts.filter(p =>
-        (p.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (p.category || '').toLowerCase().includes(searchTerm.toLowerCase())
+        (p.title || '').toLowerCase().includes(searchLower) ||
+        (p.category || '').toLowerCase().includes(searchLower)
     );
 
     const totalPages = Math.ceil(filteredPosts.length / itemsPerPage);

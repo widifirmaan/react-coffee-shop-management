@@ -108,6 +108,7 @@ export default function FinancePage({ user }) {
 
     const income = filtered.filter(t => t.type === 'INCOME').reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
     const expense = filtered.filter(t => t.type === 'EXPENSE').reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+    const profit = income - expense;
     const handleDelete = (t) => {
         setConfirmDialog({
             title: 'DELETE TRANSACTION?',
