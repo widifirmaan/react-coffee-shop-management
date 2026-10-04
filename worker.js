@@ -1925,6 +1925,10 @@ export default {
       }
     }
 
-    return env.ASSETS.fetch(request);
+    if (env.ASSETS && typeof env.ASSETS.fetch === 'function') {
+      return env.ASSETS.fetch(request);
+    }
+
+    return new Response('Assets binding not available', { status: 503 });
   }
 };
