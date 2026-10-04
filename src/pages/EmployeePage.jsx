@@ -65,16 +65,19 @@ export default function EmployeePage() {
     const generateNextId = () => {
         if (!employees.length) return 'EMP001';
 
-        const ids = employees
+        const numbers = employees
             .map(e => e.employeeId)
-            .filter(id => id && typeof id === 'string' && id.startsWith('EMP'))
-            .map(id => parseInt(id.replace('EMP', ''), 10))
-            .filter(n => !isNaN(n));
+            .filter(id => id && typeof id === 'string')
+            .map(id => {
+                const match = id.match(/(\d+)$/);
+                return match ? parseInt(match[1], 10) : null;
+            })
+            .filter(n => n !== null && !isNaN(n));
 
-        if (!ids.length) return 'EMP001';
+        if (!numbers.length) return 'EMP001';
 
-        const maxId = Math.max(...ids);
-        return `EMP${String(maxId + 1).padStart(3, '0')}`;
+        const maxNum = Math.max(...numbers);
+        return `EMP${String(maxNum + 1).padStart(3, '0')}`;
     };
 
     const handleNewRecruit = () => {

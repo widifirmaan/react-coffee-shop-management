@@ -19,7 +19,7 @@ const TABLE_COLUMNS = {
   orders: [
     'orderNumber', 'items', 'totalPrice', 'totalAmount', 'tax', 'grandTotal',
     'status', 'paymentMethod', 'paymentAmount', 'changeAmount', 'employeeId',
-    'tableNumber', 'orderType', 'notes', 'customerName', 'shiftStaff', 'createdAt', 'updatedAt'
+    'tableNumber', 'orderType', 'notes', 'customerName', 'shiftStaff', 'inventoryDeducted', 'createdAt', 'updatedAt'
   ],
   posts: [
     'title', 'slug', 'content', 'excerpt', 'author', 'status', 'image',
@@ -288,6 +288,7 @@ async function initTables(DB) {
     `).run();
     try { await DB.prepare('ALTER TABLE shop_config ADD COLUMN taxPercentage REAL DEFAULT 10').run(); } catch (_) {}
     try { await DB.prepare('ALTER TABLE shop_config ADD COLUMN receiptFooter TEXT DEFAULT "Thank you for your visit!"').run(); } catch (_) {}
+    try { await DB.prepare('ALTER TABLE orders ADD COLUMN inventoryDeducted INTEGER DEFAULT 0').run(); } catch (_) {}
     tablesInitialized = true;
   } catch (e) {
     console.error('initTables error:', e);
@@ -649,6 +650,8 @@ async function handleApi(request, env) {
     body.updatedAt = nowISO();
 
     const rawItems = Array.isArray(body.items) ? [...body.items] : [];
+    const shouldDeduct = sanitizedStatus => sanitizedStatus === 'PREPARING' || sanitizedStatus === 'COMPLETED';
+    body.inventoryDeducted = shouldDeduct(body.status) ? 1 : 0;
     stringifyJsonFields(body);
 
     const sanitized = pickFields(body, TABLE_COLUMNS.orders);
@@ -659,7 +662,7 @@ async function handleApi(request, env) {
     await DB.prepare(`INSERT INTO orders (${cols.join(',')}) VALUES (${vals.join(',')})`).bind(...Object.values(sanitized)).run();
 
     // Auto-deduct inventory if created as PREPARING or COMPLETED (e.g. direct Cashier POS checkout)
-    if (sanitized.status === 'PREPARING' || sanitized.status === 'COMPLETED') {
+    if (sanitized.inventoryDeducted === 1) {
       await deductIngredientsForOrder(DB, rawItems);
     }
     // Auto-sync to Finance if COMPLETED
@@ -706,8 +709,10 @@ async function handleApi(request, env) {
     const order = await DB.prepare('SELECT * FROM orders WHERE id = ?').bind(orderId).first();
     if (order) {
       const parsed = parseJsonFields({ ...order });
-      if (status === 'PREPARING' || status === 'COMPLETED') {
+      // Only deduct if not already deducted previously
+      if ((status === 'PREPARING' || status === 'COMPLETED') && !order.inventoryDeducted) {
         await deductIngredientsForOrder(DB, parsed.items);
+        await DB.prepare('UPDATE orders SET inventoryDeducted = 1 WHERE id = ?').bind(orderId).run();
       }
       if (status === 'COMPLETED') {
         await syncOrderToFinance(DB, parsed, user);

@@ -1,4 +1,4 @@
-import { MapPin, Phone, Instagram, Facebook, Globe, Send, Twitter, Youtube, Mail, Linkedin, Github } from 'lucide-react';
+import { MapPin, Phone, Instagram, Facebook, Globe, Send, Twitter, Youtube, Mail, Linkedin, Github, Star } from 'lucide-react';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { Alert } from '../ui/Alert';
@@ -19,7 +19,9 @@ export default function OrderPageFooter({ shopConfig }) {
     };
 
     const [feedback, setFeedback] = useState('');
+    const [customerName, setCustomerName] = useState('');
     const [rating, setRating] = useState(5);
+    const [hoverRating, setHoverRating] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [alertMsg, setAlertMsg] = useState(null);
 
@@ -29,12 +31,14 @@ export default function OrderPageFooter({ shopConfig }) {
         setIsSubmitting(true);
         try {
             await axios.post('/api/feedbacks', {
-                message: feedback,
-                rating: 5, // Default rating for quick feedback
-                customerName: 'Guest' // Default name
+                message: feedback.trim(),
+                rating: rating || 5,
+                customerName: customerName.trim() || 'Guest'
             });
             setAlertMsg({ type: 'success', message: 'TERIMA KASIH ATAS MASUKAN ANDA!' });
             setFeedback('');
+            setCustomerName('');
+            setRating(5);
         } catch (error) {
             console.error(error);
             setAlertMsg({ type: 'error', message: 'GAGAL MENGIRIM MASUKAN' });
@@ -99,22 +103,63 @@ export default function OrderPageFooter({ shopConfig }) {
 
                 {/* Feedback Form */}
                 <div>
-                    <h3>Kritik & Saran</h3>
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'stretch' }}>
+                    <h3 style={{ margin: '0 0 10px 0' }}>Kritik & Saran</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>Rating:</span>
+                        {[1, 2, 3, 4, 5].map(star => {
+                            const isFilled = (hoverRating || rating) >= star;
+                            return (
+                                <button
+                                    key={star}
+                                    type="button"
+                                    onClick={() => setRating(star)}
+                                    onMouseEnter={() => setHoverRating(star)}
+                                    onMouseLeave={() => setHoverRating(0)}
+                                    style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        padding: '2px',
+                                        display: 'flex',
+                                        alignItems: 'center'
+                                    }}
+                                >
+                                    <Star
+                                        size={20}
+                                        fill={isFilled ? '#eab308' : 'none'}
+                                        color={isFilled ? '#eab308' : '#9ca3af'}
+                                    />
+                                </button>
+                            );
+                        })}
+                        <span style={{ fontSize: '0.85rem', fontWeight: 'bold', marginLeft: '4px' }}>
+                            ({hoverRating || rating}/5)
+                        </span>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <Input
-                            value={feedback}
-                            onChange={(e) => setFeedback(e.target.value)}
-                            placeholder="Tulis masukan..."
-                            style={{ container: { margin: 0, flex: 1, display: 'flex' }, input: { width: '100%', height: '100%', boxSizing: 'border-box' } }}
+                            value={customerName}
+                            onChange={(e) => setCustomerName(e.target.value)}
+                            placeholder="Nama Anda (opsional)..."
+                            style={{ container: { margin: 0 } }}
                         />
-                        <Button
-                            variant="primary"
-                            style={{ height: 'auto' }}
-                            onClick={handleFeedbackSubmit}
-                            disabled={isSubmitting}
-                        >
-                            <Send size={18} />
-                        </Button>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'stretch' }}>
+                            <Input
+                                value={feedback}
+                                onChange={(e) => setFeedback(e.target.value)}
+                                placeholder="Tulis masukan..."
+                                style={{ container: { margin: 0, flex: 1, display: 'flex' }, input: { width: '100%', boxSizing: 'border-box' } }}
+                            />
+                            <Button
+                                variant="primary"
+                                style={{ height: 'auto', padding: '0 16px' }}
+                                onClick={handleFeedbackSubmit}
+                                disabled={isSubmitting || !feedback.trim()}
+                            >
+                                <Send size={18} />
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>

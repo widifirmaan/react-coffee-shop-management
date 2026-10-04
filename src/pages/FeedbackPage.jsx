@@ -70,7 +70,22 @@ export default function FeedbackPage() {
                 description="REVIEWS & SUGGESTIONS"
                 icon={MessageSquare}
                 color="#e9d5ff"
-                action={null}
+                action={
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        background: 'white',
+                        border: '3px solid black',
+                        boxShadow: '4px 4px 0 0 black',
+                        padding: '8px 16px',
+                        fontWeight: '900'
+                    }}>
+                        <Star size={20} fill="#eab308" color="#eab308" />
+                        <span>AVG: {averageRating} / 5.0</span>
+                        <span style={{ fontSize: '0.85rem', color: '#666', fontWeight: 'bold' }}>({feedbacks.length} reviews)</span>
+                    </div>
+                }
             />
 
             <TableContainer>
@@ -78,6 +93,8 @@ export default function FeedbackPage() {
                     <Thead>
                         <Tr>
                             <Th>DATE</Th>
+                            <Th>CUSTOMER</Th>
+                            <Th>RATING</Th>
                             <Th>MESSAGE</Th>
                             <Th>SHIFT STAFF</Th>
                             <Th>ACTION</Th>
@@ -89,6 +106,18 @@ export default function FeedbackPage() {
                                 <Td style={{ whiteSpace: 'nowrap', fontSize: '0.9rem' }}>
                                     {new Date(fb.timestamp).toLocaleDateString()} <br />
                                     <span style={{ opacity: 0.6, fontSize: '0.8rem' }}>{new Date(fb.timestamp).toLocaleTimeString()}</span>
+                                </Td>
+                                <Td style={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <User size={14} />
+                                        <span>{fb.customerName || 'Guest'}</span>
+                                    </div>
+                                </Td>
+                                <Td style={{ whiteSpace: 'nowrap' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                                        {renderStars(fb.rating || 5)}
+                                        <span style={{ marginLeft: '6px', fontWeight: 'bold', fontSize: '0.85rem' }}>({fb.rating || 5})</span>
+                                    </div>
                                 </Td>
                                 <Td style={{ maxWidth: '400px' }}>
                                     <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>"{fb.message}"</div>
@@ -118,7 +147,7 @@ export default function FeedbackPage() {
                         ))}
                         {feedbacks.length === 0 && (
                             <Tr>
-                                <Td colSpan="5" style={{ padding: '40px', textAlign: 'center', opacity: 0.5 }}>NO FEEDBACK FOUND</Td>
+                                <Td colSpan="6" style={{ padding: '40px', textAlign: 'center', opacity: 0.5 }}>NO FEEDBACK FOUND</Td>
                             </Tr>
                         )}
                     </Tbody>

@@ -119,26 +119,42 @@ export default function ShiftPage() {
     };
 
     const handleSave = async () => {
-        setIsSaving(true);
         if (!shifts || shifts.length === 0) {
             setAlertMsg({ 
                 type: 'error', 
                 message: 'JADWAL SHIFT MASIH KOSONG! TAMBAHKAN STAF KE JADWAL SEBELUM MENYIMPAN.' 
             });
-            setIsSaving(false);
             return;
         }
 
-        try {
-            await axios.post('/api/shifts', shifts);
-            setAlertMsg({ type: 'success', message: 'SCHEDULE SAVED!' });
-        } catch (e) {
-            console.error(e);
-            const errMsg = e.response?.data?.message || 'SAVE FAILED';
-            setAlertMsg({ type: 'error', message: errMsg });
-        } finally {
-            setIsSaving(false);
+        const executeSave = async () => {
+            setIsSaving(true);
+            try {
+                await axios.post('/api/shifts', shifts);
+                setAlertMsg({ type: 'success', message: 'SCHEDULE SAVED!' });
+            } catch (e) {
+                console.error(e);
+                const errMsg = e.response?.data?.message || 'SAVE FAILED';
+                setAlertMsg({ type: 'error', message: errMsg });
+            } finally {
+                setIsSaving(false);
+            }
+        };
+
+        if (!canSaveToday) {
+            setConfirmDialog({
+                isOpen: true,
+                title: 'SIMPAN JADWAL DI TENGAH PEKAN?',
+                message: `Hari ini adalah ${todayDay}. Mengubah jadwal di pertengahan minggu akan langsung mempengaruhi shift dan absensi staf yang aktif. Apakah Anda yakin ingin menyimpan perubahan?`,
+                onConfirm: async () => {
+                    setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+                    await executeSave();
+                }
+            });
+            return;
         }
+
+        await executeSave();
     };
 
     const getShiftsFor = (day, shiftType) => {
@@ -198,8 +214,8 @@ export default function ShiftPage() {
                         <Button onClick={handleRandomize} disabled={isRandomizing} variant="secondary" className="shift-header-btn">
                             <Shuffle size={20} /> {isRandomizing ? 'RANDOMIZING...' : 'RANDOMIZE'}
                         </Button>
-                        <Button onClick={handleSave} disabled={isSaving || !canSaveToday} variant="primary" className="shift-header-btn">
-                            <Save size={20} /> {isSaving ? 'SAVING...' : !canSaveToday ? 'SELASA-JUMAT TIDAK BISA SAVE' : 'SAVE SCHEDULE'}
+                        <Button onClick={handleSave} disabled={isSaving} variant="primary" className="shift-header-btn">
+                            <Save size={20} /> {isSaving ? 'SAVING...' : !canSaveToday ? 'SAVE (MID-WEEK)' : 'SAVE SCHEDULE'}
                         </Button>
                     </div>
                 }

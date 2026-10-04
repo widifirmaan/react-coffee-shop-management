@@ -70,14 +70,23 @@ export default function OrderPage({ shopConfig }) {
         }).filter(i => i.quantity > 0));
     };
 
-    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const taxPercent = (shopConfig?.taxPercentage !== undefined && !isNaN(Number(shopConfig.taxPercentage)))
+        ? Number(shopConfig.taxPercentage)
+        : 10;
+    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const tax = Math.round(subtotal * (taxPercent / 100));
+    const grandTotal = subtotal + tax;
 
     const processOrder = async () => {
         try {
             const orderPayload = {
                 items: cart.map(i => ({ menuId: i.id, menuName: i.name, quantity: i.quantity, price: i.price })),
-                totalAmount: total,
+                totalPrice: subtotal,
+                totalAmount: subtotal,
+                tax: tax,
+                grandTotal: grandTotal,
                 tableNumber: customerInfo.tableNumber,
+                orderType: customerInfo.tableNumber === 'Take Away' ? 'TAKEAWAY' : 'DINE_IN',
                 customerName: customerInfo.name,
                 notes: customerInfo.notes,
                 paymentMethod: customerInfo.paymentMethod
@@ -221,8 +230,8 @@ export default function OrderPage({ shopConfig }) {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '15px', cursor: 'pointer' }} onClick={() => setIsCartOpen(true)}>
                             <ShoppingCart size={24} />
                             <div>
-                                <div style={{ fontWeight: '900' }}>Rp {total.toLocaleString()}</div>
-                                <div style={{ fontSize: '0.8rem' }}>{cart.length} ITEMS</div>
+                                <div style={{ fontWeight: '900' }}>Rp {grandTotal.toLocaleString()}</div>
+                                <div style={{ fontSize: '0.8rem' }}>{cart.length} ITEMS (INCL. TAX)</div>
                             </div>
                         </div>
                         <Button onClick={() => { setIsCheckoutOpen(true); setIsCartOpen(false); }} variant="primary">ORDER NOW</Button>
@@ -258,7 +267,20 @@ export default function OrderPage({ shopConfig }) {
 
                         </div>
                     ))}
-                    <div style={{ marginTop: '20px', textAlign: 'right', fontSize: '1.5rem', fontWeight: '900' }}>TOTAL: Rp {total.toLocaleString()}</div>
+                    <div style={{ marginTop: '20px', borderTop: '2px dashed black', paddingTop: '15px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                            <span>Subtotal:</span>
+                            <span style={{ fontWeight: 'bold' }}>Rp {subtotal.toLocaleString()}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                            <span>Tax ({taxPercent}%):</span>
+                            <span style={{ fontWeight: 'bold' }}>Rp {tax.toLocaleString()}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.4rem', fontWeight: '900', borderTop: '2px solid black', paddingTop: '10px' }}>
+                            <span>TOTAL:</span>
+                            <span>Rp {grandTotal.toLocaleString()}</span>
+                        </div>
+                    </div>
                     <Button variant="primary" onClick={() => setIsCartOpen(false)} style={{ width: '100%', marginTop: '20px' }}>CLOSE</Button>
                 </div>
             </Modal >
@@ -281,8 +303,22 @@ export default function OrderPage({ shopConfig }) {
             </Modal>
 
             <Modal isOpen={isConfirmOpen} onClose={() => setIsConfirmOpen(false)} title="CONFIRM ORDER">
-                <p style={{ fontSize: '1.2rem', textAlign: 'center' }}>Place order for <strong>{customerInfo.name}</strong>?</p>
-                <div style={{ display: 'flex', gap: '15px', marginTop: '30px' }}>
+                <p style={{ fontSize: '1.2rem', textAlign: 'center', margin: '0 0 10px 0' }}>Place order for <strong>{customerInfo.name}</strong>?</p>
+                <div style={{ background: '#f3f4f6', border: '2px solid black', padding: '12px', margin: '15px 0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '0.9rem' }}>
+                        <span>Subtotal:</span>
+                        <span>Rp {subtotal.toLocaleString()}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '0.9rem' }}>
+                        <span>Tax ({taxPercent}%):</span>
+                        <span>Rp {tax.toLocaleString()}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '1.1rem', borderTop: '1px solid black', paddingTop: '6px' }}>
+                        <span>Total:</span>
+                        <span>Rp {grandTotal.toLocaleString()}</span>
+                    </div>
+                </div>
+                <div style={{ display: 'flex', gap: '15px', marginTop: '20px' }}>
                     <Button variant="secondary" onClick={() => setIsConfirmOpen(false)} style={{ flex: 1 }}>CANCEL</Button>
                     <Button variant="primary" onClick={processOrder} style={{ flex: 1 }}>YES, ORDER!</Button>
                 </div>
