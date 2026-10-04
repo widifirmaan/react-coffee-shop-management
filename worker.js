@@ -644,7 +644,11 @@ async function handleApi(request, env) {
     const tax = parseFloat(body.tax || 0);
     body.totalPrice = totalPrice;
     body.tax = tax;
-    body.grandTotal = totalPrice + tax;
+    if (body.grandTotal !== undefined && !isNaN(parseFloat(body.grandTotal))) {
+      body.grandTotal = parseFloat(body.grandTotal);
+    } else {
+      body.grandTotal = totalPrice + tax;
+    }
     body.status = (body.status || 'PENDING').toUpperCase();
     body.createdAt = nowISO();
     body.updatedAt = nowISO();
@@ -682,7 +686,11 @@ async function handleApi(request, env) {
         body.totalPrice = body.items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 0), 0);
         const existing = await DB.prepare('SELECT * FROM orders WHERE id = ?').bind(orderId).first();
         const tax = existing?.tax || 0;
-        body.grandTotal = body.totalPrice + tax;
+        if (body.grandTotal !== undefined && !isNaN(parseFloat(body.grandTotal))) {
+          body.grandTotal = parseFloat(body.grandTotal);
+        } else {
+          body.grandTotal = body.totalPrice + tax;
+        }
       }
       body.updatedAt = nowISO();
       stringifyJsonFields(body);

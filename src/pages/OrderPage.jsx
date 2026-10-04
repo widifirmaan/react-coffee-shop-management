@@ -30,6 +30,7 @@ export default function OrderPage({ shopConfig }) {
     const [isCallWaiterOpen, setIsCallWaiterOpen] = useState(false);
     const [zoomedImage, setZoomedImage] = useState(null);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    const [orderSuccess, setOrderSuccess] = useState(null);
 
     useEffect(() => {
         fetchMenus();
@@ -91,8 +92,8 @@ export default function OrderPage({ shopConfig }) {
                 notes: customerInfo.notes,
                 paymentMethod: customerInfo.paymentMethod
             };
-            await axios.post('/api/orders', orderPayload);
-            setAlertMsg({ type: 'success', message: 'ORDER PLACED SUCCESSFULLY!' });
+            const res = await axios.post('/api/orders', orderPayload);
+            setOrderSuccess(res.data);
             setCart([]);
             setIsConfirmOpen(false);
             setCustomerInfo({ name: '', tableNumber: '', notes: '', paymentMethod: 'CASH' });
@@ -340,6 +341,30 @@ export default function OrderPage({ shopConfig }) {
             </Modal>
 
             {alertMsg && <Alert type={alertMsg.type} message={alertMsg.message} onClose={() => setAlertMsg(null)} />}
+
+            {/* Order Success Ticket Modal */}
+            {orderSuccess && (
+                <Modal isOpen={!!orderSuccess} onClose={() => setOrderSuccess(null)} title="PESANAN DITERIMA!">
+                    <div style={{ textAlign: 'center', padding: '10px' }}>
+                        <div style={{ fontSize: '3rem', marginBottom: '10px' }}>🎉</div>
+                        <h2 style={{ margin: '0 0 10px 0', textTransform: 'uppercase' }}>Terima Kasih, {orderSuccess.customerName || 'Pelanggan'}!</h2>
+                        <p style={{ opacity: 0.8, marginBottom: '20px' }}>Pesanan Anda telah berhasil dibuat dan diteruskan ke Barista & Dapur.</p>
+                        <div style={{ background: '#fef08a', border: '3px solid black', padding: '16px', boxShadow: '4px 4px 0 0 black', marginBottom: '20px' }}>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 'bold', textTransform: 'uppercase', opacity: 0.8 }}>Nomor Pesanan:</div>
+                            <div style={{ fontSize: '2rem', fontWeight: '900', fontFamily: 'monospace', margin: '4px 0' }}>#{orderSuccess.orderNumber}</div>
+                            <div style={{ fontSize: '0.95rem', marginTop: '6px', fontWeight: 'bold' }}>
+                                {orderSuccess.tableNumber} • {orderSuccess.paymentMethod} • Rp {orderSuccess.grandTotal?.toLocaleString()}
+                            </div>
+                        </div>
+                        <p style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#555', marginBottom: '20px' }}>
+                            Tunjukkan nomor pesanan ini ke kasir atau pelayan saat melakukan pembayaran atau konfirmasi pesanan.
+                        </p>
+                        <Button variant="primary" onClick={() => setOrderSuccess(null)} style={{ width: '100%', padding: '12px' }}>
+                            TUTUP & PESAN LAGI
+                        </Button>
+                    </div>
+                </Modal>
+            )}
 
             {/* Image Zoom Overlay */}
             <ImageModal

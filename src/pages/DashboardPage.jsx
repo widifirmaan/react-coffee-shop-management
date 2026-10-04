@@ -277,7 +277,9 @@ export default function DashboardPage({ user }) {
             // Calculate today's stats
             const today = new Date().toDateString();
             const todayOrders = orders.filter(o => new Date(o.createdAt).toDateString() === today);
-            const todayRevenue = todayOrders.reduce((sum, o) => sum + (o.grandTotal || 0), 0);
+            const todayRevenue = todayOrders
+                .filter(o => o.status !== 'CANCELLED')
+                .reduce((sum, o) => sum + parseFloat(o.grandTotal || o.totalPrice || o.totalAmount || 0), 0);
             const pendingOrders = orders.filter(o => o.status === 'PENDING').length;
 
             // Fetch menus
@@ -286,7 +288,11 @@ export default function DashboardPage({ user }) {
 
             // Fetch ingredients
             const ingredientsRes = await axios.get('/api/ingredients');
-            const lowStockItems = ingredientsRes.data.filter(i => i.quantity < i.minThreshold).length;
+            const lowStockItems = ingredientsRes.data.filter(i => {
+                const threshold = parseFloat(i.minThreshold ?? i.minStock ?? 0);
+                const currentQty = parseFloat(i.quantity ?? i.stock ?? 0);
+                return currentQty <= threshold;
+            }).length;
 
             // Fetch employees
             const employeesRes = await axios.get('/api/employees');
