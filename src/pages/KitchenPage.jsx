@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { ChefHat, User, Hash, CheckCircle, Edit2, Plus, Minus, Trash2, Users } from 'lucide-react';
+import { ChefHat, User, Hash, CheckCircle, Edit2, Plus, Minus, Trash2, Users, Volume2, VolumeX } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
@@ -12,6 +12,42 @@ import SearchBar from '../components/ui/SearchBar';
 import { TableContainer, Table, Thead, Tbody, Tr, Th, Td } from '../components/ui/Table';
 import PageHeader from '../components/ui/PageHeader';
 import { Badge } from '../components/ui/Badge';
+
+const playChimeSound = () => {
+    try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        if (ctx.state === 'suspended') {
+            ctx.resume();
+        }
+        const now = ctx.currentTime;
+        // Two-tone bell chime
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(659.25, now); // E5
+        gain1.gain.setValueAtTime(0.2, now);
+        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+        osc1.connect(gain1);
+        gain1.connect(ctx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.28);
+
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(880, now + 0.14); // A5
+        gain2.gain.setValueAtTime(0.25, now + 0.14);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+        osc2.start(now + 0.14);
+        osc2.stop(now + 0.55);
+    } catch (e) {
+        console.warn('Audio playback not supported or blocked', e);
+    }
+};
 
 export default function KitchenPage() {
     const [orders, setOrders] = useState([]);
@@ -25,18 +61,42 @@ export default function KitchenPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
+    const [soundAlert, setSoundAlert] = useState(() => localStorage.getItem('kitchen_sound_alert') !== 'false');
+    const knownOrderIdsRef = useRef(new Set());
+    const isFirstLoadRef = useRef(true);
+
+    const toggleSound = () => {
+        setSoundAlert(prev => {
+            const next = !prev;
+            localStorage.setItem('kitchen_sound_alert', String(next));
+            if (next) playChimeSound();
+            return next;
+        });
+    };
+
     useEffect(() => {
         fetchOrders();
         fetchMenus();
         const interval = setInterval(fetchOrders, 5000);
         return () => clearInterval(interval);
-    }, []);
+    }, [soundAlert]);
 
     const fetchOrders = async () => {
         try {
             const res = await axios.get('/api/orders');
             const activeOrders = res.data.filter(o => o.status !== 'COMPLETED' && o.status !== 'CANCELLED');
             const completedList = res.data.filter(o => o.status === 'COMPLETED');
+
+            // Detect new orders
+            if (!isFirstLoadRef.current && soundAlert) {
+                const hasNewOrder = activeOrders.some(o => !knownOrderIdsRef.current.has(o.id));
+                if (hasNewOrder) {
+                    playChimeSound();
+                }
+            }
+            knownOrderIdsRef.current = new Set(activeOrders.map(o => o.id));
+            isFirstLoadRef.current = false;
+
             setOrders(activeOrders.reverse());
             setCompletedOrders(completedList);
         } catch (e) {
@@ -141,6 +201,16 @@ export default function KitchenPage() {
                 description={`${orders.length} ACTIVE ORDERS`}
                 icon={ChefHat}
                 color="#fef08a"
+                action={
+                    <Button
+                        variant={soundAlert ? 'success' : 'secondary'}
+                        onClick={toggleSound}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', fontWeight: 'bold' }}
+                    >
+                        {soundAlert ? <Volume2 size={18} /> : <VolumeX size={18} />}
+                        {soundAlert ? 'SOUND ON' : 'MUTED'}
+                    </Button>
+                }
             />
 
             <style>{`

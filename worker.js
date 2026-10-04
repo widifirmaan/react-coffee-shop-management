@@ -13,7 +13,8 @@ const TABLE_COLUMNS = {
     'badgeText1', 'badgeText2', 'marqueeText', 'galleryImages', 'infoTitle',
     'infoContent', 'infoFooter1', 'infoFooter2', 'techSpec1', 'techSpec2',
     'techSpec3', 'latestDropPromoTitle', 'latestDropPromoDesc', 'latestDropPromoDate',
-    'latestDropNewsTitle', 'latestDropNewsDesc', 'latestDropEventTitle', 'latestDropEventDesc'
+    'latestDropNewsTitle', 'latestDropNewsDesc', 'latestDropEventTitle', 'latestDropEventDesc',
+    'taxPercentage', 'receiptFooter'
   ],
   orders: [
     'orderNumber', 'items', 'totalPrice', 'totalAmount', 'tax', 'grandTotal',
@@ -258,6 +259,8 @@ async function initTables(DB) {
         createdAt TEXT DEFAULT (datetime('now'))
       )
     `).run();
+    try { await DB.prepare('ALTER TABLE shop_config ADD COLUMN taxPercentage REAL DEFAULT 10').run(); } catch (_) {}
+    try { await DB.prepare('ALTER TABLE shop_config ADD COLUMN receiptFooter TEXT DEFAULT "Thank you for your visit!"').run(); } catch (_) {}
     tablesInitialized = true;
   } catch (e) {
     console.error('initTables error:', e);

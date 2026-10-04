@@ -1,30 +1,83 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Bell, Check, Clock } from 'lucide-react';
+import { Bell, Check, Clock, Volume2, VolumeX } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { NotificationCard } from '../components/ui/NotificationCard';
 import { Modal } from '../components/ui/Modal';
 
+const playWaiterAlertSound = () => {
+    try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        if (ctx.state === 'suspended') {
+            ctx.resume();
+        }
+        const now = ctx.currentTime;
+        // Urgent 3-pulse waiter call chime (800Hz - 1000Hz)
+        [0, 0.12, 0.24].forEach((delay, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(i % 2 === 0 ? 880 : 1046.5, now + delay);
+            gain.gain.setValueAtTime(0.25, now + delay);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.1);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + delay);
+            osc.stop(now + delay + 0.1);
+        });
+    } catch (e) {
+        console.warn('Audio playback not supported or blocked', e);
+    }
+};
+
 export default function WaiterPage() {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [confirmId, setConfirmId] = useState(null);
 
+    const [soundAlert, setSoundAlert] = useState(() => localStorage.getItem('waiter_sound_alert') !== 'false');
+    const knownNotifIdsRef = useRef(new Set());
+    const isFirstLoadRef = useRef(true);
+
+    const toggleSound = () => {
+        setSoundAlert(prev => {
+            const next = !prev;
+            localStorage.setItem('waiter_sound_alert', String(next));
+            if (next) playWaiterAlertSound();
+            return next;
+        });
+    };
+
     useEffect(() => {
         fetchNotifications();
         const interval = setInterval(fetchNotifications, 5000); // Poll every 5s
         return () => clearInterval(interval);
-    }, []);
+    }, [soundAlert]);
 
     const fetchNotifications = async () => {
         try {
             const res = await axios.get('/api/notifications');
-            setNotifications(res.data);
+            const data = Array.isArray(res.data) ? res.data : [];
+
+            // Detect new incoming notifications
+            if (!isFirstLoadRef.current && soundAlert) {
+                const hasNew = data.some(n => !knownNotifIdsRef.current.has(n.id));
+                if (hasNew) {
+                    playWaiterAlertSound();
+                }
+            }
+            knownNotifIdsRef.current = new Set(data.map(n => n.id));
+            isFirstLoadRef.current = false;
+
+            setNotifications(data);
             setLoading(false);
         } catch (e) {
-            console.error(e);
+            console.error('Fetch notifications error', e);
+            setLoading(false);
         }
     };
 
@@ -45,7 +98,21 @@ export default function WaiterPage() {
 
     return (
         <div className="page-container" style={{ minHeight: '100vh', background: '#f8fafc' }}>
-            <PageHeader title="WAITER DASHBOARD" description="REAL-TIME NOTIFICATIONS" color="#60a5fa" />
+            <PageHeader
+                title="WAITER DASHBOARD"
+                description={`${notifications.length} ACTIVE NOTIFICATIONS`}
+                color="#60a5fa"
+                action={
+                    <Button
+                        variant={soundAlert ? 'success' : 'secondary'}
+                        onClick={toggleSound}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', fontWeight: 'bold' }}
+                    >
+                        {soundAlert ? <Volume2 size={18} /> : <VolumeX size={18} />}
+                        {soundAlert ? 'SOUND ON' : 'MUTED'}
+                    </Button>
+                }
+            />
 
             <div>
                 {loading ? (

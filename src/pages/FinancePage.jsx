@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { DollarSign, TrendingUp, TrendingDown, Plus } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, Plus, Download, Calendar, Filter, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
@@ -9,12 +9,27 @@ import { TableContainer, Table, Thead, Tbody, Tr, Th, Td } from '../components/u
 import Pagination from '../components/ui/Pagination';
 import SearchBar from '../components/ui/SearchBar';
 import PageHeader from '../components/ui/PageHeader';
+import { Badge } from '../components/ui/Badge';
 
-export default function FinancePage() {
+const CATEGORIES = [
+    'Sales', 'Raw Materials / Inventory', 'Salaries / Wages',
+    'Utilities (Electricity/Water/Net)', 'Maintenance & Repairs',
+    'Marketing & Promo', 'Rent & Facility', 'Other'
+];
+
+export default function FinancePage({ user }) {
     const [transactions, setTransactions] = useState([]);
-    const [newTrans, setNewTrans] = useState({ type: 'EXPENSE', amount: 0, description: '' });
+    const [newTrans, setNewTrans] = useState({
+        type: 'EXPENSE',
+        category: 'Raw Materials / Inventory',
+        amount: '',
+        description: '',
+        date: new Date().toISOString().split('T')[0]
+    });
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [timeFilter, setTimeFilter] = useState('ALL'); // 'ALL', 'TODAY', 'WEEK', 'MONTH'
+    const [typeFilter, setTypeFilter] = useState('ALL'); // 'ALL', 'INCOME', 'EXPENSE'
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
@@ -27,108 +42,292 @@ export default function FinancePage() {
             const res = await axios.get('/api/transactions');
             setTransactions(res.data);
         } catch (e) {
-            console.error(e);
+            console.error('Failed to load transactions', e);
         }
     };
 
     const handleAdd = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('/api/transactions', newTrans);
-            setNewTrans({ type: 'EXPENSE', amount: 0, description: '' });
+            await axios.post('/api/transactions', {
+                ...newTrans,
+                amount: parseFloat(newTrans.amount || 0)
+            });
+            setNewTrans({
+                type: 'EXPENSE',
+                category: 'Raw Materials / Inventory',
+                amount: '',
+                description: '',
+                date: new Date().toISOString().split('T')[0]
+            });
             setIsModalOpen(false);
             fetchTransactions();
         } catch (e) {
-            alert("Error");
+            alert('Failed to save transaction');
         }
     };
 
-    const income = transactions.filter(t => t.type === 'INCOME').reduce((sum, t) => sum + t.amount, 0);
-    const expense = transactions.filter(t => t.type === 'EXPENSE').reduce((sum, t) => sum + t.amount, 0);
+    const formatRupiah = (num) => {
+        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num || 0);
+    };
+
+    // Time filtering logic
+    const filterByDate = (txDateStr) => {
+        if (timeFilter === 'ALL') return true;
+        const txDate = new Date(txDateStr);
+        const now = new Date();
+
+        if (timeFilter === 'TODAY') {
+            return txDate.toDateString() === now.toDateString();
+        }
+        if (timeFilter === 'WEEK') {
+            const weekAgo = new Date();
+            weekAgo.setDate(now.getDate() - 7);
+            return txDate >= weekAgo;
+        }
+        if (timeFilter === 'MONTH') {
+            return txDate.getMonth() === now.getMonth() && txDate.getFullYear() === now.getFullYear();
+        }
+        return true;
+    };
+
+    const filtered = transactions.filter(t => {
+        const matchesSearch = !searchTerm ||
+            t.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (t.category && t.category.toLowerCase().includes(searchTerm.toLowerCase()));
+        const matchesType = typeFilter === 'ALL' || t.type === typeFilter;
+        const matchesTime = filterByDate(t.date || t.createdAt);
+        return matchesSearch && matchesType && matchesTime;
+    });
+
+    const income = filtered.filter(t => t.type === 'INCOME').reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+    const expense = filtered.filter(t => t.type === 'EXPENSE').reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
     const profit = income - expense;
 
-    // Search and Pagination
-    const filtered = transactions.filter(t =>
-        t.description.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Export CSV
+    const exportCSV = () => {
+        const headers = ['Date', 'Type', 'Category', 'Description', 'Amount (IDR)', 'Recorded By'];
+        const rows = filtered.map(t => [
+            new Date(t.date || t.createdAt).toLocaleDateString('id-ID'),
+            t.type,
+            `"${t.category || 'General'}"`,
+            `"${t.description.replace(/"/g, '""')}"`,
+            t.amount,
+            t.employeeId || 'System'
+        ]);
+
+        const csvContent = 'data:text/csv;charset=utf-8,' +
+            [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', `siap_nyafe_finance_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    // Pagination
     const totalPages = Math.ceil(filtered.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const paginatedData = filtered.slice(startIndex, startIndex + itemsPerPage);
 
     return (
-        <div className="page-container">
+        <div className="page-container" style={{ paddingTop: '40px' }}>
             <PageHeader
-                title="FINANCIAL"
-                description="PROFIT & LOSS TRACKER"
+                title="FINANCE & CASHFLOW"
+                description="REAL-TIME REVENUE, EXPENSES & NET PROFIT TRACKER"
                 icon={DollarSign}
                 color="#d1fae5"
-                action={
-                    <Button onClick={() => setIsModalOpen(true)} variant="primary" style={{ padding: '15px 30px', fontSize: '1.2rem' }}>
-                        <Plus /> RECORD TRANSACTION
-                    </Button>
+                actionButton={
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <Button
+                            onClick={exportCSV}
+                            variant="secondary"
+                            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '12px 18px', fontWeight: '900' }}
+                        >
+                            <Download size={18} /> EXPORT CSV
+                        </Button>
+                        <Button
+                            onClick={() => setIsModalOpen(true)}
+                            variant="primary"
+                            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '12px 20px', background: '#10b981', color: 'black', fontWeight: '900' }}
+                        >
+                            <Plus size={18} /> RECORD TRANSACTION
+                        </Button>
+                    </div>
                 }
             />
 
-            {/* Search */}
-            <div style={{ marginBottom: '30px' }}>
-                <SearchBar
-                    value={searchTerm}
-                    onChange={setSearchTerm}
-                    placeholder="SEARCH TRANSACTIONS..."
-                />
+            {/* KPI STAT CARDS */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+                <Card style={{ background: '#dcfce7', color: 'black' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <div style={{ fontSize: '0.85rem', fontWeight: '900', opacity: 0.8, textTransform: 'uppercase' }}>
+                                TOTAL INCOME ({timeFilter})
+                            </div>
+                            <div style={{ color: '#15803d', fontSize: '2.2rem', fontWeight: '900', fontFamily: 'monospace', marginTop: '6px' }}>
+                                + {formatRupiah(income)}
+                            </div>
+                        </div>
+                        <ArrowUpRight size={40} color="#15803d" strokeWidth={2.5} />
+                    </div>
+                </Card>
+
+                <Card style={{ background: '#fee2e2', color: 'black' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <div style={{ fontSize: '0.85rem', fontWeight: '900', opacity: 0.8, textTransform: 'uppercase' }}>
+                                TOTAL EXPENSES ({timeFilter})
+                            </div>
+                            <div style={{ color: '#b91c1c', fontSize: '2.2rem', fontWeight: '900', fontFamily: 'monospace', marginTop: '6px' }}>
+                                - {formatRupiah(expense)}
+                            </div>
+                        </div>
+                        <ArrowDownRight size={40} color="#b91c1c" strokeWidth={2.5} />
+                    </div>
+                </Card>
+
+                <Card style={{ background: profit >= 0 ? '#bbf7d0' : '#fecaca', color: 'black' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <div style={{ fontSize: '0.85rem', fontWeight: '900', opacity: 0.8, textTransform: 'uppercase' }}>
+                                NET PROFIT / MARGIN
+                            </div>
+                            <div style={{ fontSize: '2.2rem', fontWeight: '900', fontFamily: 'monospace', marginTop: '6px', color: profit >= 0 ? '#166534' : '#991b1b' }}>
+                                {formatRupiah(profit)}
+                            </div>
+                        </div>
+                        <TrendingUp size={40} color={profit >= 0 ? '#166534' : '#991b1b'} strokeWidth={2.5} />
+                    </div>
+                </Card>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px', marginBottom: '40px' }}>
-                <Card style={{ background: '#f0fdf4', textAlign: 'center' }}>
-                    <h3 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}><TrendingUp size={24} /> INCOME</h3>
-                    <p style={{ color: '#16a34a', fontSize: '2.5rem', fontWeight: '900', margin: '10px 0' }}>+ {income.toLocaleString()}</p>
-                </Card>
-                <Card style={{ background: '#fef2f2', textAlign: 'center' }}>
-                    <h3 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}><TrendingDown size={24} /> EXPENSE</h3>
-                    <p style={{ color: '#dc2626', fontSize: '2.5rem', fontWeight: '900', margin: '10px 0' }}>- {expense.toLocaleString()}</p>
-                </Card>
-                <Card style={{ background: profit >= 0 ? '#dcfce7' : '#fee2e2', textAlign: 'center', border: '4px solid black' }}>
-                    <h3>NET PROFIT</h3>
-                    <p style={{ fontSize: '2.5rem', fontWeight: '900', margin: '10px 0' }}>{profit.toLocaleString()}</p>
-                </Card>
+            {/* FILTERS & SEARCH BAR */}
+            <div style={{
+                background: 'white',
+                border: '3px solid black',
+                boxShadow: '4px 4px 0 0 black',
+                padding: '15px 20px',
+                marginBottom: '25px',
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '15px',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+            }}>
+                <div style={{ flex: '1 1 300px' }}>
+                    <SearchBar
+                        value={searchTerm}
+                        onChange={(val) => { setSearchTerm(val); setCurrentPage(1); }}
+                        placeholder="SEARCH BY DESCRIPTION OR CATEGORY..."
+                    />
+                </div>
+
+                {/* Period Filter Buttons */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: '900', marginRight: '4px' }}>PERIOD:</span>
+                    {['ALL', 'TODAY', 'WEEK', 'MONTH'].map(period => (
+                        <button
+                            key={period}
+                            onClick={() => { setTimeFilter(period); setCurrentPage(1); }}
+                            style={{
+                                padding: '6px 12px',
+                                border: '2px solid black',
+                                background: timeFilter === period ? 'black' : '#f3f4f6',
+                                color: timeFilter === period ? 'white' : 'black',
+                                fontWeight: '900',
+                                fontSize: '0.75rem',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            {period}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Type Filter Buttons */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: '900', marginRight: '4px' }}>TYPE:</span>
+                    {['ALL', 'INCOME', 'EXPENSE'].map(type => (
+                        <button
+                            key={type}
+                            onClick={() => { setTypeFilter(type); setCurrentPage(1); }}
+                            style={{
+                                padding: '6px 12px',
+                                border: '2px solid black',
+                                background: typeFilter === type ? 'black' : '#f3f4f6',
+                                color: typeFilter === type ? 'white' : 'black',
+                                fontWeight: '900',
+                                fontSize: '0.75rem',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            {type}
+                        </button>
+                    ))}
+                </div>
             </div>
 
+            {/* TRANSACTIONS TABLE */}
             <TableContainer>
                 <Table>
                     <Thead>
                         <Tr>
-                            {['DATE', 'DESCRIPTION', 'TYPE', 'AMOUNT'].map(h => <Th key={h}>{h}</Th>)}
+                            <Th>DATE</Th>
+                            <Th>CATEGORY</Th>
+                            <Th>DESCRIPTION</Th>
+                            <Th>TYPE</Th>
+                            <Th style={{ textAlign: 'right' }}>AMOUNT</Th>
                         </Tr>
                     </Thead>
                     <Tbody>
                         {paginatedData.map((t, i) => (
-                            <Tr key={t.id} index={i}>
-                                <Td>{new Date(t.date).toLocaleDateString()}</Td>
-                                <Td style={{ fontWeight: 'bold' }}>{t.description}</Td>
+                            <Tr key={t.id || i} index={i}>
+                                <Td style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>
+                                    {new Date(t.date || t.createdAt).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}
+                                </Td>
                                 <Td>
                                     <span style={{
-                                        background: t.type === 'INCOME' ? '#dcfce7' : '#fee2e2',
-                                        color: t.type === 'INCOME' ? '#166534' : '#991b1b',
-                                        padding: '5px 10px', fontWeight: 'bold', border: '2px solid black', fontSize: '0.8rem'
+                                        background: '#f3f4f6',
+                                        border: '1.5px solid black',
+                                        padding: '2px 8px',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 'bold'
                                     }}>
-                                        {t.type}
+                                        {t.category || (t.type === 'INCOME' ? 'Sales' : 'General')}
                                     </span>
                                 </Td>
-                                <Td align="right" style={{ fontWeight: '900', fontSize: '1.2rem', color: t.type === 'INCOME' ? '#166534' : '#991b1b' }}>
-                                    {t.type === 'INCOME' ? '+' : '-'} {t.amount.toLocaleString()}
+                                <Td style={{ fontWeight: 'bold' }}>{t.description}</Td>
+                                <Td>
+                                    <Badge variant={t.type === 'INCOME' ? 'success' : 'danger'}>
+                                        {t.type}
+                                    </Badge>
+                                </Td>
+                                <Td align="right" style={{
+                                    fontWeight: '900',
+                                    fontSize: '1.1rem',
+                                    fontFamily: 'monospace',
+                                    color: t.type === 'INCOME' ? '#15803d' : '#b91c1c'
+                                }}>
+                                    {t.type === 'INCOME' ? '+ ' : '- '}
+                                    {formatRupiah(t.amount)}
                                 </Td>
                             </Tr>
                         ))}
                         {filtered.length === 0 && (
                             <Tr>
-                                <Td colSpan="4" style={{ padding: '40px', textAlign: 'center', opacity: 0.5 }}>NO TRANSACTIONS FOUND</Td>
+                                <Td colSpan={5} style={{ padding: '40px', textAlign: 'center', opacity: 0.5, fontWeight: 'bold' }}>
+                                    NO TRANSACTIONS FOUND MATCHING FILTER CRITERIA
+                                </Td>
                             </Tr>
                         )}
                     </Tbody>
                 </Table>
             </TableContainer>
 
-            {filtered.length > 0 && (
+            {totalPages > 1 && (
                 <Pagination
                     currentPage={currentPage}
                     totalPages={totalPages}
@@ -138,16 +337,101 @@ export default function FinancePage() {
                 />
             )}
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="RECORD TRANSACTION">
+            {/* ADD TRANSACTION MODAL */}
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="RECORD FINANCIAL TRANSACTION">
                 <form onSubmit={handleAdd}>
-                    <Select label="TYPE" value={newTrans.type} onChange={e => setNewTrans({ ...newTrans, type: e.target.value })}
-                        options={[{ value: 'EXPENSE', label: 'EXPENSE (PENGELUARAN)' }, { value: 'INCOME', label: 'INCOME (PEMASUKAN)' }]} />
-                    <Input label="DESCRIPTION" value={newTrans.description} onChange={e => setNewTrans({ ...newTrans, description: e.target.value })} required maxLength={100} />
-                    <Input label="AMOUNT (IDR)" type="number" value={newTrans.amount} onChange={e => setNewTrans({ ...newTrans, amount: e.target.value })} required max={100000000} />
+                    <div style={{ marginBottom: '15px' }}>
+                        <label style={{ display: 'block', fontWeight: '900', marginBottom: '6px' }}>TRANSACTION TYPE *</label>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                            <button
+                                type="button"
+                                onClick={() => setNewTrans({ ...newTrans, type: 'EXPENSE' })}
+                                style={{
+                                    padding: '12px',
+                                    border: '3px solid black',
+                                    background: newTrans.type === 'EXPENSE' ? '#ef4444' : '#f3f4f6',
+                                    color: newTrans.type === 'EXPENSE' ? 'white' : 'black',
+                                    fontWeight: '900',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                🔴 EXPENSE (PENGELUARAN)
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setNewTrans({ ...newTrans, type: 'INCOME' })}
+                                style={{
+                                    padding: '12px',
+                                    border: '3px solid black',
+                                    background: newTrans.type === 'INCOME' ? '#22c55e' : '#f3f4f6',
+                                    color: newTrans.type === 'INCOME' ? 'white' : 'black',
+                                    fontWeight: '900',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                🟢 INCOME (PEMASUKAN)
+                            </button>
+                        </div>
+                    </div>
 
-                    <div style={{ display: 'flex', gap: '15px', marginTop: '20px' }}>
-                        <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)} style={{ flex: 1 }}>CANCEL</Button>
-                        <Button type="submit" variant={newTrans.type === 'EXPENSE' ? 'danger' : 'success'} style={{ flex: 1 }}>CONFIRM</Button>
+                    <div style={{ marginBottom: '15px' }}>
+                        <label style={{ display: 'block', fontWeight: '900', marginBottom: '6px' }}>CATEGORY</label>
+                        <select
+                            value={newTrans.category}
+                            onChange={(e) => setNewTrans({ ...newTrans, category: e.target.value })}
+                            style={{ width: '100%', padding: '12px', border: '3px solid black', fontWeight: 'bold' }}
+                        >
+                            {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                        </select>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '15px' }}>
+                        <Input
+                            label="AMOUNT (IDR) *"
+                            type="number"
+                            min="1"
+                            placeholder="e.g. 500000"
+                            value={newTrans.amount}
+                            onChange={(e) => setNewTrans({ ...newTrans, amount: e.target.value })}
+                            required
+                        />
+
+                        <div>
+                            <label style={{ display: 'block', fontWeight: '900', marginBottom: '8px' }}>DATE</label>
+                            <input
+                                type="date"
+                                value={newTrans.date}
+                                onChange={(e) => setNewTrans({ ...newTrans, date: e.target.value })}
+                                style={{ width: '100%', padding: '15px', border: '3px solid black', fontWeight: 'bold', fontFamily: 'monospace' }}
+                            />
+                        </div>
+                    </div>
+
+                    <Input
+                        label="DESCRIPTION / NOTES *"
+                        placeholder="e.g. Pembelian susu 10 botol, tagihan listrik PLN, dll"
+                        value={newTrans.description}
+                        onChange={(e) => setNewTrans({ ...newTrans, description: e.target.value })}
+                        required
+                        maxLength={120}
+                    />
+
+                    <div style={{ display: 'flex', gap: '15px', marginTop: '25px' }}>
+                        <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)} style={{ flex: 1 }}>
+                            CANCEL
+                        </Button>
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            style={{
+                                flex: 1,
+                                background: newTrans.type === 'EXPENSE' ? '#ef4444' : '#22c55e',
+                                color: 'white',
+                                fontWeight: '900'
+                            }}
+                        >
+                            RECORD {newTrans.type}
+                        </Button>
                     </div>
                 </form>
             </Modal>

@@ -67,7 +67,7 @@ export default function EmployeePage() {
 
         const ids = employees
             .map(e => e.employeeId)
-            .filter(id => id.startsWith('EMP'))
+            .filter(id => id && typeof id === 'string' && id.startsWith('EMP'))
             .map(id => parseInt(id.replace('EMP', ''), 10))
             .filter(n => !isNaN(n));
 
@@ -122,14 +122,26 @@ export default function EmployeePage() {
         });
     };
 
-    const handleDelete = async (id) => {
+    const handleDelete = async (emp) => {
+        if (emp.role && emp.role.toUpperCase() === 'MANAGER') {
+            setAlertMsg({ type: 'error', message: 'CANNOT TERMINATE A MANAGER ACCOUNT!' });
+            return;
+        }
+
         setConfirmDialog({
             isOpen: true,
             title: 'TERMINATE EMPLOYEE',
-            message: 'ARE YOU SURE YOU WANT TO REMOVE THIS EMPLOYEE FROM THE ROSTER? THIS ACTION CANNOT BE UNDONE.',
+            message: `ARE YOU SURE YOU WANT TO REMOVE ${emp.name} FROM THE ROSTER? THIS ACTION CANNOT BE UNDONE.`,
             onConfirm: async () => {
-                setAlertMsg({ type: 'info', message: 'FEATURE NOT CONNECTED (MOCK)' });
-                setConfirmDialog({ ...confirmDialog, isOpen: false });
+                try {
+                    await axios.delete(`/api/employees/${emp.id}`);
+                    setAlertMsg({ type: 'success', message: `${emp.name} REMOVED FROM ROSTER` });
+                    fetchEmployees();
+                } catch (e) {
+                    console.error('Delete employee failed', e);
+                    setAlertMsg({ type: 'error', message: 'FAILED TO REMOVE EMPLOYEE' });
+                }
+                setConfirmDialog({ isOpen: false, title: '', message: '', onConfirm: null });
             }
         });
     };
@@ -234,7 +246,16 @@ export default function EmployeePage() {
                                     <History size={16} /> ATTENDANCE HISTORY
                                 </Button>
                             </div>
-                            <Button onClick={() => handleDelete(emp.id)} variant="danger" style={{ width: '100%' }}>
+                            <Button
+                                onClick={() => handleDelete(emp)}
+                                variant="danger"
+                                disabled={emp.role && emp.role.toUpperCase() === 'MANAGER'}
+                                style={{
+                                    width: '100%',
+                                    opacity: (emp.role && emp.role.toUpperCase() === 'MANAGER') ? 0.4 : 1,
+                                    cursor: (emp.role && emp.role.toUpperCase() === 'MANAGER') ? 'not-allowed' : 'pointer'
+                                }}
+                            >
                                 <Trash2 size={18} /> TERMINATE
                             </Button>
                         </div>

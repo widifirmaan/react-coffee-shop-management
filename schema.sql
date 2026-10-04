@@ -85,7 +85,9 @@ CREATE TABLE IF NOT EXISTS shop_config (
   latestDropNewsTitle TEXT,
   latestDropNewsDesc TEXT,
   latestDropEventTitle TEXT,
-  latestDropEventDesc TEXT
+  latestDropEventDesc TEXT,
+  taxPercentage REAL DEFAULT 10,
+  receiptFooter TEXT DEFAULT 'Thank you for your visit!'
 );
 
 CREATE TABLE IF NOT EXISTS orders (

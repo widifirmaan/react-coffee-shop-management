@@ -73,10 +73,10 @@ export default function ShiftPage() {
             return;
         }
 
-        // Limit to 5 staff per shift
+        // Limit to 8 staff per shift
         const currentShifts = shifts.filter(s => s.dayOfWeek === day && s.shiftType === shiftType);
-        if (currentShifts.length >= 5) {
-            setAlertMsg({ type: 'error', message: 'MAX 5 STAFF PER SHIFT!' });
+        if (currentShifts.length >= 8) {
+            setAlertMsg({ type: 'error', message: 'MAX 8 STAFF PER SHIFT!' });
             return;
         }
 
@@ -120,25 +120,13 @@ export default function ShiftPage() {
 
     const handleSave = async () => {
         setIsSaving(true);
-        // Validation: Every shift must have at least one staff member
-        for (const day of DAYS) {
-            for (const shiftType of SHIFTS) {
-                const shiftStaff = getShiftsFor(day, shiftType);
-                
-                // Strict 5-Role Validation
-                const requiredRoles = ['MANAGER', 'BARISTA', 'CASHIER', 'KITCHEN STAFF', 'WAITER'];
-                const currentRoles = shiftStaff.map(s => s.role?.toUpperCase());
-                const missingRoles = requiredRoles.filter(role => !currentRoles.includes(role));
-
-                if (missingRoles.length > 0) {
-                    setAlertMsg({ 
-                        type: 'error', 
-                        message: `Shift ${shiftType} pada ${day} kekurangan: ${missingRoles.join(', ')}` 
-                    });
-                    setIsSaving(false);
-                    return;
-                }
-            }
+        if (!shifts || shifts.length === 0) {
+            setAlertMsg({ 
+                type: 'error', 
+                message: 'JADWAL SHIFT MASIH KOSONG! TAMBAHKAN STAF KE JADWAL SEBELUM MENYIMPAN.' 
+            });
+            setIsSaving(false);
+            return;
         }
 
         try {

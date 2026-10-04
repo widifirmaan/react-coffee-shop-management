@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Save, Globe, Phone, MapPin, Image, Hash, Instagram, Facebook, Upload, Star, Trash2 } from 'lucide-react';
+import { Save, Globe, Phone, MapPin, Image, Hash, Instagram, Facebook, Upload, Star, Trash2, CreditCard } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Input, Select } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
@@ -17,7 +17,9 @@ export default function SettingsPage() {
         instagramUrl: '',
         facebookUrl: '',
         twitterUrl: '',
-        socialLinks: []
+        socialLinks: [],
+        taxPercentage: 10,
+        receiptFooter: 'Thank you for your visit!'
     });
 
     const [previewFavicon, setPreviewFavicon] = useState(null);
@@ -48,8 +50,7 @@ export default function SettingsPage() {
         try {
             const res = await axios.put('/api/config', config);
             setConfig(res.data);
-            setAlertMsg({ type: 'success', message: 'SETTINGS SAVED!' });
-            setTimeout(() => window.location.reload(), 2000);
+            setAlertMsg({ type: 'success', message: 'SETTINGS SAVED SUCCESSFULLY!' });
         } catch (e) {
             console.error("Failed to save", e);
             setAlertMsg({ type: 'error', message: 'SAVE FAILED' });
@@ -377,6 +378,32 @@ export default function SettingsPage() {
                                 maxLength={20}
                             />
                         </div>
+                    </Card>
+
+                    {/* Cashier & POS Settings */}
+                    <Card title="CASHIER & POS SETTINGS" icon={CreditCard}>
+                        <Input
+                            label="RESTAURANT TAX RATE (PB1 %)"
+                            name="taxPercentage"
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="0.1"
+                            value={config.taxPercentage ?? 10}
+                            onChange={handleChange}
+                            placeholder="10"
+                        />
+                        <Input
+                            label="RECEIPT FOOTER MESSAGE"
+                            name="receiptFooter"
+                            value={config.receiptFooter || ''}
+                            onChange={handleChange}
+                            placeholder="Thank you for your visit! Follow @siapnyafe"
+                            maxLength={100}
+                        />
+                        <p style={{ fontSize: '0.85rem', color: '#666', marginTop: '-10px', fontWeight: 'bold' }}>
+                            Configures restaurant tax (PB1) percentage and footer notes printed on 58mm/80mm thermal receipts.
+                        </p>
                     </Card>
 
                     {/* Contact Info */}

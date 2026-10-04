@@ -27,6 +27,14 @@ import ShiftPage from './pages/ShiftPage';
 import AssetManagementPage from './pages/AssetManagementPage';
 import CashierPage from './pages/CashierPage';
 
+function ManagerOnlyRoute({ user, children }) {
+    const isManager = (user?.role || '').toUpperCase() === 'MANAGER';
+    if (!isManager) {
+        return <Navigate to="/dashboard" replace />;
+    }
+    return children;
+}
+
 function AppContent() {
     const location = useLocation();
     const { user, login, logout, loading } = useAuth(); // Use Context
@@ -91,18 +99,21 @@ function AppContent() {
             <div className="container" style={{ position: 'relative', zIndex: 1 }}>
                 <Routes>
                     <Route path="/dashboard" element={<DashboardPage user={user} />} />
+                    <Route path="/cashier" element={<CashierPage user={user} shopConfig={shopConfig} />} />
                     <Route path="/menu" element={<MenuPage user={user} />} />
                     <Route path="/kitchen" element={<KitchenPage user={user} />} />
-                    <Route path="/inventory" element={<InventoryPage user={user} />} />
-                    <Route path="/employees" element={<EmployeePage user={user} />} />
-                    <Route path="/finance" element={<FinancePage user={user} />} />
-                    <Route path="/settings" element={<SettingsPage />} />
-                    <Route path="/posts" element={<PostManagementPage user={user} />} />
                     <Route path="/waiter" element={<WaiterPage />} />
                     <Route path="/feedback" element={<FeedbackPage />} />
-                    <Route path="/cashier" element={<CashierPage user={user} shopConfig={shopConfig} />} />
-                    <Route path="/assets" element={<AssetManagementPage user={user} />} />
-                    <Route path="/shifts" element={<ShiftPage />} />
+                    <Route path="/inventory" element={<InventoryPage user={user} />} />
+
+                    {/* Manager Only Routes */}
+                    <Route path="/assets" element={<ManagerOnlyRoute user={user}><AssetManagementPage user={user} /></ManagerOnlyRoute>} />
+                    <Route path="/employees" element={<ManagerOnlyRoute user={user}><EmployeePage user={user} /></ManagerOnlyRoute>} />
+                    <Route path="/shifts" element={<ManagerOnlyRoute user={user}><ShiftPage /></ManagerOnlyRoute>} />
+                    <Route path="/finance" element={<ManagerOnlyRoute user={user}><FinancePage user={user} /></ManagerOnlyRoute>} />
+                    <Route path="/posts" element={<ManagerOnlyRoute user={user}><PostManagementPage user={user} /></ManagerOnlyRoute>} />
+                    <Route path="/settings" element={<ManagerOnlyRoute user={user}><SettingsPage /></ManagerOnlyRoute>} />
+
                     {/* Fallback route */}
                     <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Routes>

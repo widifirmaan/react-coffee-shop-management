@@ -97,7 +97,10 @@ export default function CashierPage({ user, shopConfig }) {
 
     // Calculations
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const taxRate = 0.10; // 10% PB1
+    const taxPercent = (shopConfig?.taxPercentage !== undefined && !isNaN(Number(shopConfig.taxPercentage)))
+        ? Number(shopConfig.taxPercentage)
+        : 10;
+    const taxRate = taxPercent / 100;
     const taxAmount = includeTax ? Math.round(subtotal * taxRate) : 0;
     const grandTotal = Math.max(0, subtotal + taxAmount - parseFloat(discountAmount || 0));
     const changeAmount = Math.max(0, parseFloat(cashTendered || 0) - grandTotal);
@@ -644,7 +647,7 @@ export default function CashierPage({ user, shopConfig }) {
                                     checked={includeTax}
                                     onChange={(e) => setIncludeTax(e.target.checked)}
                                 />
-                                Tax PB1 (10%):
+                                Tax PB1 ({taxPercent}%):
                             </label>
                             <span style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{formatRupiah(taxAmount)}</span>
                         </div>
@@ -934,7 +937,7 @@ export default function CashierPage({ user, shopConfig }) {
                         </div>
                         {completedOrder?.tax > 0 && (
                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <span>TAX PB1 (10%):</span>
+                                <span>TAX PB1 ({taxPercent}%):</span>
                                 <span>{formatRupiah(completedOrder?.tax)}</span>
                             </div>
                         )}
@@ -972,8 +975,8 @@ export default function CashierPage({ user, shopConfig }) {
 
                     {/* Footer */}
                     <div style={{ textAlign: 'center', fontSize: '0.75rem', lineHeight: '1.4' }}>
-                        <div>TERIMA KASIH ATAS KUNJUNGAN ANDA!</div>
-                        <div>FOLLOW US ON INSTAGRAM @SIAPNYAFE</div>
+                        <div style={{ fontWeight: 'bold' }}>{shopConfig?.receiptFooter || 'TERIMA KASIH ATAS KUNJUNGAN ANDA!'}</div>
+                        {shopConfig?.instagramUrl && <div>FOLLOW US ON INSTAGRAM {shopConfig.instagramUrl}</div>}
                         <div style={{ fontSize: '0.65rem', opacity: 0.6, marginTop: '6px' }}>
                             Powered by Siap Nyafe Smart POS System
                         </div>
