@@ -58,7 +58,6 @@ Siap Nyafe is a coffee shop point-of-sale (POS) and management web application b
 | **State & Networking** | React Context API, Axios `1.6.0` | Centralized authentication state with global HTTP request interceptors |
 | **Carousels & Sliders** | Swiper `11.0.5` | Mobile touch swipe carousels for promotional menu highlights |
 | **Iconography** | Lucide React `0.292.0` | Consistent vector line icons across POS registers and dashboard views |
-| **Hosting** | Cloudflare Pages | Global static edge delivery with custom apex domain routing |
 
 ---
 
