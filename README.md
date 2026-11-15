@@ -1,10 +1,10 @@
 # Siap Nyafe POS
 
-> Neo-brutalist coffee shop management platform, customer self-ordering portal, and kitchen display system.
+> Coffee shop management platform, customer self-ordering portal, and kitchen display system.
 
-Siap Nyafe is an all-in-one coffee shop point-of-sale (POS) and operations suite built with React 18, Vite 5, and modern React Router. Engineered under a tactile Neo-Brutalist design language, it unifies digital customer self-ordering, real-time barista kitchen ticket workflows (KDS), cashier checkout processing with automated tax and change calculation, raw ingredient inventory monitoring, staff shift scheduling, and manager revenue analytics into a single responsive web platform.
+Siap Nyafe is a coffee shop point-of-sale (POS) and management web application built with React 18, Vite 5, and React Router. It features a customer self-ordering menu, cashier checkout with change calculation, kitchen display system (KDS) order tracking, ingredient inventory monitoring, staff shift scheduling, and manager financial analytics.
 
-[![Live Demo](https://img.shields.io/badge/Demo-react--coffee--shop--management.vercel.app-10B981?style=flat-square&logo=vercel&logoColor=white)](https://react-coffee-shop-management.vercel.app/)
+[![Live Demo](https://img.shields.io/badge/Demo-siapnyafe.widifirmaan.web.id-10B981?style=flat-square&logo=cloudflare&logoColor=white)](https://siapnyafe.widifirmaan.web.id)
 [![React 18](https://img.shields.io/badge/React-18.2.0-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
 [![Vite 5](https://img.shields.io/badge/Vite-5.0.0-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![React Router](https://img.shields.io/badge/Router-v6.18-CA4245?style=flat-square&logo=reactrouter&logoColor=white)](https://reactrouter.com/)
@@ -15,9 +15,8 @@ Siap Nyafe is an all-in-one coffee shop point-of-sale (POS) and operations suite
 
 ## Live Production
 
-- **URL:** [https://react-coffee-shop-management.vercel.app/](https://react-coffee-shop-management.vercel.app/)
-- **Deployment:** Vercel Edge Network
-- **Design System:** High-contrast Neo-Brutalism (Hard 2px/3px borders, solid offset drop-shadows, bold typography)
+- **URL:** [https://siapnyafe.widifirmaan.web.id](https://siapnyafe.widifirmaan.web.id)
+- **Deployment:** Cloudflare Pages / Custom Domain CDN (`CNAME: siapnyafe.widifirmaan.web.id`)
 
 ---
 
@@ -35,18 +34,18 @@ Siap Nyafe is an all-in-one coffee shop point-of-sale (POS) and operations suite
 
 ## Features
 
-- **Interactive Self-Ordering Portal (`/order`)**: Digital guest menu with multi-category filtering (Coffee, Non-Coffee, Pastries, Main Course), drink customization modals (sweetness, ice levels, milk alternatives), and real-time cart state.
-- **High-Velocity Cashier Register (`/cashier`)**: Rapid order management station calculating order subtotal, dynamic tax percentages, coupon discounts, cash tendered exchange, and instant thermal receipt printing.
-- **Executive Operations Dashboard (`/dashboard`)**: KPI tracking displaying gross daily sales, net profit margins, top 5 best-selling coffee items, and real-time active customer order volume.
-- **Barista Kitchen Display System (`/kitchen`)**: Real-time barista queue with order timestamps, item preparation checklists, and progressive order lifecycle status toggling (Pending, Brewing, Completed).
-- **Ingredient & Stock Inventory Control (`/inventory`)**: SKU-level stock level monitoring for coffee beans, dairy, syrups, and packaging with automated low-stock warnings.
+- **Customer Self-Ordering Portal (`/order`)**: Digital guest menu with multi-category filtering (Coffee, Non-Coffee, Pastries, Main Course), drink customization modals (sweetness, ice levels, milk alternatives), and live cart management.
+- **Cashier POS Register (`/cashier`)**: Order checkout terminal calculating subtotal, configurable tax percentages, coupon discounts, cash tendered exchange, and receipt printing.
+- **Manager Operations Dashboard (`/dashboard`)**: Sales overview tracking daily revenue, profit margins, top-selling items, and active order counts.
+- **Barista Kitchen Display System (`/kitchen`)**: Real-time barista ticket queue with order timestamps, preparation checklists, and progressive order lifecycle status toggling (Pending, Brewing, Completed).
+- **Ingredient & Stock Inventory Control (`/inventory`)**: SKU-level stock level monitoring for coffee beans, dairy, syrups, and packaging with low-stock warnings.
 - **Staff Roster & Weekly Shift Matrix (`/employee`, `/shift`)**: Multi-tier employee management tracking wage structures, contact information, role permissions, and weekly shift scheduling.
 - **Table Waiter Assistance Dispatcher (`/waiter`)**: Real-time table calling system and service request notification dispatcher for floor staff.
 - **Asset Depreciation & Equipment Logs (`/asset-management`)**: Maintenance tracking and depreciation calculations for espresso machines, commercial grinders, and cafe hardware.
 - **Financial Accounting & Ledger (`/finance`)**: Operational cost ledger, expense breakdown, and daily cash reconciliations.
 - **Customer Feedback & Rating Portal (`/feedback`)**: Guest review collection interface capturing satisfaction scores and customer experience sentiment.
 - **Promotional CMS & Announcements (`/cms`, `/post-management`)**: Content management system for cafe announcements, blog posts, and seasonal promotional banners.
-- **Modular Neo-Brutalist Component Primitives**: Handcrafted UI component kit featuring high-contrast interactive buttons, status badges, data tables, search bars, and dialog overlays.
+- **Neo-Brutalist Component Kit**: High-contrast UI styled with custom CSS variables, hard borders, offset drop-shadows, and Lucide React vector icons.
 
 ---
 
@@ -54,12 +53,12 @@ Siap Nyafe is an all-in-one coffee shop point-of-sale (POS) and operations suite
 
 | Category | Technologies | Purpose |
 | :--- | :--- | :--- |
-| **Core Framework** | React `18.2.0`, Vite `5.0.0` | High-performance SPA architecture with lightning-fast HMR and bundle splitting |
-| **Client Routing** | React Router DOM `6.18.0` | Declarative routing, URL parameter binding, and role-based route guards |
-| **State & Networking** | React Context API, Axios `1.6.0` | Centralized authentication state with global HTTP request/response interceptors |
-| **Carousels & Sliders** | Swiper `12.0.3` | Hardware-accelerated mobile touch carousels for promotional menu highlights |
-| **Iconography** | Lucide React `0.292.0` | Vector line icons styled to complement the high-contrast brutalist aesthetic |
-| **Deployment** | Vercel Edge Platform | Global CDN asset delivery with instant cache invalidation |
+| **Core Framework** | React `18.2.0`, Vite `5.0.0` | SPA frontend foundation with fast Vite HMR and production bundle optimization |
+| **Routing** | React Router DOM `6.18.0` | Client-side routing, URL parameter binding, and protected route wrappers |
+| **State & Networking** | React Context API, Axios `1.6.0` | Centralized authentication state with global HTTP request interceptors |
+| **Carousels & Sliders** | Swiper `11.0.5` | Mobile touch swipe carousels for promotional menu highlights |
+| **Iconography** | Lucide React `0.292.0` | Consistent vector line icons across POS registers and dashboard views |
+| **Hosting** | Cloudflare Pages | Global static edge delivery with custom apex domain routing |
 
 ---
 
