@@ -10,7 +10,6 @@ Siap Nyafe is an all-in-one coffee shop point-of-sale (POS) and operations suite
 [![React Router](https://img.shields.io/badge/Router-v6.18-CA4245?style=flat-square&logo=reactrouter&logoColor=white)](https://reactrouter.com/)
 [![Lucide Icons](https://img.shields.io/badge/Icons-Lucide_React-F56565?style=flat-square)](https://lucide.dev/)
 [![Design System](https://img.shields.io/badge/Design-Neo--Brutalism-FCD34D?style=flat-square)](#features)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
 ---
 
@@ -39,9 +38,14 @@ Siap Nyafe is an all-in-one coffee shop point-of-sale (POS) and operations suite
 - **Interactive Self-Ordering Portal (`/order`)**: Digital guest menu with multi-category filtering (Coffee, Non-Coffee, Pastries, Main Course), drink customization modals (sweetness, ice levels, milk alternatives), and real-time cart state.
 - **High-Velocity Cashier Register (`/cashier`)**: Rapid order management station calculating order subtotal, dynamic tax percentages, coupon discounts, cash tendered exchange, and instant thermal receipt printing.
 - **Executive Operations Dashboard (`/dashboard`)**: KPI tracking displaying gross daily sales, net profit margins, top 5 best-selling coffee items, and real-time active customer order volume.
-- **Kitchen Display System (`/kitchen`)**: Real-time barista queue with order timestamps, item preparation checklists, and progressive order lifecycle status toggling (Pending, Brewing, Completed).
+- **Barista Kitchen Display System (`/kitchen`)**: Real-time barista queue with order timestamps, item preparation checklists, and progressive order lifecycle status toggling (Pending, Brewing, Completed).
 - **Ingredient & Stock Inventory Control (`/inventory`)**: SKU-level stock level monitoring for coffee beans, dairy, syrups, and packaging with automated low-stock warnings.
-- **Staff Roster & Weekly Shift Matrix (`/employee`, `/shift`)**: Multi-tier employee management tracking wage structures, contact information, and role-based permissions (Cashier, Barista, Waiter, Manager).
+- **Staff Roster & Weekly Shift Matrix (`/employee`, `/shift`)**: Multi-tier employee management tracking wage structures, contact information, role permissions, and weekly shift scheduling.
+- **Table Waiter Assistance Dispatcher (`/waiter`)**: Real-time table calling system and service request notification dispatcher for floor staff.
+- **Asset Depreciation & Equipment Logs (`/asset-management`)**: Maintenance tracking and depreciation calculations for espresso machines, commercial grinders, and cafe hardware.
+- **Financial Accounting & Ledger (`/finance`)**: Operational cost ledger, expense breakdown, and daily cash reconciliations.
+- **Customer Feedback & Rating Portal (`/feedback`)**: Guest review collection interface capturing satisfaction scores and customer experience sentiment.
+- **Promotional CMS & Announcements (`/cms`, `/post-management`)**: Content management system for cafe announcements, blog posts, and seasonal promotional banners.
 - **Modular Neo-Brutalist Component Primitives**: Handcrafted UI component kit featuring high-contrast interactive buttons, status badges, data tables, search bars, and dialog overlays.
 
 ---
@@ -65,24 +69,30 @@ Siap Nyafe is an all-in-one coffee shop point-of-sale (POS) and operations suite
 /
 ├── src/
 │   ├── components/
-│   │   ├── layout/       # Navbar, OrderPageHeader, OrderPageFooter
-│   │   └── ui/           # Neo-brutalist buttons, cards, modals, tables, badges
+│   │   ├── layout/                 # Navbar, OrderPageHeader, OrderPageFooter
+│   │   └── ui/                     # Neo-brutalist buttons, cards, modals, tables, badges
 │   ├── context/
-│   │   └── AuthContext.jsx # Global user authentication & role state
+│   │   └── AuthContext.jsx         # Global user authentication & role state
 │   ├── pages/
-│   │   ├── OrderPage.jsx       # Customer self-ordering digital menu
-│   │   ├── DashboardPage.jsx   # Manager operations dashboard
-│   │   ├── CashierPage.jsx     # POS register checkout
-│   │   ├── KitchenPage.jsx     # Kitchen Display System (KDS)
-│   │   ├── InventoryPage.jsx   # Stock tracking
-│   │   ├── EmployeePage.jsx    # Staff management
-│   │   ├── ShiftPage.jsx       # Shift scheduling
-│   │   ├── CMSPage.jsx         # Public promotional landing
-│   │   └── LoginPage.jsx       # Auth gate
-│   ├── utils/                  # Staff and business logic helper algorithms
-│   ├── App.jsx                 # Route definitions and layouts
-│   └── main.jsx                # React application root
-├── screenshots/                # MacBook Pro M4 & iPhone 16 Pro showcase mockups
+│   │   ├── OrderPage.jsx           # Customer self-ordering digital menu
+│   │   ├── DashboardPage.jsx       # Manager operations dashboard
+│   │   ├── CashierPage.jsx         # POS register checkout
+│   │   ├── KitchenPage.jsx         # Kitchen Display System (KDS)
+│   │   ├── InventoryPage.jsx       # Raw ingredient stock tracking
+│   │   ├── EmployeePage.jsx        # Staff directory & roles
+│   │   ├── ShiftPage.jsx           # Weekly shift scheduling
+│   │   ├── WaiterPage.jsx          # Table waiter assistance calls
+│   │   ├── AssetManagementPage.jsx # Coffee machinery & depreciation
+│   │   ├── FinancePage.jsx         # Financial ledger & expense tracking
+│   │   ├── FeedbackPage.jsx        # Customer feedback & reviews
+│   │   ├── CMSPage.jsx             # Public promotional landing
+│   │   ├── PostManagementPage.jsx  # Blog & announcement manager
+│   │   ├── SettingsPage.jsx        # Store configuration & tax settings
+│   │   └── LoginPage.jsx           # Auth gate
+│   ├── utils/                      # Staff and business logic helper algorithms
+│   ├── App.jsx                     # Route definitions and layouts
+│   └── main.jsx                    # React application root
+├── screenshots/                    # MacBook Pro M4 & iPhone 16 Pro showcase mockups
 └── README.md
 ```
 
@@ -125,9 +135,3 @@ npm run build
 ## Author
 
 Developed by **[Widi Firmansyah](https://widifirmaan.web.id)**.
-
----
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
