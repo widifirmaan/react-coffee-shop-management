@@ -1,14 +1,15 @@
 # Siap Nyafe POS
 
-> Neo-brutalist coffee shop management platform, customer self-order portal, and kitchen display system.
+> Neo-brutalist coffee shop management platform, customer self-ordering portal, and kitchen display system.
 
-Siap Nyafe is an all-in-one coffee shop point-of-sale (POS) and operations suite built with React 18 and Vite. It unifies customer digital self-ordering, real-time kitchen ticket queueing (KDS), cashier order processing, inventory tracking, staff shift scheduling, and manager revenue analytics under a high-contrast Neo-Brutalist interface.
+Siap Nyafe is an all-in-one coffee shop point-of-sale (POS) and operations suite built with React 18, Vite 5, and modern React Router. Engineered under a tactile Neo-Brutalist design language, it unifies digital customer self-ordering, real-time barista kitchen ticket workflows (KDS), cashier checkout processing with automated tax and change calculation, raw ingredient inventory monitoring, staff shift scheduling, and manager revenue analytics into a single responsive web platform.
 
 [![Live Demo](https://img.shields.io/badge/Demo-react--coffee--shop--management.vercel.app-10B981?style=flat-square&logo=vercel&logoColor=white)](https://react-coffee-shop-management.vercel.app/)
 [![React 18](https://img.shields.io/badge/React-18.2.0-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-5.0-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Vite 5](https://img.shields.io/badge/Vite-5.0.0-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![React Router](https://img.shields.io/badge/Router-v6.18-CA4245?style=flat-square&logo=reactrouter&logoColor=white)](https://reactrouter.com/)
 [![Lucide Icons](https://img.shields.io/badge/Icons-Lucide_React-F56565?style=flat-square)](https://lucide.dev/)
+[![Design System](https://img.shields.io/badge/Design-Neo--Brutalism-FCD34D?style=flat-square)](#features)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
 ---
@@ -17,7 +18,7 @@ Siap Nyafe is an all-in-one coffee shop point-of-sale (POS) and operations suite
 
 - **URL:** [https://react-coffee-shop-management.vercel.app/](https://react-coffee-shop-management.vercel.app/)
 - **Deployment:** Vercel Edge Network
-- **Design System:** Neo-Brutalism (Bold high-contrast borders, solid drop shadows, tactile typography)
+- **Design System:** High-contrast Neo-Brutalism (Hard 2px/3px borders, solid offset drop-shadows, bold typography)
 
 ---
 
@@ -33,35 +34,35 @@ Siap Nyafe is an all-in-one coffee shop point-of-sale (POS) and operations suite
 
 ---
 
-## Core Features
+## Features
 
-- **Customer Self-Ordering Portal (`/order`)**: Interactive digital menu with category filtering (Coffee, Non-Coffee, Pastries), item detail modal, customizable options, and dynamic cart summary.
-- **Cashier POS Station (`/cashier`)**: Rapid order entry system with real-time tax calculation, discount application, payment method handling, and thermal receipt print trigger.
-- **Operations Dashboard (`/dashboard`)**: KPI overview cards for daily gross revenue, net profit margin, top-selling coffee blends, and active orders velocity.
-- **Kitchen Display System (`/kitchen`)**: Real-time order status board for baristas with order timers, preparation steps, and instant status toggling (Pending, Brewing, Completed).
-- **Inventory & Stock Depletion (`/inventory`)**: Track raw ingredients, coffee beans, milk, and packaging with low-stock alerts and reorder thresholds.
-- **Staff Roster & Shift Matrix (`/employee`, `/shift`)**: Employee profiles, hourly wages, role permissions (Cashier, Barista, Waiter, Manager), and weekly shift schedules.
-- **Neo-Brutalist Component System**: Custom-engineered UI primitives with crisp 2px-3px solid borders, offset box-shadows, and high-readability retro typography.
+- **Interactive Self-Ordering Portal (`/order`)**: Digital guest menu with multi-category filtering (Coffee, Non-Coffee, Pastries, Main Course), drink customization modals (sweetness, ice levels, milk alternatives), and real-time cart state.
+- **High-Velocity Cashier Register (`/cashier`)**: Rapid order management station calculating order subtotal, dynamic tax percentages, coupon discounts, cash tendered exchange, and instant thermal receipt printing.
+- **Executive Operations Dashboard (`/dashboard`)**: KPI tracking displaying gross daily sales, net profit margins, top 5 best-selling coffee items, and real-time active customer order volume.
+- **Kitchen Display System (`/kitchen`)**: Real-time barista queue with order timestamps, item preparation checklists, and progressive order lifecycle status toggling (Pending, Brewing, Completed).
+- **Ingredient & Stock Inventory Control (`/inventory`)**: SKU-level stock level monitoring for coffee beans, dairy, syrups, and packaging with automated low-stock warnings.
+- **Staff Roster & Weekly Shift Matrix (`/employee`, `/shift`)**: Multi-tier employee management tracking wage structures, contact information, and role-based permissions (Cashier, Barista, Waiter, Manager).
+- **Modular Neo-Brutalist Component Primitives**: Handcrafted UI component kit featuring high-contrast interactive buttons, status badges, data tables, search bars, and dialog overlays.
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology | Details |
+| Category | Technologies | Purpose |
 | :--- | :--- | :--- |
-| **Frontend Framework** | React `18.2.0` | Functional components with Hooks and Context API state |
-| **Bundler & Dev Server** | Vite `5.0.0` | Lightning-fast Hot Module Replacement (HMR) and optimized builds |
-| **Routing** | React Router DOM `6.18.0` | Declarative client-side routing with role-based auth guards |
-| **HTTP Client** | Axios `1.6.0` | REST API communication with global auth interceptors |
-| **Iconography** | Lucide React `0.292.0` | Crisp SVG line icons matching the brutalist theme |
-| **Sliders & Carousel** | Swiper `12.0.3` | Mobile touch-friendly promo and menu carousels |
+| **Core Framework** | React `18.2.0`, Vite `5.0.0` | High-performance SPA architecture with lightning-fast HMR and bundle splitting |
+| **Client Routing** | React Router DOM `6.18.0` | Declarative routing, URL parameter binding, and role-based route guards |
+| **State & Networking** | React Context API, Axios `1.6.0` | Centralized authentication state with global HTTP request/response interceptors |
+| **Carousels & Sliders** | Swiper `12.0.3` | Hardware-accelerated mobile touch carousels for promotional menu highlights |
+| **Iconography** | Lucide React `0.292.0` | Vector line icons styled to complement the high-contrast brutalist aesthetic |
+| **Deployment** | Vercel Edge Platform | Global CDN asset delivery with instant cache invalidation |
 
 ---
 
 ## Project Structure
 
-```text
-react-coffee-shop-management/
+```bash
+/
 ├── src/
 │   ├── components/
 │   │   ├── layout/       # Navbar, OrderPageHeader, OrderPageFooter
@@ -78,10 +79,11 @@ react-coffee-shop-management/
 │   │   ├── ShiftPage.jsx       # Shift scheduling
 │   │   ├── CMSPage.jsx         # Public promotional landing
 │   │   └── LoginPage.jsx       # Auth gate
+│   ├── utils/                  # Staff and business logic helper algorithms
 │   ├── App.jsx                 # Route definitions and layouts
 │   └── main.jsx                # React application root
-├── raw_screenshots/            # Production screen captures
-└── screenshots/                # MacBook Pro M4 & iPhone 16 Pro mockups
+├── screenshots/                # MacBook Pro M4 & iPhone 16 Pro showcase mockups
+└── README.md
 ```
 
 ---
@@ -93,28 +95,36 @@ react-coffee-shop-management/
 - **Node.js**: Version 18.0.0 or higher
 - **npm** or **yarn**
 
-### Installation
+### Installation & Setup
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/widifirmaan/react-coffee-shop-management.git
-   cd react-coffee-shop-management
-   ```
+> **Environment Variables:** No external API keys are required for local frontend development. Default demo staff credentials and menu data are pre-configured for local evaluation.
 
-2. **Install dependencies**:
-   ```bash
-   npm install
-   ```
+```bash
+# 1. Clone the repository
+git clone https://github.com/widifirmaan/react-coffee-shop-management.git
+cd react-coffee-shop-management
 
-3. **Start local development server**:
-   ```bash
-   npm run dev
-   ```
+# 2. Install project dependencies
+npm install
 
-4. **Build for production**:
-   ```bash
-   npm run build
-   ```
+# 3. Start local development server
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173) in your web browser.
+
+### Production Build
+
+```bash
+# Compile and optimize production distribution bundle
+npm run build
+```
+
+---
+
+## Author
+
+Developed by **[Widi Firmansyah](https://widifirmaan.web.id)**.
 
 ---
 
