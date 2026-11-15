@@ -45,7 +45,7 @@ Siap Nyafe is a coffee shop point-of-sale (POS) and management web application b
 - **Financial Accounting & Ledger (`/finance`)**: Operational cost ledger, expense breakdown, and daily cash reconciliations.
 - **Customer Feedback & Rating Portal (`/feedback`)**: Guest review collection interface capturing satisfaction scores and customer experience sentiment.
 - **Promotional CMS & Announcements (`/cms`, `/post-management`)**: Content management system for cafe announcements, blog posts, and seasonal promotional banners.
-- **Neo-Brutalist Component Kit**: High-contrast UI styled with custom CSS variables, hard borders, offset drop-shadows, and Lucide React vector icons.
+- **High-Contrast Component System**: Custom UI styled with CSS variables, borders, card shadows, and Lucide React vector icons.
 
 ---
 
@@ -69,7 +69,7 @@ Siap Nyafe is a coffee shop point-of-sale (POS) and management web application b
 ├── src/
 │   ├── components/
 │   │   ├── layout/                 # Navbar, OrderPageHeader, OrderPageFooter
-│   │   └── ui/                     # Neo-brutalist buttons, cards, modals, tables, badges
+│   │   └── ui/                     # Reusable buttons, cards, modals, tables, badges
 │   ├── context/
 │   │   └── AuthContext.jsx         # Global user authentication & role state
 │   ├── pages/
