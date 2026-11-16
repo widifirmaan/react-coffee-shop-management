@@ -162,18 +162,18 @@ export default function FinancePage({ user }) {
                 icon={DollarSign}
                 color="#d1fae5"
                 action={
-                    <div style={{ display: 'flex', gap: '10px' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', width: '100%' }}>
                         <Button
                             onClick={exportCSV}
                             variant="secondary"
-                            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '12px 18px', fontWeight: '900' }}
+                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '12px 18px', fontWeight: '900', flex: '1 1 auto' }}
                         >
                             <Download size={18} /> EXPORT CSV
                         </Button>
                         <Button
                             onClick={() => setIsModalOpen(true)}
                             variant="primary"
-                            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '12px 20px', background: '#10b981', color: 'black', fontWeight: '900' }}
+                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '12px 20px', background: '#10b981', color: 'black', fontWeight: '900', flex: '1 1 auto' }}
                         >
                             <Plus size={18} /> RECORD TRANSACTION
                         </Button>
@@ -270,7 +270,7 @@ export default function FinancePage({ user }) {
                 </div>
 
                 {/* Type Filter Buttons */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                     <span style={{ fontSize: '0.75rem', fontWeight: '900', marginRight: '4px' }}>TYPE:</span>
                     {['ALL', 'INCOME', 'EXPENSE'].map(type => (
                         <button
@@ -387,10 +387,11 @@ export default function FinancePage({ user }) {
                                     background: newTrans.type === 'EXPENSE' ? '#ef4444' : '#f3f4f6',
                                     color: newTrans.type === 'EXPENSE' ? 'white' : 'black',
                                     fontWeight: '900',
+                                    fontSize: '0.85rem',
                                     cursor: 'pointer'
                                 }}
                             >
-                                🔴 EXPENSE (PENGELUARAN)
+                                EXPENSE (PENGELUARAN)
                             </button>
                             <button
                                 type="button"
@@ -401,10 +402,11 @@ export default function FinancePage({ user }) {
                                     background: newTrans.type === 'INCOME' ? '#22c55e' : '#f3f4f6',
                                     color: newTrans.type === 'INCOME' ? 'white' : 'black',
                                     fontWeight: '900',
+                                    fontSize: '0.85rem',
                                     cursor: 'pointer'
                                 }}
                             >
-                                🟢 INCOME (PEMASUKAN)
+                                INCOME (PEMASUKAN)
                             </button>
                         </div>
                     </div>

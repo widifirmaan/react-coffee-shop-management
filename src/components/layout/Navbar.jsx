@@ -107,7 +107,7 @@ export default function Navbar({ user, onLogout, shopConfig }) {
                     alignItems: 'center',
                     gap: '8px'
                 }}>
-                    <span>Hi, {user.name || user.email || user.employeeId}! 👋</span>
+                    <span>Hi, {user.name || user.email || user.employeeId}!</span>
                     <span style={{
                         background: '#facc15',
                         color: 'black',

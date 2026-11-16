@@ -304,7 +304,7 @@ export default function InventoryPage({ user }) {
                         boxShadow: activeTab === 'STOCK' ? '4px 4px 0 0 #38bdf8' : '2px 2px 0 0 black'
                     }}
                 >
-                    📦 INVENTORY STOCK LEVELS
+                    INVENTORY STOCK LEVELS
                 </button>
 
                 <button
@@ -320,7 +320,7 @@ export default function InventoryPage({ user }) {
                         boxShadow: activeTab === 'RECIPES' ? '4px 4px 0 0 #f59e0b' : '2px 2px 0 0 black'
                     }}
                 >
-                    📜 MENU RECIPES & BOM AUTO-DEDUCTION
+                    MENU RECIPES & BOM AUTO-DEDUCTION
                 </button>
             </div>
 
@@ -588,7 +588,7 @@ export default function InventoryPage({ user }) {
                     </div>
 
                     <div style={{ background: '#fef3c7', border: '2px solid black', padding: '12px', marginBottom: '20px', fontSize: '0.85rem' }}>
-                        💡 <strong>How it works:</strong> Whenever this menu is ordered, the system will automatically deduct this amount from real-time stock when processed by the Cashier or Kitchen.
+                        <strong>How it works:</strong> Whenever this menu is ordered, the system will automatically deduct this amount from real-time stock when processed by the Cashier or Kitchen.
                     </div>
 
                     <div style={{ display: 'flex', gap: '15px' }}>

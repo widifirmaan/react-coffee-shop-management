@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { ShoppingCart, Menu as MenuIcon, LayoutGrid, List as ListIcon, Trash2, Plus, Minus } from 'lucide-react';
+import { ShoppingCart, Menu as MenuIcon, LayoutGrid, List as ListIcon, Trash2, Plus, Minus, CheckCircle } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Mousewheel } from 'swiper/modules';
 import 'swiper/css';
@@ -357,7 +357,9 @@ export default function OrderPage({ shopConfig }) {
             {orderSuccess && (
                 <Modal isOpen={!!orderSuccess} onClose={() => setOrderSuccess(null)} title="PESANAN DITERIMA!">
                     <div style={{ textAlign: 'center', padding: '10px' }}>
-                        <div style={{ fontSize: '3rem', marginBottom: '10px' }}>🎉</div>
+                        <div style={{ marginBottom: '15px', display: 'flex', justifyContent: 'center' }}>
+                            <CheckCircle size={56} color="#16a34a" strokeWidth={2.5} />
+                        </div>
                         <h2 style={{ margin: '0 0 10px 0', textTransform: 'uppercase' }}>Terima Kasih, {orderSuccess.customerName || 'Pelanggan'}!</h2>
                         <p style={{ opacity: 0.8, marginBottom: '20px' }}>Pesanan Anda telah berhasil dibuat dan diteruskan ke Barista & Dapur.</p>
                         <div style={{ background: '#fef08a', border: '3px solid black', padding: '16px', boxShadow: '4px 4px 0 0 black', marginBottom: '20px' }}>

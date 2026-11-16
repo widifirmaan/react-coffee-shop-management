@@ -527,6 +527,12 @@ input:focus {
     }
     .page-header-container > div:last-child {
         width: 100%;
+        max-width: 100%;
+    }
+    .page-header-container > div:last-child > div {
+        width: 100%;
+        max-width: 100%;
+        flex-wrap: wrap;
     }
     .page-header-container > div:last-child button {
         width: 100% !important;

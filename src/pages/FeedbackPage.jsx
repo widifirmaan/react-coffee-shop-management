@@ -81,7 +81,6 @@ export default function FeedbackPage() {
                         padding: '8px 16px',
                         fontWeight: '900'
                     }}>
-                        <Star size={20} fill="#eab308" color="#eab308" />
                         <span>AVG: {averageRating} / 5.0</span>
                         <span style={{ fontSize: '0.85rem', color: '#666', fontWeight: 'bold' }}>({feedbacks.length} reviews)</span>
                     </div>

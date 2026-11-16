@@ -268,7 +268,7 @@ export default function KitchenPage() {
                         {/* Notes */}
                         {order.notes && (
                             <div style={{ marginBottom: '15px', background: '#fef3c7', padding: '15px', border: '2px dashed black' }}>
-                                <b style={{ color: '#b45309' }}>⚠️ NOTES:</b> {order.notes}
+                                <b style={{ color: '#b45309' }}>NOTES:</b> {order.notes}
                             </div>
                         )}
 

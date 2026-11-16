@@ -675,9 +675,9 @@ export default function AssetManagementPage({ user }) {
                             onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
                             style={{ width: '100%', padding: '12px', border: '3px solid black', fontWeight: 'bold', marginBottom: '15px' }}
                         >
-                            <option value="GOOD">🟢 GOOD (Kondisi Prima / Siap Pakai)</option>
-                            <option value="NEEDS_MAINTENANCE">🟡 NEEDS MAINTENANCE (Perlu Perawatan / Servis)</option>
-                            <option value="BROKEN">🔴 BROKEN (Rusak / Kendala Operasional)</option>
+                            <option value="GOOD">GOOD (Kondisi Prima / Siap Pakai)</option>
+                            <option value="NEEDS_MAINTENANCE">NEEDS MAINTENANCE (Perlu Perawatan / Servis)</option>
+                            <option value="BROKEN">BROKEN (Rusak / Kendala Operasional)</option>
                         </select>
 
                         <label style={{ display: 'block', fontWeight: '900', marginBottom: '5px' }}>OPERATIONAL STATUS *</label>
