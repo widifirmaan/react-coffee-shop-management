@@ -109,8 +109,8 @@ Siap Nyafe is a coffee shop point-of-sale (POS) and management web application b
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/widifirmaan/react-coffee-shop-management.git
-cd react-coffee-shop-management
+git clone https://github.com/widifirmaan/reactjs-coffee-shop-management.git
+cd reactjs-coffee-shop-management
 
 # 2. Install project dependencies
 npm install
