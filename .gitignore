@@ -8,3 +8,5 @@ migrate-now.js
 *.sqlite
 
 raw_screenshots/
+
+.wrangler/
