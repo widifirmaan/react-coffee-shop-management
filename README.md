@@ -47,10 +47,15 @@ Siap Nyafe is a full-stack coffee shop management and point-of-sale (POS) web ap
 
 ---
 
-### 2. Point of Sale (POS) & Kitchen Barista Operations (`/cashier`, `/kitchen`, `/waiter`)
+### 2. Operations Dashboard, Point of Sale (POS) & Kitchen Barista Workflow (`/dashboard`, `/cashier`, `/kitchen`, `/waiter`)
 
 | Desktop Interface (MacBook Pro M4) | Mobile Interface (iPhone 16 Pro) |
 | :---: | :---: |
+| **Executive Operations Dashboard (`/dashboard`)**<br>![Manager Dashboard Overview Desktop](screenshots/Coffee%20Manager%20Dashboard%20Overview%20Desktop.png) | **Executive Operations Dashboard (`/dashboard`)**<br>![Manager Dashboard Overview Mobile](screenshots/Coffee%20Manager%20Dashboard%20Overview%20Mobile.png) |
+| **Shift Attendance Confirmation (Clock In Confirm Modal)**<br>![Dashboard Clock In Confirm Modal Desktop](screenshots/Coffee%20Dashboard%20Modal%20Clock%20In%20Confirm%20Desktop.png) | **Shift Attendance Confirmation (Clock In Confirm Modal)**<br>![Dashboard Clock In Confirm Modal Mobile](screenshots/Coffee%20Dashboard%20Modal%20Clock%20In%20Confirm%20Mobile.png) |
+| **Shift Timecard & Attendance Alert (Late Attendance Modal)**<br>![Dashboard Attendance Alert Desktop](screenshots/Coffee%20Dashboard%20Modal%20Attendance%20Alert%20Desktop.png) | **Shift Timecard & Attendance Alert (Late Attendance Modal)**<br>![Dashboard Attendance Alert Mobile](screenshots/Coffee%20Dashboard%20Modal%20Attendance%20Alert%20Mobile.png) |
+| **Late Attendance Notification Banner (Late Toast Alert)**<br>![Dashboard Attendance Late Alert Desktop](screenshots/Coffee%20Dashboard%20Alert%20Attendance%20Late%20Desktop.png) | **Late Attendance Notification Banner (Late Toast Alert)**<br>![Dashboard Attendance Late Alert Mobile](screenshots/Coffee%20Dashboard%20Alert%20Attendance%20Late%20Mobile.png) |
+| **Manager Operational Memo Saved (Toast Alert)**<br>![Dashboard Memo Saved Alert Desktop](screenshots/Coffee%20Dashboard%20Alert%20Note%20Saved%20Desktop.png) | **Manager Operational Memo Saved (Toast Alert)**<br>![Dashboard Memo Saved Alert Mobile](screenshots/Coffee%20Dashboard%20Alert%20Note%20Saved%20Mobile.png) |
 | **Cashier Point-of-Sale Register Terminal (`/cashier`)**<br>![Cashier POS Register Desktop](screenshots/Coffee%20Cashier%20POS%20Register%20Desktop.png) | **Cashier Point-of-Sale Register Terminal (`/cashier`)**<br>![Cashier POS Register Mobile](screenshots/Coffee%20Cashier%20POS%20Register%20Mobile.png) |
 | **Thermal Receipt & Invoice Print Modal (Cashier Receipt)**<br>![Cashier Modal Thermal Receipt Desktop](screenshots/Coffee%20Cashier%20Modal%20Thermal%20Receipt%20Desktop.png) | **Thermal Receipt & Invoice Print Modal (Cashier Receipt)**<br>![Cashier Modal Thermal Receipt Mobile](screenshots/Coffee%20Cashier%20Modal%20Thermal%20Receipt%20Mobile.png) |
 | **POS Insufficient Cash Payment (Underpaid Error Alert)**<br>![Cashier Underpaid Alert Desktop](screenshots/Coffee%20Cashier%20Alert%20Underpaid%20Error%20Desktop.png) | **POS Insufficient Cash Payment (Underpaid Error Alert)**<br>![Cashier Underpaid Alert Mobile](screenshots/Coffee%20Cashier%20Alert%20Underpaid%20Error%20Mobile.png) |
@@ -66,15 +71,10 @@ Siap Nyafe is a full-stack coffee shop management and point-of-sale (POS) web ap
 
 ---
 
-### 3. Managerial Oversight, Timecards & Staff Administration (`/dashboard`, `/employees`, `/shifts`, `/login`)
+### 3. Staff Administration, Roster & Weekly Shift Scheduling (`/login`, `/employees`, `/shifts`)
 
 | Desktop Interface (MacBook Pro M4) | Mobile Interface (iPhone 16 Pro) |
 | :---: | :---: |
-| **Executive Operations Dashboard (`/dashboard`)**<br>![Manager Dashboard Overview Desktop](screenshots/Coffee%20Manager%20Dashboard%20Overview%20Desktop.png) | **Executive Operations Dashboard (`/dashboard`)**<br>![Manager Dashboard Overview Mobile](screenshots/Coffee%20Manager%20Dashboard%20Overview%20Mobile.png) |
-| **Shift Attendance Confirmation (Clock In Confirm Modal)**<br>![Dashboard Clock In Confirm Modal Desktop](screenshots/Coffee%20Dashboard%20Modal%20Clock%20In%20Confirm%20Desktop.png) | **Shift Attendance Confirmation (Clock In Confirm Modal)**<br>![Dashboard Clock In Confirm Modal Mobile](screenshots/Coffee%20Dashboard%20Modal%20Clock%20In%20Confirm%20Mobile.png) |
-| **Shift Timecard & Attendance Alert (Late Attendance Modal)**<br>![Dashboard Attendance Alert Desktop](screenshots/Coffee%20Dashboard%20Modal%20Attendance%20Alert%20Desktop.png) | **Shift Timecard & Attendance Alert (Late Attendance Modal)**<br>![Dashboard Attendance Alert Mobile](screenshots/Coffee%20Dashboard%20Modal%20Attendance%20Alert%20Mobile.png) |
-| **Late Attendance Notification Banner (Late Toast Alert)**<br>![Dashboard Attendance Late Alert Desktop](screenshots/Coffee%20Dashboard%20Alert%20Attendance%20Late%20Desktop.png) | **Late Attendance Notification Banner (Late Toast Alert)**<br>![Dashboard Attendance Late Alert Mobile](screenshots/Coffee%20Dashboard%20Alert%20Attendance%20Late%20Mobile.png) |
-| **Manager Operational Memo Saved (Toast Alert)**<br>![Dashboard Memo Saved Alert Desktop](screenshots/Coffee%20Dashboard%20Alert%20Note%20Saved%20Desktop.png) | **Manager Operational Memo Saved (Toast Alert)**<br>![Dashboard Memo Saved Alert Mobile](screenshots/Coffee%20Dashboard%20Alert%20Note%20Saved%20Mobile.png) |
 | **Staff & Manager Authentication Portal (`/login`)**<br>![Staff Login Desktop](screenshots/Coffee%20Staff%20Login%20Desktop.png) | **Staff & Manager Authentication Portal (`/login`)**<br>![Staff Login Mobile](screenshots/Coffee%20Staff%20Login%20Mobile.png) |
 | **Staff Authentication Failure (401 Auth Error Alert)**<br>![Staff Auth Error Alert Desktop](screenshots/Coffee%20Staff%20Login%20Alert%20Auth%20Error%20Desktop.png) | **Staff Authentication Failure (401 Auth Error Alert)**<br>![Staff Auth Error Alert Mobile](screenshots/Coffee%20Staff%20Login%20Alert%20Auth%20Error%20Mobile.png) |
 | **Staff Directory & Wage Roster (`/employees`)**<br>![Staff Roster Management Desktop](screenshots/Coffee%20Staff%20Roster%20Management%20Desktop.png) | **Staff Directory & Wage Roster (`/employees`)**<br>![Staff Roster Management Mobile](screenshots/Coffee%20Staff%20Roster%20Management%20Mobile.png) |
