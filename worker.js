@@ -961,10 +961,15 @@ async function handleApi(request, env) {
       const usage = new Array(emps.length).fill(0);
 
       for (const day of DAYS) {
+        const assignedToday = new Set();
+
         for (const shiftType of SHIFTS) {
           let minUsage = Infinity;
           let candidates = [];
           for (let i = 0; i < emps.length; i++) {
+            // Strict check: if role has enough staff (>= 3), do not double-schedule the same person on the same day
+            if (emps.length >= 3 && assignedToday.has(emps[i].employeeId)) continue;
+
             if (usage[i] < minUsage) {
               minUsage = usage[i];
               candidates = [i];
@@ -972,8 +977,12 @@ async function handleApi(request, env) {
               candidates.push(i);
             }
           }
+          if (candidates.length === 0) {
+            candidates = emps.map((_, idx) => idx);
+          }
           const pick = candidates[Math.floor(Math.random() * candidates.length)];
           usage[pick]++;
+          assignedToday.add(emps[pick].employeeId);
 
           const emp = emps[pick];
           newShifts.push({
@@ -1415,10 +1424,22 @@ async function handleApi(request, env) {
     const today = getJakartaDateStr();
     const { totalMin } = getJakartaHoursMinutes();
 
-    let rec = await DB.prepare('SELECT ar.*, e.employeeId, e.name AS employeeName, e.position FROM attendance_records ar JOIN employees e ON ar.employee_id = e.id WHERE ar.employee_id = ? AND ar.date = ?').bind(emp.id, today).first();
+    let rec = await DB.prepare(`
+      SELECT ar.*, e.employeeId, e.name AS employeeName, e.position 
+      FROM attendance_records ar 
+      JOIN employees e ON ar.employee_id = e.id 
+      WHERE ar.employee_id = ? AND ar.date = ?
+      ORDER BY (CASE WHEN (ar.clockOutTime IS NULL OR ar.clockOutTime = '') AND ar.status NOT IN ('TIDAK ABSEN MASUK', 'TIDAK ABSEN KELUAR') THEN 0 ELSE 1 END), ar.clockInTime DESC
+    `).bind(emp.id, today).first();
     if (!rec) {
       const yesterdayDate = getYesterdayJakartaDateStr();
-      const yRec = await DB.prepare('SELECT ar.*, e.employeeId, e.name AS employeeName, e.position FROM attendance_records ar JOIN employees e ON ar.employee_id = e.id WHERE ar.employee_id = ? AND ar.date = ?').bind(emp.id, yesterdayDate).first();
+      const yRec = await DB.prepare(`
+        SELECT ar.*, e.employeeId, e.name AS employeeName, e.position 
+        FROM attendance_records ar 
+        JOIN employees e ON ar.employee_id = e.id 
+        WHERE ar.employee_id = ? AND ar.date = ?
+        ORDER BY ar.clockInTime DESC
+      `).bind(emp.id, yesterdayDate).first();
       if (yRec && !yRec.clockOutTime && yRec.status !== 'TIDAK ABSEN MASUK' && yRec.status !== 'TIDAK ABSEN KELUAR') {
         if (isAttendanceExpired(yRec, today, totalMin)) {
           await DB.prepare("UPDATE attendance_records SET clockOutTime = '', hoursWorked = NULL, status = 'TIDAK ABSEN KELUAR' WHERE id = ?").bind(yRec.id).run();
@@ -1460,15 +1481,32 @@ async function handleApi(request, env) {
     let dayOfWeek = getDayOfWeek();
     let scheduledShift = null;
 
+    // First: Check if employee has an open unclosed shift from earlier
+    const openRecord = await DB.prepare(`
+      SELECT * FROM attendance_records 
+      WHERE employee_id = ? 
+        AND clockInTime IS NOT NULL AND clockInTime != ''
+        AND (clockOutTime IS NULL OR clockOutTime = '')
+        AND status NOT IN ('TIDAK ABSEN MASUK', 'TIDAK ABSEN KELUAR')
+    `).bind(emp.id).first();
+
+    if (openRecord) {
+      if (isAttendanceExpired(openRecord, today, totalMin)) {
+        await DB.prepare("UPDATE attendance_records SET clockOutTime = '', hoursWorked = NULL, status = 'TIDAK ABSEN KELUAR' WHERE id = ?").bind(openRecord.id).run();
+      } else {
+        return error(`Anda masih memiliki shift aktif (${openRecord.shiftType}) yang belum di-clock out. Silahkan clock out terlebih dahulu.`, 400, cors);
+      }
+    }
+
     // Determine target shift date and schedule:
-    // If it's early morning (00:00 - 04:00) and employee had an EVENING shift yesterday that was not clocked in:
-    if (totalMin < 240) {
+    // If it's early morning (00:00 - 07:00) and employee had an EVENING shift yesterday that was not clocked in:
+    if (totalMin < 420) {
       const yesterdayDay = getDayOfWeek(-1);
       const yesterdayDate = getYesterdayJakartaDateStr();
       const yShift = await DB.prepare('SELECT * FROM shift_schedules WHERE employeeId = ? AND dayOfWeek = ? AND shiftType = ?')
         .bind(employeeId, yesterdayDay, 'EVENING').first();
       if (yShift) {
-        const yRec = await DB.prepare('SELECT * FROM attendance_records WHERE employee_id = ? AND date = ?').bind(emp.id, yesterdayDate).first();
+        const yRec = await DB.prepare('SELECT * FROM attendance_records WHERE employee_id = ? AND date = ? AND shiftType = ?').bind(emp.id, yesterdayDate, 'EVENING').first();
         if (!yRec) {
           scheduledShift = yShift;
           today = yesterdayDate;
@@ -1478,7 +1516,18 @@ async function handleApi(request, env) {
     }
 
     if (!scheduledShift) {
-      scheduledShift = await DB.prepare('SELECT * FROM shift_schedules WHERE employeeId = ? AND dayOfWeek = ?').bind(employeeId, dayOfWeek).first();
+      const todayShifts = (await DB.prepare('SELECT * FROM shift_schedules WHERE employeeId = ? AND dayOfWeek = ?').bind(employeeId, dayOfWeek).all()).results || [];
+      if (todayShifts.length > 1) {
+        // Pick shift matching current active window
+        scheduledShift = todayShifts.find(s => {
+          if (s.shiftType === 'MORNING' && totalMin >= 410 && totalMin <= 900) return true;
+          if (s.shiftType === 'AFTERNOON' && totalMin >= 890 && totalMin <= 1380) return true;
+          if (s.shiftType === 'EVENING' && (totalMin >= 1370 || totalMin <= 420)) return true;
+          return false;
+        }) || todayShifts[0];
+      } else {
+        scheduledShift = todayShifts[0] || null;
+      }
     }
 
     // STRICT SHIFT ADHERENCE
@@ -1492,8 +1541,8 @@ async function handleApi(request, env) {
       return error(`Jadwal shift Anda tidak valid (${scheduledShift.shiftType}). Silahkan hubungi manager.`, 400, cors);
     }
 
-    const existingToday = await DB.prepare('SELECT * FROM attendance_records WHERE employee_id = ? AND date = ?').bind(emp.id, today).first();
-    if (existingToday) return error('Sudah melakukan absensi untuk jadwal hari ini.', 400, cors);
+    const existingToday = await DB.prepare('SELECT * FROM attendance_records WHERE employee_id = ? AND date = ? AND shiftType = ?').bind(emp.id, today, scheduledShift.shiftType).first();
+    if (existingToday) return error(`Sudah melakukan absensi untuk jadwal shift ${scheduledShift.shiftType} hari ini.`, 400, cors);
 
     const shiftType = scheduledShift.shiftType;
     let status = 'ON_TIME';
@@ -1589,18 +1638,42 @@ async function handleApi(request, env) {
     const { totalMin } = getJakartaHoursMinutes();
     const today = getJakartaDateStr();
 
-    let record = await DB.prepare('SELECT * FROM attendance_records WHERE employee_id = ? AND date = ?').bind(emp.id, today).first();
-    if (!record || record.clockOutTime) {
+    let record = await DB.prepare(`
+      SELECT * FROM attendance_records 
+      WHERE employee_id = ? 
+        AND date = ? 
+        AND clockInTime IS NOT NULL AND clockInTime != ''
+        AND (clockOutTime IS NULL OR clockOutTime = '')
+        AND status NOT IN ('TIDAK ABSEN MASUK', 'TIDAK ABSEN KELUAR')
+      ORDER BY clockInTime DESC
+    `).bind(emp.id, today).first();
+
+    if (!record) {
       const yesterdayDate = getYesterdayJakartaDateStr();
-      const yRecord = await DB.prepare('SELECT * FROM attendance_records WHERE employee_id = ? AND date = ?').bind(emp.id, yesterdayDate).first();
-      if (yRecord && !yRecord.clockOutTime && yRecord.status !== 'TIDAK ABSEN MASUK' && yRecord.status !== 'TIDAK ABSEN KELUAR') {
+      const yRecord = await DB.prepare(`
+        SELECT * FROM attendance_records 
+        WHERE employee_id = ? 
+          AND date = ? 
+          AND clockInTime IS NOT NULL AND clockInTime != ''
+          AND (clockOutTime IS NULL OR clockOutTime = '')
+          AND status NOT IN ('TIDAK ABSEN MASUK', 'TIDAK ABSEN KELUAR')
+        ORDER BY clockInTime DESC
+      `).bind(emp.id, yesterdayDate).first();
+      if (yRecord) {
         record = yRecord;
       }
     }
 
-    if (!record) return error('Tidak ditemukan catatan clock in aktif.', 400, cors);
-    if (record.status === 'TIDAK ABSEN MASUK' || !record.clockInTime) {
-      return error('Anda tercatat TIDAK ABSEN MASUK, tidak dapat melakukan clock out. Silahkan hubungi manager.', 400, cors);
+    if (!record) {
+      const failedRec = await DB.prepare(`
+        SELECT * FROM attendance_records 
+        WHERE employee_id = ? AND (date = ? OR date = ?) AND status = 'TIDAK ABSEN MASUK'
+        ORDER BY date DESC
+      `).bind(emp.id, today, getYesterdayJakartaDateStr()).first();
+      if (failedRec) {
+        return error('Anda tercatat TIDAK ABSEN MASUK, tidak dapat melakukan clock out. Silahkan hubungi manager.', 400, cors);
+      }
+      return error('Tidak ditemukan catatan clock in aktif.', 400, cors);
     }
     if (record.clockOutTime) return error('Sudah melakukan clock out sebelumnya.', 400, cors);
 
@@ -1759,6 +1832,7 @@ async function handleApi(request, env) {
 
     await seedEmp('EMP-MAN-001', 'manager@americano.com', 'manager123', 'Andi Manager', '08123456781', 'Manager', 5000000, 'Manager');
     await seedEmp('EMP-MAN-002', 'manager2@americano.com', 'manager123', 'Siti Manager', '08123456782', 'Manager', 5000000, 'Manager');
+    await seedEmp('EMP-MAN-003', 'manager3@americano.com', 'manager123', 'Bambang Manager', '08123456780', 'Manager', 5000000, 'Manager');
     await seedEmp('EMP-BAR-001', 'barista1@americano.com', 'barista123', 'Budi Barista', '08123456783', 'Barista', 3000000, 'Barista');
     await seedEmp('EMP-BAR-002', 'barista2@americano.com', 'barista123', 'Rina Barista', '08123456784', 'Barista', 3000000, 'Barista');
     await seedEmp('EMP-BAR-003', 'barista3@americano.com', 'barista123', 'Dedi Barista', '08123456785', 'Barista', 3000000, 'Barista');
@@ -1793,7 +1867,7 @@ async function handleApi(request, env) {
       await DB.prepare('INSERT INTO categories (id, name) VALUES (?, ?)').bind(uid(), cat).run();
     }
 
-    return json({ message: 'Database seeded with 14 employees. Example logins: EMP-MAN-001 / manager123, EMP-BAR-001 / barista123, EMP-CSH-001 / cashier123, EMP-KIT-001 / kitchen123, EMP-WAI-001 / waiter123' }, 200, cors);
+    return json({ message: 'Database seeded with 15 employees. Example logins: EMP-MAN-001 / manager123, EMP-BAR-001 / barista123, EMP-CSH-001 / cashier123, EMP-KIT-001 / kitchen123, EMP-WAI-001 / waiter123' }, 200, cors);
   }
 
   if (path === '/api/seed-content' && method === 'POST') {

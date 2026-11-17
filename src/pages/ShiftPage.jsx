@@ -73,6 +73,16 @@ export default function ShiftPage() {
             return;
         }
 
+        // Prevent double booking: 1 employee can only have 1 shift per day
+        const alreadyAssignedToday = shifts.some(s =>
+            s.dayOfWeek === day &&
+            s.employeeId === emp.employeeId
+        );
+        if (alreadyAssignedToday) {
+            setAlertMsg({ type: 'error', message: `${emp.name} SUDAH MEMILIKI JADWAL SHIFT DI HARI ${day}!` });
+            return;
+        }
+
         // Limit to 8 staff per shift
         const currentShifts = shifts.filter(s => s.dayOfWeek === day && s.shiftType === shiftType);
         if (currentShifts.length >= 8) {

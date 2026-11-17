@@ -30,36 +30,8 @@ export default function DashboardPage({ user }) {
     const [isEditing, setIsEditing] = useState(false);
     const [alertMsg, setAlertMsg] = useState(null);
     const [confirmation, setConfirmation] = useState(null);
-    const [weeklyShifts, setWeeklyShifts] = useState([]);
     const [lateModal, setLateModal] = useState(null);
-    const [scheduleSearchTerm, setScheduleSearchTerm] = useState('');
-    const [scheduleCurrentPage, setScheduleCurrentPage] = useState(1);
-    const scheduleItemsPerPage = 5;
     const [todayShift, setTodayShift] = useState(null);
-
-
-
-    // Schedule Helper
-    const days = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
-    const getWeekDates = () => {
-        const now = new Date();
-        const shortDay = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Jakarta', weekday: 'short' }).format(now);
-        const dayMap = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6 };
-        const currentIdx = dayMap[shortDay] ?? 0;
-        const weekDates = {};
-        days.forEach((day, i) => {
-            const diffDays = i - currentIdx;
-            const targetDate = new Date(now.getTime() + diffDays * 86400000);
-            weekDates[day] = new Intl.DateTimeFormat('en-CA', {
-                timeZone: 'Asia/Jakarta',
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit'
-            }).format(targetDate);
-        });
-        return weekDates;
-    };
-    const weekDates = getWeekDates();
 
     // Helper for case-insensitive role check
     const isManager = user && user.role && user.role.toUpperCase() === 'MANAGER';
@@ -68,7 +40,6 @@ export default function DashboardPage({ user }) {
         fetchDashboardData();
         checkAttendance();
         fetchNote();
-        fetchShiftData();
         fetchTodayShift();
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
 
@@ -77,68 +48,54 @@ export default function DashboardPage({ user }) {
         };
     }, [user]);
 
-
-
-    const fetchShiftData = async () => {
-        try {
-            // Fetch Shifts & Today's Attendance
-            const [shiftRes, attRes] = await Promise.all([
-                axios.get('/api/shifts'),
-                axios.get('/api/attendance') // FETCH ALL HISTORY
-            ]);
-
-            const allShifts = shiftRes.data;
-            const allAttendance = attRes.data;
-
-            // Group by Employee
-            const grouped = {};
-            allShifts.forEach(s => {
-                if (!grouped[s.employeeId]) {
-                    grouped[s.employeeId] = {
-                        id: s.employeeId,
-                        name: s.employeeName,
-                        position: s.position,
-                        schedule: {},
-                        attendance: {}
-                    };
-                }
-                grouped[s.employeeId].schedule[s.dayOfWeek] = s.shiftType;
-            });
-
-            // Attach Attendance History to Employee
-            Object.values(grouped).forEach(emp => {
-                emp.attendanceHistory = {};
-                allAttendance.filter(a => a.employeeId === emp.id).forEach(a => {
-                    emp.attendanceHistory[a.date] = a;
-                });
-
-                // Set Today Status
-                const todayStr = new Intl.DateTimeFormat('en-CA', {
-                    timeZone: 'Asia/Jakarta',
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit'
-                }).format(new Date());
-                const todayAtt = emp.attendanceHistory[todayStr];
-                emp.todayStatus = todayAtt ? todayAtt.status : null;
-            });
-
-            setWeeklyShifts(Object.values(grouped));
-        } catch (e) {
-            console.error("Failed to fetch shift data", e);
-        }
-    };
-
     const fetchTodayShift = async () => {
         if (!user || !user.employeeId) return;
         try {
             const shiftRes = await axios.get('/api/shifts');
-            const today = new Intl.DateTimeFormat('en-US', {
+            const now = new Date();
+            const parts = new Intl.DateTimeFormat('en-GB', {
+                timeZone: 'Asia/Jakarta',
+                hour: 'numeric',
+                minute: 'numeric',
+                hour12: false
+            }).formatToParts(now);
+            let hour = 0, minute = 0;
+            parts.forEach(p => {
+                if (p.type === 'hour') hour = parseInt(p.value, 10);
+                if (p.type === 'minute') minute = parseInt(p.value, 10);
+            });
+            const totalMin = (hour % 24) * 60 + minute;
+
+            let today = new Intl.DateTimeFormat('en-US', {
                 timeZone: 'Asia/Jakarta',
                 weekday: 'long'
-            }).format(new Date()).toUpperCase();
-            const userShift = shiftRes.data.find(s => s.employeeId === user.employeeId && s.dayOfWeek === today);
-            setTodayShift(userShift || null);
+            }).format(now).toUpperCase();
+
+            // Overnight EVENING shift check (before 07:00 AM)
+            if (totalMin < 420) {
+                const yesterday = new Intl.DateTimeFormat('en-US', {
+                    timeZone: 'Asia/Jakarta',
+                    weekday: 'long'
+                }).format(new Date(now.getTime() - 86400000)).toUpperCase();
+                const yesterdayEvening = shiftRes.data.find(s => s.employeeId === user.employeeId && s.dayOfWeek === yesterday && s.shiftType === 'EVENING');
+                if (yesterdayEvening) {
+                    setTodayShift(yesterdayEvening);
+                    return;
+                }
+            }
+
+            const userShifts = shiftRes.data.filter(s => s.employeeId === user.employeeId && s.dayOfWeek === today);
+            if (userShifts.length > 0) {
+                const active = userShifts.find(s => {
+                    if (s.shiftType === 'MORNING' && totalMin >= 410 && totalMin <= 900) return true;
+                    if (s.shiftType === 'AFTERNOON' && totalMin >= 890 && totalMin <= 1380) return true;
+                    if (s.shiftType === 'EVENING' && (totalMin >= 1370 || totalMin <= 420)) return true;
+                    return false;
+                });
+                setTodayShift(active || userShifts[0]);
+            } else {
+                setTodayShift(null);
+            }
         } catch (e) {
             console.error('Failed to fetch today shift', e);
         }
@@ -200,7 +157,8 @@ export default function DashboardPage({ user }) {
                         });
                         setAlertMsg({ type: 'error', message: 'TIDAK ABSEN MASUK!' });
                         setAttendance(rec);
-                        fetchShiftData();
+                        fetchTodayShift();
+                        checkAttendance();
                     } else if (rec.lateAlert) {
                         setLateModal({
                             type: 'late',
@@ -209,11 +167,13 @@ export default function DashboardPage({ user }) {
                         });
                         setAlertMsg({ type: 'error', message: `ANDA TERLAMBAT ${rec.minutesLate} MENIT!` });
                         setAttendance(rec);
-                        fetchShiftData();
+                        fetchTodayShift();
+                        checkAttendance();
                     } else {
                         setAttendance(rec);
                         setAlertMsg({ type: 'success', message: 'CLOCKED IN SUCCESSFULLY!' });
-                        fetchShiftData();
+                        fetchTodayShift();
+                        checkAttendance();
                     }
                 } catch (error) {
                     const msg = error.response?.data?.message || 'CLOCK IN FAILED!';
@@ -249,7 +209,8 @@ export default function DashboardPage({ user }) {
                         setAlertMsg({ type: 'success', message: 'CLOCKED OUT SUCCESSFULLY!' });
                     }
                     setAttendance(rec);
-                    fetchShiftData();
+                    fetchTodayShift();
+                    checkAttendance();
                 } catch (error) {
                     const msg = error.response?.data?.message || 'CLOCK OUT FAILED!';
                     const isEarly = msg.includes('Belum waktu clock out');
