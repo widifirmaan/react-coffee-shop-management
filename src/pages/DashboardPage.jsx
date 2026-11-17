@@ -328,14 +328,14 @@ export default function DashboardPage({ user }) {
                             <Clock size={24} /> ATTENDANCE
                         </h2>
                         <span style={{ fontSize: '0.8rem', opacity: 0.8, background: 'black', color: 'white', padding: '4px 8px', borderRadius: '0', fontWeight: 'bold' }}>
-                            {currentTime.toLocaleDateString()}
+                            {new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Jakarta', dateStyle: 'medium' }).format(currentTime)}
                         </span>
                     </div>
 
                     <div style={{ textAlign: 'center', marginBottom: '20px' }}>
                         <h1 style={{ fontSize: '3.5rem', margin: 0, fontFamily: 'monospace', letterSpacing: '-2px', lineHeight: 1 }}>
-                            {currentTime.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })}
-                            <span style={{ fontSize: '1.5rem', opacity: 0.5 }}>:{currentTime.getSeconds().toString().padStart(2, '0')}</span>
+                            {new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', hour12: false }).format(currentTime)}
+                            <span style={{ fontSize: '1.5rem', opacity: 0.5 }}>:{new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Jakarta', second: '2-digit' }).format(currentTime)}</span>
                         </h1>
                     </div>
 
@@ -426,8 +426,8 @@ export default function DashboardPage({ user }) {
                             </div>
                             <Button
                                 onClick={handleClockIn}
-                                disabled={!!attendance}
-                                variant={attendance ? 'secondary' : 'primary'}
+                                disabled={!!attendance || !todayShift || todayShift.shiftType === 'OFF'}
+                                variant={(attendance || !todayShift || todayShift.shiftType === 'OFF') ? 'secondary' : 'primary'}
                                 style={{ width: '100%', fontSize: '1rem', padding: '10px' }}
                             >
                                 IN

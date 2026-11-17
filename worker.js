@@ -247,6 +247,77 @@ function isAttendanceExpired(record, todayDateStr, currentTotalMin) {
   return false;
 }
 
+async function syncMissedAttendance(DB, today, totalMin, dayOfWeek) {
+  try {
+    // 1. MORNING shift missed (past 09:00 WIB, totalMin > 540)
+    if (totalMin > 540) {
+      const morningShifts = await DB.prepare(`
+        SELECT ss.*, e.id as empDbId 
+        FROM shift_schedules ss
+        JOIN employees e ON ss.employeeId = e.employeeId
+        WHERE ss.dayOfWeek = ? AND ss.shiftType = 'MORNING' AND e.active = 1
+      `).bind(dayOfWeek).all();
+
+      for (const s of (morningShifts.results || [])) {
+        const existing = await DB.prepare('SELECT id FROM attendance_records WHERE employee_id = ? AND date = ? AND shiftType = ?')
+          .bind(s.empDbId, today, 'MORNING').first();
+        if (!existing) {
+          const id = uid();
+          await DB.prepare(
+            'INSERT INTO attendance_records (id, employee_id, employeeName, date, present, clockInTime, shiftType, status, minutesLate, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+          ).bind(id, s.empDbId, s.employeeName, today, 0, '', 'MORNING', 'TIDAK ABSEN MASUK', totalMin - 420, 'Otomatis: Melewati batas waktu clock in').run();
+        }
+      }
+    }
+
+    // 2. AFTERNOON shift missed (past 17:00 WIB, totalMin > 1020)
+    if (totalMin > 1020) {
+      const afternoonShifts = await DB.prepare(`
+        SELECT ss.*, e.id as empDbId 
+        FROM shift_schedules ss
+        JOIN employees e ON ss.employeeId = e.employeeId
+        WHERE ss.dayOfWeek = ? AND ss.shiftType = 'AFTERNOON' AND e.active = 1
+      `).bind(dayOfWeek).all();
+
+      for (const s of (afternoonShifts.results || [])) {
+        const existing = await DB.prepare('SELECT id FROM attendance_records WHERE employee_id = ? AND date = ? AND shiftType = ?')
+          .bind(s.empDbId, today, 'AFTERNOON').first();
+        if (!existing) {
+          const id = uid();
+          await DB.prepare(
+            'INSERT INTO attendance_records (id, employee_id, employeeName, date, present, clockInTime, shiftType, status, minutesLate, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+          ).bind(id, s.empDbId, s.employeeName, today, 0, '', 'AFTERNOON', 'TIDAK ABSEN MASUK', totalMin - 900, 'Otomatis: Melewati batas waktu clock in').run();
+        }
+      }
+    }
+
+    // 3. Yesterday EVENING shift missed (past 01:00 WIB next day, totalMin > 60)
+    if (totalMin > 60) {
+      const yesterdayDay = getDayOfWeek(-1);
+      const yesterdayDate = getYesterdayJakartaDateStr();
+      const eveningShifts = await DB.prepare(`
+        SELECT ss.*, e.id as empDbId 
+        FROM shift_schedules ss
+        JOIN employees e ON ss.employeeId = e.employeeId
+        WHERE ss.dayOfWeek = ? AND ss.shiftType = 'EVENING' AND e.active = 1
+      `).bind(yesterdayDay).all();
+
+      for (const s of (eveningShifts.results || [])) {
+        const existing = await DB.prepare('SELECT id FROM attendance_records WHERE employee_id = ? AND date = ? AND shiftType = ?')
+          .bind(s.empDbId, yesterdayDate, 'EVENING').first();
+        if (!existing) {
+          const id = uid();
+          await DB.prepare(
+            'INSERT INTO attendance_records (id, employee_id, employeeName, date, present, clockInTime, shiftType, status, minutesLate, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+          ).bind(id, s.empDbId, s.employeeName, yesterdayDate, 0, '', 'EVENING', 'TIDAK ABSEN MASUK', 120, 'Otomatis: Melewati batas waktu clock in').run();
+        }
+      }
+    }
+  } catch (err) {
+    console.error('syncMissedAttendance error:', err);
+  }
+}
+
 function nowISO() {
   return new Date().toISOString();
 }
@@ -1371,6 +1442,10 @@ async function handleApi(request, env) {
     if (!user) return error('Unauthorized', 401, cors);
     const today = getJakartaDateStr();
     const { totalMin } = getJakartaHoursMinutes();
+    const dayOfWeek = getDayOfWeek();
+
+    // Auto-sync any missed scheduled shifts (TIDAK ABSEN MASUK)
+    await syncMissedAttendance(DB, today, totalMin, dayOfWeek);
 
     // Auto-expire any stale attendance records
     const staleRecords = await DB.prepare(`
@@ -1403,6 +1478,12 @@ async function handleApi(request, env) {
     }
     const emp = await DB.prepare('SELECT * FROM employees WHERE employeeId = ?').bind(attHistoryMatch[1]).first();
     if (!emp) return error('Not found', 404, cors);
+
+    const today = getJakartaDateStr();
+    const { totalMin } = getJakartaHoursMinutes();
+    const dayOfWeek = getDayOfWeek();
+    await syncMissedAttendance(DB, today, totalMin, dayOfWeek);
+
     const { results } = await DB.prepare(`
       SELECT ar.*, e.employeeId, e.name AS employeeName, e.position
       FROM attendance_records ar
@@ -1423,6 +1504,10 @@ async function handleApi(request, env) {
     if (!emp) return json(null, 200, cors);
     const today = getJakartaDateStr();
     const { totalMin } = getJakartaHoursMinutes();
+    const dayOfWeek = getDayOfWeek();
+
+    // Auto-sync any missed scheduled shifts (TIDAK ABSEN MASUK)
+    await syncMissedAttendance(DB, today, totalMin, dayOfWeek);
 
     let rec = await DB.prepare(`
       SELECT ar.*, e.employeeId, e.name AS employeeName, e.position 
