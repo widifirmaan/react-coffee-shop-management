@@ -1,4 +1,4 @@
-# Siap Nyafe POS ☕
+# Siap Nyafe POS
 
 > Fullstack coffee shop point-of-sale, customer self-ordering portal, kitchen display system, and operational management platform built with React 18, Cloudflare Workers, and Cloudflare D1.
 
@@ -47,10 +47,12 @@ Siap Nyafe is a full-stack coffee shop management and point-of-sale (POS) web ap
 
 ---
 
-### 2. Operations Dashboard, Point of Sale (POS) & Kitchen Barista Workflow (`/dashboard`, `/cashier`, `/kitchen`, `/waiter`)
+### 2. Staff Authentication, Operations Dashboard, POS & Kitchen Workflow (`/login`, `/dashboard`, `/cashier`, `/kitchen`, `/waiter`)
 
 | Desktop (MacBook Pro M4) | Mobile (iPhone 16 Pro) |
 | :---: | :---: |
+| **Staff & Manager Authentication Portal (`/login`)**<br>![Coffee Staff Login Desktop](screenshots/Coffee%20Staff%20Login%20Desktop.png) | **Staff & Manager Authentication Portal (`/login`)**<br>![Coffee Staff Login Mobile](screenshots/Coffee%20Staff%20Login%20Mobile.png) |
+| **Staff Authentication Failure (401 Auth Error Alert)**<br>![Coffee Staff Login Alert Auth Error Desktop](screenshots/Coffee%20Staff%20Login%20Alert%20Auth%20Error%20Desktop.png) | **Staff Authentication Failure (401 Auth Error Alert)**<br>![Coffee Staff Login Alert Auth Error Mobile](screenshots/Coffee%20Staff%20Login%20Alert%20Auth%20Error%20Mobile.png) |
 | **Executive Operations Dashboard (`/dashboard`)**<br>![Coffee Manager Dashboard Overview Desktop](screenshots/Coffee%20Manager%20Dashboard%20Overview%20Desktop.png) | **Executive Operations Dashboard (`/dashboard`)**<br>![Coffee Manager Dashboard Overview Mobile](screenshots/Coffee%20Manager%20Dashboard%20Overview%20Mobile.png) |
 | **Shift Attendance Confirmation (Clock In Modal)**<br>![Coffee Dashboard Modal Clock In Confirm Desktop](screenshots/Coffee%20Dashboard%20Modal%20Clock%20In%20Confirm%20Desktop.png) | **Shift Attendance Confirmation (Clock In Modal)**<br>![Coffee Dashboard Modal Clock In Confirm Mobile](screenshots/Coffee%20Dashboard%20Modal%20Clock%20In%20Confirm%20Mobile.png) |
 | **Shift Timecard & Attendance Alert (Late Modal)**<br>![Coffee Dashboard Modal Attendance Alert Desktop](screenshots/Coffee%20Dashboard%20Modal%20Attendance%20Alert%20Desktop.png) | **Shift Timecard & Attendance Alert (Late Modal)**<br>![Coffee Dashboard Modal Attendance Alert Mobile](screenshots/Coffee%20Dashboard%20Modal%20Attendance%20Alert%20Mobile.png) |
@@ -70,12 +72,10 @@ Siap Nyafe is a full-stack coffee shop management and point-of-sale (POS) web ap
 
 ---
 
-### 3. Staff Administration, Roster & Weekly Shift Scheduling (`/login`, `/employees`, `/shifts`)
+### 3. Staff Administration, Roster & Weekly Shift Scheduling (`/employees`, `/shifts`)
 
 | Desktop (MacBook Pro M4) | Mobile (iPhone 16 Pro) |
 | :---: | :---: |
-| **Staff & Manager Authentication Portal (`/login`)**<br>![Coffee Staff Login Desktop](screenshots/Coffee%20Staff%20Login%20Desktop.png) | **Staff & Manager Authentication Portal (`/login`)**<br>![Coffee Staff Login Mobile](screenshots/Coffee%20Staff%20Login%20Mobile.png) |
-| **Staff Authentication Failure (401 Auth Error Alert)**<br>![Coffee Staff Login Alert Auth Error Desktop](screenshots/Coffee%20Staff%20Login%20Alert%20Auth%20Error%20Desktop.png) | **Staff Authentication Failure (401 Auth Error Alert)**<br>![Coffee Staff Login Alert Auth Error Mobile](screenshots/Coffee%20Staff%20Login%20Alert%20Auth%20Error%20Mobile.png) |
 | **Staff Directory & Wage Roster (`/employees`)**<br>![Coffee Staff Roster Management Desktop](screenshots/Coffee%20Staff%20Roster%20Management%20Desktop.png) | **Staff Directory & Wage Roster (`/employees`)**<br>![Coffee Staff Roster Management Mobile](screenshots/Coffee%20Staff%20Roster%20Management%20Mobile.png) |
 | **Staff Recruitment & Role Provisioning (Recruit Modal)**<br>![Coffee Staff Modal Recruit Employee Desktop](screenshots/Coffee%20Staff%20Modal%20Recruit%20Employee%20Desktop.png) | **Staff Recruitment & Role Provisioning (Recruit Modal)**<br>![Coffee Staff Modal Recruit Employee Mobile](screenshots/Coffee%20Staff%20Modal%20Recruit%20Employee%20Mobile.png) |
 | **Staff Profile & Wage Adjustment (Edit Modal)**<br>![Coffee Staff Modal Edit Employee Desktop](screenshots/Coffee%20Staff%20Modal%20Edit%20Employee%20Desktop.png) | **Staff Profile & Wage Adjustment (Edit Modal)**<br>![Coffee Staff Modal Edit Employee Mobile](screenshots/Coffee%20Staff%20Modal%20Edit%20Employee%20Mobile.png) |
