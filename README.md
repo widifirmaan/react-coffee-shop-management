@@ -4,7 +4,6 @@
 
 Siap Nyafe is a full-stack coffee shop management and point-of-sale (POS) web application built with React 18 and a serverless Cloudflare Workers backend powered by Cloudflare D1 SQLite and R2 object storage. Engineered with a bold Neo-Brutalist design system, the platform provides a public customer self-ordering menu, cashier register terminal with instant change calculation, real-time kitchen display system (KDS) order workflows, raw ingredient inventory tracking, staff roster scheduling, equipment asset depreciation logs, and managerial financial accounting.
 
-[![Live Demo](https://img.shields.io/badge/Demo-siapnyafe.widifirmaan.web.id-10B981?style=flat-square&logo=cloudflare&logoColor=white)](https://siapnyafe.widifirmaan.web.id)
 [![React 18](https://img.shields.io/badge/React-18.2.0-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
 [![Vite 5](https://img.shields.io/badge/Vite-5.0.0-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Cloudflare Workers](https://img.shields.io/badge/Backend-Cloudflare_Workers-F38020?style=flat-square&logo=cloudflareworkers&logoColor=white)](https://workers.cloudflare.com/)
