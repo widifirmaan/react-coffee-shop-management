@@ -215,7 +215,7 @@ Siap Nyafe is a full-stack coffee shop management and point-of-sale (POS) web ap
 
 ---
 
-## Getting Started & Local Development
+## Tutorial Run Local & Setup
 
 ### Prerequisites
 
@@ -281,11 +281,11 @@ npm run deploy
 
 ---
 
-## Database Seeding & Demo Credentials
+### Database Seeding & Demo Credentials
 
 Siap Nyafe provides automated database seeder endpoints in the Cloudflare Worker to populate employees across all 5 operational roles, default catalog items, Unsplash photography, raw ingredients, and coffee equipment assets.
 
-### 1. Triggering Database Seeding
+#### 1. Triggering Database Seeding
 
 Execute the seeder endpoints via `curl` or HTTP client:
 
@@ -301,7 +301,7 @@ curl -X POST https://siapnyafe.widifirmaan.web.id/api/seed-content \
   -d '{"secret":"siap-nyafe-seed-2026"}'
 ```
 
-### 2. Pre-Configured Demo Accounts
+#### 2. Pre-Configured Demo Accounts & Auth Credentials
 
 | Role | Employee ID | Email | Password | Default Route | Accessible Modules |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -315,6 +315,33 @@ curl -X POST https://siapnyafe.widifirmaan.web.id/api/seed-content \
 
 ---
 
+## Testing & QA Automation
+
+Automated testing and QA verification are powered by the system's `qa-toolkit`:
+
+### 1. Playwright Test Suite
+End-to-end smoke verification covering brand showcase, self-order catalog `/order`, and staff login portal `/login`:
+
+```bash
+cd /home/widifirmaan/Projects/qa-toolkit
+npx playwright test tests/playwright/coffeeshop.spec.js
+```
+
+### 2. Cypress E2E Verification
+Cross-browser regression testing on brand landing and digital ordering flow:
+
+```bash
+cd /home/widifirmaan/Projects/qa-toolkit
+npx cypress run --spec cypress/e2e/coffeeshop.cy.js
+```
+
+### 3. QA Execution Summary
+- **Playwright**: 3 tests passed (Brand Landing, Customer Order Menu `/order`, Staff Login Form `/login`)
+- **Cypress**: 2 specs passed (Landing page DOM mount & Menu catalog verification)
+- **Status**: ✅ All automated tests verified and passing
+
+---
+
 ## Author
 
-Developed by **[Widi Firmansyah](https://widifirmaan.web.id)**.
+Made with ❤️ by **Widi Firmansyah** / [widifirmaan.web.id](https://widifirmaan.web.id)
