@@ -1,4 +1,4 @@
-# Siap Nyafe POS
+# Siap Nyafe POS ☕
 
 > Fullstack coffee shop point-of-sale, customer self-ordering portal, kitchen display system, and operational management platform built with React 18, Cloudflare Workers, and Cloudflare D1.
 
@@ -15,7 +15,7 @@ Siap Nyafe is a full-stack coffee shop management and point-of-sale (POS) web ap
 
 ---
 
-## Live Production
+## Live URL
 
 - **URL:** [https://siapnyafe.widifirmaan.web.id](https://siapnyafe.widifirmaan.web.id)
 - **Deployment:** Cloudflare Workers & Cloudflare Pages (`siapnyafe.widifirmaan.web.id`)
@@ -23,11 +23,11 @@ Siap Nyafe is a full-stack coffee shop management and point-of-sale (POS) web ap
 
 ---
 
-## Showcase
+## Screenshots
 
 ### 1. Customer Brand & Self-Ordering Experience (`/`, `/order`)
 
-| Desktop Interface (MacBook Pro M4) | Mobile Interface (iPhone 16 Pro) |
+| Desktop (MacBook Pro M4) | Mobile (iPhone 16 Pro) |
 | :---: | :---: |
 | **Public Brand Landing CMS (Hero View)**<br>![Coffee Landing CMS Hero Desktop](screenshots/Coffee%20Landing%20CMS%20Hero%20Desktop.png) | **Public Brand Landing CMS (Hero View)**<br>![Coffee Landing CMS Hero Mobile](screenshots/Coffee%20Landing%20CMS%20Hero%20Mobile.png) |
 | **Brand Story & Split Gate (Info Section)**<br>![Coffee Landing CMS Info Section Desktop](screenshots/Coffee%20Landing%20CMS%20Info%20Section%20Desktop.png) | **Brand Story & Split Gate (Info Section)**<br>![Coffee Landing CMS Info Section Mobile](screenshots/Coffee%20Landing%20CMS%20Info%20Section%20Mobile.png) |
@@ -50,7 +50,7 @@ Siap Nyafe is a full-stack coffee shop management and point-of-sale (POS) web ap
 
 ### 2. Operations Dashboard, Point of Sale (POS) & Kitchen Barista Workflow (`/dashboard`, `/cashier`, `/kitchen`, `/waiter`)
 
-| Desktop Interface (MacBook Pro M4) | Mobile Interface (iPhone 16 Pro) |
+| Desktop (MacBook Pro M4) | Mobile (iPhone 16 Pro) |
 | :---: | :---: |
 | **Executive Operations Dashboard (`/dashboard`)**<br>![Coffee Manager Dashboard Overview Desktop](screenshots/Coffee%20Manager%20Dashboard%20Overview%20Desktop.png) | **Executive Operations Dashboard (`/dashboard`)**<br>![Coffee Manager Dashboard Overview Mobile](screenshots/Coffee%20Manager%20Dashboard%20Overview%20Mobile.png) |
 | **Shift Attendance Confirmation (Clock In Modal)**<br>![Coffee Dashboard Modal Clock In Confirm Desktop](screenshots/Coffee%20Dashboard%20Modal%20Clock%20In%20Confirm%20Desktop.png) | **Shift Attendance Confirmation (Clock In Modal)**<br>![Coffee Dashboard Modal Clock In Confirm Mobile](screenshots/Coffee%20Dashboard%20Modal%20Clock%20In%20Confirm%20Mobile.png) |
@@ -73,7 +73,7 @@ Siap Nyafe is a full-stack coffee shop management and point-of-sale (POS) web ap
 
 ### 3. Staff Administration, Roster & Weekly Shift Scheduling (`/login`, `/employees`, `/shifts`)
 
-| Desktop Interface (MacBook Pro M4) | Mobile Interface (iPhone 16 Pro) |
+| Desktop (MacBook Pro M4) | Mobile (iPhone 16 Pro) |
 | :---: | :---: |
 | **Staff & Manager Authentication Portal (`/login`)**<br>![Coffee Staff Login Desktop](screenshots/Coffee%20Staff%20Login%20Desktop.png) | **Staff & Manager Authentication Portal (`/login`)**<br>![Coffee Staff Login Mobile](screenshots/Coffee%20Staff%20Login%20Mobile.png) |
 | **Staff Authentication Failure (401 Auth Error Alert)**<br>![Coffee Staff Login Alert Auth Error Desktop](screenshots/Coffee%20Staff%20Login%20Alert%20Auth%20Error%20Desktop.png) | **Staff Authentication Failure (401 Auth Error Alert)**<br>![Coffee Staff Login Alert Auth Error Mobile](screenshots/Coffee%20Staff%20Login%20Alert%20Auth%20Error%20Mobile.png) |
@@ -94,7 +94,7 @@ Siap Nyafe is a full-stack coffee shop management and point-of-sale (POS) web ap
 
 ### 4. Supply Chain, Equipment Assets, Finance & Marketing (`/menu`, `/inventory`, `/assets`, `/finance`, `/posts`, `/feedback`, `/settings`)
 
-| Desktop Interface (MacBook Pro M4) | Mobile Interface (iPhone 16 Pro) |
+| Desktop (MacBook Pro M4) | Mobile (iPhone 16 Pro) |
 | :---: | :---: |
 | **Menu Catalog & Recipe Management (`/menu`)**<br>![Coffee Menu Item Management Desktop](screenshots/Coffee%20Menu%20Item%20Management%20Desktop.png) | **Menu Catalog & Recipe Management (`/menu`)**<br>![Coffee Menu Item Management Mobile](screenshots/Coffee%20Menu%20Item%20Management%20Mobile.png) |
 | **Drink Creation & Price Setup (Add Item Modal)**<br>![Coffee Menu Modal Add Item Desktop](screenshots/Coffee%20Menu%20Modal%20Add%20Item%20Desktop.png) | **Drink Creation & Price Setup (Add Item Modal)**<br>![Coffee Menu Modal Add Item Mobile](screenshots/Coffee%20Menu%20Modal%20Add%20Item%20Mobile.png) |
@@ -135,7 +135,7 @@ Siap Nyafe is a full-stack coffee shop management and point-of-sale (POS) web ap
 
 ---
 
-## Features
+## Fitur
 
 - **Public Brand Showcase & Interactive CMS (`/`)**: High-energy Neo-Brutalist brand landing featuring infinite typography marquees, split-gate animated "About Us" brand story reveal, promotional latest roasts showcase, and interactive 3D signature menu overlay with item specification modals.
 - **Customer Digital Self-Ordering Portal (`/order`)**: Interactive customer-facing menu featuring multi-category filtering (Coffee, Non-Coffee, Featured, Snack, Food), item customization options (sweetness level, ice preference, dairy alternatives), notes, and a real-time floating cart tray with table number assignment.
@@ -173,7 +173,9 @@ Siap Nyafe is a full-stack coffee shop management and point-of-sale (POS) web ap
 
 ---
 
-## Project Structure
+## Tutorial Run Local & Setup
+
+### Project Structure
 
 ```bash
 /
@@ -212,10 +214,6 @@ Siap Nyafe is a full-stack coffee shop management and point-of-sale (POS) web ap
 ├── package.json                    # Dependencies, scripts, and engine specifications
 └── README.md
 ```
-
----
-
-## Tutorial Run Local & Setup
 
 ### Prerequisites
 
