@@ -312,33 +312,6 @@ curl -X POST https://siapnyafe.widifirmaan.web.id/api/seed-content \
 
 ---
 
-## Testing & QA Automation
-
-Automated testing and QA verification are powered by the system's `qa-toolkit`:
-
-### 1. Playwright Test Suite
-End-to-end smoke verification covering brand showcase, self-order catalog `/order`, and staff login portal `/login`:
-
-```bash
-cd /home/widifirmaan/Projects/qa-toolkit
-npx playwright test tests/playwright/coffeeshop.spec.js
-```
-
-### 2. Cypress E2E Verification
-Cross-browser regression testing on brand landing and digital ordering flow:
-
-```bash
-cd /home/widifirmaan/Projects/qa-toolkit
-npx cypress run --spec cypress/e2e/coffeeshop.cy.js
-```
-
-### 3. QA Execution Summary
-- **Playwright**: 3 tests passed (Brand Landing, Customer Order Menu `/order`, Staff Login Form `/login`)
-- **Cypress**: 2 specs passed (Landing page DOM mount & Menu catalog verification)
-- **Status**: ✅ All automated tests verified and passing
-
----
-
 ## Author
 
 Made with ❤️ by **Widi Firmansyah** / [widifirmaan.web.id](https://widifirmaan.web.id)
