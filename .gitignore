@@ -10,3 +10,5 @@ migrate-now.js
 raw_screenshots/
 
 .wrangler/
+presentation.html
+*.pdf
