@@ -252,8 +252,13 @@ To develop both the frontend and the Cloudflare Worker API locally with an isola
 # 1. Install dependencies
 npm install
 
-# 2. Initialize the local D1 database schema
+# 2. Initialize the local D1 database schema and demo records
 npx wrangler d1 execute siapnyafe --local --file=./schema.sql
+npx wrangler d1 execute siapnyafe --local --file=./scripts/seed.sql
+
+# Or using native SQLite CLI:
+sqlite3 local.db < schema.sql
+sqlite3 local.db < scripts/seed.sql
 
 # 3. Start local Cloudflare Worker API
 npx wrangler dev
