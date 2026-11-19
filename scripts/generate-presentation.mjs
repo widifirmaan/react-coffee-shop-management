@@ -8,18 +8,17 @@ const projectRoot = path.resolve(__dirname, '..');
 const screenshotsDir = path.join(projectRoot, 'screenshots');
 const downloadsDir = '/home/widifirmaan/Downloads';
 
-// Helper to base64 encode screenshot images
 function encodeImage(filename) {
   const filePath = path.join(screenshotsDir, filename);
   if (!fs.existsSync(filePath)) {
-    console.warn(`⚠️ Warning: Screenshot not found: ${filePath}`);
+    console.warn(`Warning: Screenshot not found: ${filePath}`);
     return '';
   }
   const fileBuffer = fs.readFileSync(filePath);
   return `data:image/png;base64,${fileBuffer.toString('base64')}`;
 }
 
-console.log('☕ Encoding Siap Nyafe POS screenshots into high-resolution base64 data URIs...');
+console.log('Encoding Siap Nyafe screenshots...');
 
 const images = {
   coverDesktop: encodeImage('Coffee Landing CMS Hero Desktop.png'),
@@ -28,7 +27,6 @@ const images = {
   customerOrderMobile: encodeImage('Coffee Customer Order Page Mobile.png'),
   cashierPOSDesktop: encodeImage('Coffee Cashier POS Register Desktop.png'),
   cashierPOSMobile: encodeImage('Coffee Cashier POS Register Mobile.png'),
-  cashierReceiptDesktop: encodeImage('Coffee Cashier Modal Thermal Receipt Desktop.png'),
   kitchenKDSDesktop: encodeImage('Coffee Kitchen Display System Desktop.png'),
   kitchenKDSMobile: encodeImage('Coffee Kitchen Display System Mobile.png'),
   waiterQueueDesktop: encodeImage('Coffee Waiter Service Queue Desktop.png'),
@@ -41,30 +39,27 @@ const images = {
   assetMobile: encodeImage('Coffee Asset & Equipment Mobile.png'),
 };
 
-console.log('🎨 Constructing Siap Nyafe Neo-Brutalist Presentation Deck HTML...');
+console.log('Constructing clean Siap Nyafe Presentation Deck HTML...');
 
 const htmlContent = `<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Siap Nyafe POS - Web Architecture & Technical Showcase</title>
+  <title>Siap Nyafe POS - Web Architecture Showcase</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700;800&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg-cream: #FFFDF8;
-      --bg-surface: #FFFFFF;
+      --bg-card: #FFFFFF;
       --border-dark: #121212;
-      --accent-amber: #F59E0B;
+      --accent-amber: #D97706;
       --accent-yellow: #FCD34D;
-      --accent-orange: #EA580C;
-      --accent-emerald: #10B981;
-      --accent-rose: #F43F5E;
-      --accent-blue: #2563EB;
-      --accent-purple: #8B5CF6;
+      --accent-emerald: #059669;
+      --text-main: #121212;
+      --text-muted: #4B5563;
       --shadow-brutal: 4px 4px 0px #121212;
-      --shadow-brutal-lg: 6px 6px 0px #121212;
     }
 
     * {
@@ -76,10 +71,10 @@ const htmlContent = `<!DOCTYPE html>
     }
 
     body {
-      background-color: #E2E8F0;
+      background-color: var(--bg-cream);
       font-family: 'Plus Jakarta Sans', sans-serif;
-      color: #121212;
-      line-height: 1.4;
+      color: var(--text-main);
+      line-height: 1.45;
     }
 
     @page {
@@ -98,68 +93,45 @@ const htmlContent = `<!DOCTYPE html>
       padding: 16mm 18mm;
       overflow: hidden;
       background-image: 
-        radial-gradient(circle at 1px 1px, rgba(18, 18, 18, 0.08) 1px, transparent 0);
+        radial-gradient(circle at 1px 1px, rgba(18, 18, 18, 0.06) 1px, transparent 0);
       background-size: 24px 24px;
     }
 
-    /* Neo-Brutalist Frame Decor */
     .slide::before {
       content: '';
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
-      height: 6px;
-      background: repeating-linear-gradient(
-        45deg,
-        var(--accent-amber),
-        var(--accent-amber) 14px,
-        var(--border-dark) 14px,
-        var(--border-dark) 28px
-      );
+      height: 4px;
+      background: repeating-linear-gradient(45deg, #F59E0B, #F59E0B 12px, #121212 12px, #121212 24px);
       z-index: 50;
     }
 
-    /* Slide Header */
     .slide-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 5mm;
-      border-bottom: 3px solid var(--border-dark);
-      padding-bottom: 3mm;
+      border-bottom: 2.5px solid var(--border-dark);
+      padding-bottom: 3.5mm;
     }
 
-    .brand-cluster {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .brand-badge {
+    .header-tag {
       background: var(--accent-yellow);
       border: 2px solid var(--border-dark);
       box-shadow: 2px 2px 0px var(--border-dark);
-      padding: 4px 10px;
+      padding: 3px 10px;
       font-family: 'Space Grotesk', sans-serif;
       font-weight: 800;
-      font-size: 11px;
+      font-size: 10px;
       letter-spacing: 0.08em;
       text-transform: uppercase;
     }
 
-    .slide-section-title {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 14px;
-      font-weight: 800;
-      color: var(--border-dark);
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-
-    .slide-page-badge {
+    .slide-num {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 800;
       background: #FFFFFF;
       border: 2px solid var(--border-dark);
@@ -167,11 +139,10 @@ const htmlContent = `<!DOCTYPE html>
       padding: 3px 10px;
     }
 
-    /* Slide Main Content Layout */
     .slide-body {
       display: grid;
       grid-template-columns: 1fr 1.35fr;
-      gap: 20px;
+      gap: 22px;
       flex: 1;
       min-height: 0;
     }
@@ -189,39 +160,22 @@ const htmlContent = `<!DOCTYPE html>
       gap: 8px;
     }
 
-    .route-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: #FFFFFF;
-      border: 2px solid var(--border-dark);
-      box-shadow: 2px 2px 0px var(--border-dark);
-      padding: 3px 8px;
-      width: fit-content;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--accent-orange);
-    }
-
     .slide-title {
       font-family: 'Space Grotesk', sans-serif;
       font-size: 24px;
       font-weight: 900;
-      line-height: 1.15;
+      line-height: 1.2;
       color: var(--border-dark);
       letter-spacing: -0.02em;
     }
 
-    .slide-subtitle {
+    .slide-desc {
       font-size: 13px;
-      color: #374151;
-      font-weight: 500;
-      line-height: 1.45;
+      color: var(--text-muted);
+      line-height: 1.5;
     }
 
-    /* Spec & Feature Cards */
-    .feature-blocks {
+    .feature-list {
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -230,47 +184,29 @@ const htmlContent = `<!DOCTYPE html>
 
     .brutal-card {
       background: #FFFFFF;
-      border: 2.5px solid var(--border-dark);
+      border: 2px solid var(--border-dark);
       box-shadow: var(--shadow-brutal);
-      padding: 10px 14px;
+      padding: 12px 14px;
     }
 
-    .brutal-card.amber-tint {
+    .brutal-card.amber {
       background: #FEF3C7;
     }
 
-    .brutal-card.emerald-tint {
-      background: #D1FAE5;
-    }
-
-    .brutal-card.blue-tint {
-      background: #DBEAFE;
-    }
-
-    .brutal-card.purple-tint {
-      background: #EDE9FE;
-    }
-
-    .card-label {
+    .feature-card-title {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      color: var(--border-dark);
       margin-bottom: 4px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
     }
 
-    .card-text {
+    .feature-card-text {
       font-size: 11px;
-      line-height: 1.4;
-      color: #1F2937;
-      font-weight: 500;
+      color: #374151;
+      line-height: 1.45;
     }
 
-    /* Key Metrics Grid */
     .metrics-row {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -281,230 +217,140 @@ const htmlContent = `<!DOCTYPE html>
       background: #FFFFFF;
       border: 2px solid var(--border-dark);
       box-shadow: 2px 2px 0px var(--border-dark);
-      padding: 6px 10px;
+      padding: 8px 10px;
       text-align: center;
     }
 
     .metric-val {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 900;
       color: var(--border-dark);
     }
 
-    .metric-desc {
+    .metric-lbl {
       font-size: 9px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: #4B5563;
+      color: var(--text-muted);
+      margin-top: 2px;
     }
 
-    /* Media Mockup Frame */
-    .slide-visual {
+    /* Clean Direct Screenshot Display without nested mockup frames */
+    .visual-stage {
       position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
+      width: 100%;
+      height: 100%;
       min-height: 0;
     }
 
-    .device-container {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .desktop-frame {
-      width: 88%;
-      background: #FFFFFF;
-      border: 3px solid var(--border-dark);
-      box-shadow: var(--shadow-brutal-lg);
-      border-radius: 6px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .frame-bar {
-      height: 22px;
-      background: #F3F4F6;
-      border-bottom: 2.5px solid var(--border-dark);
-      display: flex;
-      align-items: center;
-      padding: 0 10px;
-      gap: 6px;
-    }
-
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      border: 1.5px solid var(--border-dark);
-    }
-    .dot.red { background: #EF4444; }
-    .dot.yellow { background: #F59E0B; }
-    .dot.green { background: #10B981; }
-
-    .url-chip {
-      margin-left: 12px;
-      background: #FFFFFF;
-      border: 1.5px solid var(--border-dark);
-      padding: 1px 10px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 8px;
-      font-weight: 700;
-      color: #4B5563;
-      border-radius: 3px;
-    }
-
-    .desktop-img {
-      width: 100%;
-      height: auto;
+    .screenshot-desktop {
+      max-width: 95%;
       max-height: 380px;
       object-fit: contain;
-      background: #FAFAFA;
       display: block;
+      filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.15));
     }
 
-    .mobile-frame {
+    .screenshot-mobile {
       position: absolute;
-      right: -10px;
-      bottom: -15px;
-      width: 28%;
-      background: #FFFFFF;
-      border: 3px solid var(--border-dark);
-      box-shadow: 5px 5px 0px var(--border-dark);
-      border-radius: 12px;
-      overflow: hidden;
-      z-index: 10;
-    }
-
-    .mobile-notch {
-      height: 14px;
-      background: #121212;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .notch-speaker {
-      width: 32px;
-      height: 3px;
-      background: #4B5563;
-      border-radius: 2px;
-    }
-
-    .mobile-img {
-      width: 100%;
-      height: auto;
+      right: 0px;
+      bottom: -8px;
+      max-height: 280px;
+      max-width: 28%;
+      object-fit: contain;
       display: block;
+      filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.2));
     }
 
-    /* Footer Meta */
     .slide-footer {
       display: flex;
       justify-content: space-between;
       align-items: center;
       border-top: 2px solid var(--border-dark);
-      padding-top: 3mm;
+      padding-top: 3.5mm;
       margin-top: 4mm;
       font-family: 'JetBrains Mono', monospace;
       font-size: 9px;
-      color: #6B7280;
+      color: var(--text-muted);
       font-weight: 700;
     }
 
-    /* Cover Slide Specifics */
+    /* Cover Slide */
     .cover-slide {
       background: #FEF3C7;
-      display: flex;
-      flex-direction: column;
       justify-content: space-between;
       padding: 18mm 20mm;
     }
 
-    .cover-badge-row {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-
-    .cover-title-group {
-      margin-top: 20px;
-      max-width: 85%;
-    }
-
-    .cover-giant-title {
+    .cover-title {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 52px;
+      font-size: 46px;
       font-weight: 900;
-      line-height: 1.0;
-      letter-spacing: -0.04em;
+      line-height: 1.05;
       color: var(--border-dark);
-      text-transform: uppercase;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
-    .cover-giant-title span {
-      background: var(--accent-amber);
-      border: 3px solid var(--border-dark);
-      box-shadow: 4px 4px 0px var(--border-dark);
-      padding: 2px 12px;
+    .cover-title span {
+      background: #F59E0B;
+      border: 2px solid var(--border-dark);
+      box-shadow: 3px 3px 0px var(--border-dark);
+      padding: 2px 10px;
       display: inline-block;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     .cover-desc {
-      font-size: 16px;
-      line-height: 1.45;
+      font-size: 15px;
+      line-height: 1.5;
       color: #374151;
-      font-weight: 600;
-      max-width: 720px;
+      max-width: 680px;
     }
 
     .cover-split {
       display: grid;
-      grid-template-columns: 1.1fr 1fr;
-      gap: 30px;
+      grid-template-columns: 1fr 1.1fr;
+      gap: 28px;
       align-items: center;
       margin: 10px 0;
     }
 
-    .cover-specs-grid {
+    .cover-specs {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
     }
 
-    .cover-spec-card {
+    .spec-card {
       background: #FFFFFF;
-      border: 2.5px solid var(--border-dark);
-      box-shadow: 3px 3px 0px var(--border-dark);
-      padding: 10px 14px;
+      border: 2px solid var(--border-dark);
+      box-shadow: var(--shadow-brutal);
+      padding: 12px 14px;
     }
 
-    .cover-spec-k {
+    .spec-k {
       font-family: 'JetBrains Mono', monospace;
       font-size: 9px;
       font-weight: 800;
+      color: var(--text-muted);
       text-transform: uppercase;
-      color: #6B7280;
-      margin-bottom: 2px;
+      margin-bottom: 3px;
     }
 
-    .cover-spec-v {
+    .spec-v {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 13px;
+      font-size: 13.5px;
       font-weight: 800;
       color: var(--border-dark);
     }
 
-    /* Tech Stack Architecture Matrix */
-    .arch-grid {
+    /* Tech Stack Grid */
+    .tech-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 16px;
@@ -512,9 +358,9 @@ const htmlContent = `<!DOCTYPE html>
       flex: 1;
     }
 
-    .arch-col {
+    .tech-col {
       background: #FFFFFF;
-      border: 3px solid var(--border-dark);
+      border: 2px solid var(--border-dark);
       box-shadow: var(--shadow-brutal);
       padding: 14px;
       display: flex;
@@ -522,39 +368,38 @@ const htmlContent = `<!DOCTYPE html>
       gap: 10px;
     }
 
-    .arch-col-title {
+    .tech-col-title {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 800;
       text-transform: uppercase;
+      letter-spacing: 0.05em;
       padding-bottom: 6px;
       border-bottom: 2px solid var(--border-dark);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      color: var(--border-dark);
     }
 
-    .arch-item {
+    .tech-item {
       background: #F9FAFB;
       border: 1.5px solid var(--border-dark);
       padding: 8px 10px;
       font-size: 11px;
     }
 
-    .arch-item-name {
+    .tech-item-name {
       font-family: 'JetBrains Mono', monospace;
       font-weight: 800;
-      color: #111827;
+      color: var(--border-dark);
       margin-bottom: 2px;
     }
 
-    .arch-item-detail {
+    .tech-item-desc {
       font-size: 10px;
-      color: #4B5563;
-      line-height: 1.35;
+      color: var(--text-muted);
+      line-height: 1.4;
     }
 
-    /* Final Slide */
+    /* Closing Slide */
     .closing-slide {
       background: #FFFBEB;
       text-align: center;
@@ -568,24 +413,16 @@ const htmlContent = `<!DOCTYPE html>
 
     .closing-title {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 38px;
+      font-size: 36px;
       font-weight: 900;
-      letter-spacing: -0.03em;
-      text-transform: uppercase;
+      letter-spacing: -0.02em;
+      color: var(--border-dark);
     }
 
-    .closing-pills {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: center;
-      max-width: 780px;
-    }
-
-    .live-hero-card {
+    .closing-card {
       background: #FFFFFF;
-      border: 3px solid var(--border-dark);
-      box-shadow: 6px 6px 0px var(--border-dark);
+      border: 2.5px solid var(--border-dark);
+      box-shadow: 5px 5px 0px var(--border-dark);
       padding: 16px 36px;
       display: flex;
       flex-direction: column;
@@ -594,329 +431,272 @@ const htmlContent = `<!DOCTYPE html>
       margin-top: 10px;
     }
 
-    .live-url-text {
+    .closing-url {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 800;
-      color: var(--accent-orange);
+      color: var(--accent-amber);
     }
   </style>
 </head>
 <body>
 
-  <!-- ==================== SLIDE 01: COVER ==================== -->
+  <!-- SLIDE 01: COVER -->
   <div class="slide cover-slide">
     <div>
-      <div class="cover-badge-row">
-        <div class="brand-badge">SIAP NYAFE POS SYSTEM</div>
-        <div class="route-pill">EDGE CLOUD RUNTIME • REACT 18 + D1</div>
-        <div class="brand-badge" style="background:#10B981; color:#fff;">PRODUCTION DEPLOYED</div>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <div class="header-tag">POINT-OF-SALE SISTEM</div>
+        <div class="header-tag" style="background:#10B981; color:#fff;">PRODUCTION READY</div>
       </div>
-      <div class="cover-title-group">
-        <div class="cover-giant-title">
-          <span>SIAP NYAFE POS</span><br>
-          ENTERPRISE POINT-OF-SALE & KITCHEN SYSTEM
+      <div style="margin-top: 20px; max-width: 80%;">
+        <div class="cover-title">
+          <span>SIAP NYAFE</span> POS & KITCHEN SYSTEM
         </div>
         <p class="cover-desc">
-          Arsitektur web point-of-sale fullstack, portal customer self-ordering, real-time Kitchen Display System (KDS), waiter floor dispatch, dan sistem inventaris terdistribusi berbasis serverless edge computing.
+          Aplikasi web point-of-sale kedai kopi, pemesanan mandiri pelanggan, kitchen display system (KDS), dan manajemen inventaris bahan baku berbasis React 18 dan Cloudflare Workers.
         </p>
       </div>
     </div>
 
     <div class="cover-split">
-      <div class="cover-specs-grid">
-        <div class="cover-spec-card">
-          <div class="cover-spec-k">CORE FRAMEWORK</div>
-          <div class="cover-spec-v">React 18 + Vite 5 SPA</div>
+      <div class="cover-specs">
+        <div class="spec-card">
+          <div class="spec-k">FRAMEWORK</div>
+          <div class="spec-v">React 18 + Vite 5 SPA</div>
         </div>
-        <div class="cover-spec-card">
-          <div class="cover-spec-k">SERVERLESS BACKEND</div>
-          <div class="cover-spec-v">Cloudflare Workers Edge</div>
+        <div class="spec-card">
+          <div class="spec-k">BACKEND EDGE</div>
+          <div class="spec-v">Cloudflare Workers</div>
         </div>
-        <div class="cover-spec-card">
-          <div class="cover-spec-k">EDGE DATABASE</div>
-          <div class="cover-spec-v">Cloudflare D1 SQLite Engine</div>
+        <div class="spec-card">
+          <div class="spec-k">DATABASE</div>
+          <div class="spec-v">Cloudflare D1 SQLite</div>
         </div>
-        <div class="cover-spec-card">
-          <div class="cover-spec-k">DESIGN SPECIFICATION</div>
-          <div class="cover-spec-v">Neo-Brutalist Hard Shadows</div>
+        <div class="spec-card">
+          <div class="spec-k">DESIGN SYSTEM</div>
+          <div class="spec-v">Neo-Brutalism Tokens</div>
         </div>
       </div>
 
-      <div style="position: relative;">
-        <div class="desktop-frame" style="width: 100%;">
-          <div class="frame-bar">
-            <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
-            <div class="url-chip">https://siapnyafe.widifirmaan.web.id</div>
-          </div>
-          <img src="${images.coverDesktop}" class="desktop-img" alt="Siap Nyafe Cover">
-        </div>
+      <div class="visual-stage">
+        <img src="${images.coverDesktop}" class="screenshot-desktop" alt="Siap Nyafe Cover">
       </div>
     </div>
 
     <div class="slide-footer">
-      <div>AUTHOR: WIDI FIRMANSYAH</div>
-      <div>PROJECT: SIAP NYAFE COFFEE POS PLATFORM</div>
-      <div>PAGE 01 / 10</div>
+      <div>WIDI FIRMANSYAH</div>
+      <div>REACTJS COFFEE SHOP MANAGEMENT</div>
+      <div>01 / 10</div>
     </div>
   </div>
 
-  <!-- ==================== SLIDE 02: CUSTOMER SELF-ORDER ==================== -->
+  <!-- SLIDE 02: CUSTOMER ORDER -->
   <div class="slide">
     <div class="slide-header">
-      <div class="brand-cluster">
-        <div class="brand-badge">CUSTOMER PORTAL</div>
-        <div class="slide-section-title">SELF-ORDERING MENU & BEVERAGE CUSTOMIZATION</div>
-      </div>
-      <div class="slide-page-badge">SLIDE 02</div>
+      <div class="header-tag">MENU PELANGGAN</div>
+      <div class="slide-num">02 / 10</div>
     </div>
 
     <div class="slide-body">
       <div class="slide-info">
         <div class="headline-group">
-          <div class="route-pill">GET /order • PUBLIC ROUTE</div>
-          <h2 class="slide-title">Digital Self-Order & Dynamic Customizer</h2>
-          <p class="slide-subtitle">
-            Katalog pemesanan mandiri responsif dengan sticky category pill navigation, modal kustomisasi parameter minuman (sweetness, ice ratio, espresso shots), dan keranjang belanja reaktif.
+          <h2 class="slide-title">Pemesanan Mandiri & Kustomisasi Menu</h2>
+          <p class="slide-desc">
+            Katalog pemesanan bagi pelanggan dengan filter tab kategori, pemilihan varian minuman (kadar gula, es, dan jenis susu), serta keranjang belanja reaktif.
           </p>
         </div>
 
-        <div class="feature-blocks">
-          <div class="brutal-card amber-tint">
-            <div class="card-label">⚡ Reactive Cart Mutation State</div>
-            <div class="card-text">
-              Manajemen state keranjang berbasis in-memory React state dengan sanitasi otomatis, validasi kuantitas item, kalkulasi pajak PPN dinamis, dan persistensi sesi lokal.
+        <div class="feature-list">
+          <div class="brutal-card amber">
+            <div class="feature-card-title">Kustomisasi Minuman</div>
+            <div class="feature-card-text">
+              Modal pilihan parameter minuman yang langsung menyesuaikan penambahan harga satuan ke dalam keranjang.
             </div>
           </div>
           <div class="brutal-card">
-            <div class="card-label">🎛️ Addon & Ingredient Matrix</div>
-            <div class="card-text">
-              Modal konfigurasi pilihan opsi suhu (hot/iced), ukuran cup, level gula, hingga varian susu oat/dairy dengan penyesuaian delta harga satuan secara instan.
+            <div class="feature-card-title">Keranjang Belanja Reaktif</div>
+            <div class="feature-card-text">
+              Manajemen state keranjang lokal dengan validasi kuantitas item dan kalkulasi total biaya pesanan.
             </div>
           </div>
         </div>
 
         <div class="metrics-row">
           <div class="metric-box">
-            <div class="metric-val">100%</div>
-            <div class="metric-desc">Client-Side State</div>
-          </div>
-          <div class="metric-box">
-            <div class="metric-val">0 ms</div>
-            <div class="metric-desc">Cart Latency</div>
+            <div class="metric-val">React 18</div>
+            <div class="metric-lbl">State</div>
           </div>
           <div class="metric-box">
             <div class="metric-val">16+</div>
-            <div class="metric-desc">Menu Variants</div>
+            <div class="metric-lbl">Menu Varian</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-val">0 ms</div>
+            <div class="metric-lbl">Cart Delay</div>
           </div>
         </div>
       </div>
 
-      <div class="slide-visual">
-        <div class="device-container">
-          <div class="desktop-frame">
-            <div class="frame-bar">
-              <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
-              <div class="url-chip">siapnyafe.widifirmaan.web.id/order</div>
-            </div>
-            <img src="${images.customerOrderDesktop}" class="desktop-img" alt="Customer Order Desktop">
-          </div>
-          <div class="mobile-frame">
-            <div class="mobile-notch"><div class="notch-speaker"></div></div>
-            <img src="${images.customerOrderMobile}" class="mobile-img" alt="Customer Order Mobile">
-          </div>
-        </div>
+      <div class="visual-stage">
+        <img src="${images.customerOrderDesktop}" class="screenshot-desktop" alt="Customer Order Desktop">
+        <img src="${images.customerOrderMobile}" class="screenshot-mobile" alt="Customer Order Mobile">
       </div>
     </div>
 
     <div class="slide-footer">
-      <div>SIAP NYAFE WEB ARCHITECTURE</div>
-      <div>CLIENT MENU COMPONENT LIFECYCLE</div>
-      <div>PAGE 02 / 10</div>
+      <div>MENU PEMESANAN MANDIRI</div>
+      <div>KATALOG & KERANJANG KASIR</div>
+      <div>02 / 10</div>
     </div>
   </div>
 
-  <!-- ==================== SLIDE 03: CASHIER POS ==================== -->
+  <!-- SLIDE 03: CASHIER POS -->
   <div class="slide">
     <div class="slide-header">
-      <div class="brand-cluster">
-        <div class="brand-badge" style="background:#10B981; color:#fff;">CASHIER WORKFLOW</div>
-        <div class="slide-section-title">POS REGISTER & INSTANT CHANGE MATH ENGINE</div>
-      </div>
-      <div class="slide-page-badge">SLIDE 03</div>
+      <div class="header-tag">TERMINAL KASIR</div>
+      <div class="slide-num">03 / 10</div>
     </div>
 
     <div class="slide-body">
       <div class="slide-info">
         <div class="headline-group">
-          <div class="route-pill">POST /api/orders • ROLE: CASHIER</div>
-          <h2 class="slide-title">Cashier Register & Change Math Engine</h2>
-          <p class="slide-subtitle">
-            Terminal kasir kas berkecepatan tinggi dengan navigasi multi-kategori, kalkulator kembalian otomatis, deteksi nominal uang tunai kurang, dan cetak struk termal modal.
+          <h2 class="slide-title">Terminal Kasir POS & Hitung Kembalian</h2>
+          <p class="slide-desc">
+            Terminal kasir transaksi cepat dengan pemilihan produk langsung, kalkulasi nominal uang kembalian otomatis, dan cetak struk belanja modal.
           </p>
         </div>
 
-        <div class="feature-blocks">
-          <div class="brutal-card emerald-tint">
-            <div class="card-label">💰 Real-Time Change Calculation</div>
-            <div class="card-text">
-              Algoritma kalkulasi nilai tender tunai terhadap grand total. Menampilkan peringatan warna merah saat nominal kurang, dan otomatis mengkalkulasi nominal uang kembalian.
+        <div class="feature-list">
+          <div class="brutal-card">
+            <div class="feature-card-title">Kalkulasi Kembalian Tunai</div>
+            <div class="feature-card-text">
+              Memvalidasi uang tunai yang dibayarkan dan menghitung kembalian otomatis dengan penanda warna jika uang kurang.
             </div>
           </div>
-          <div class="brutal-card">
-            <div class="card-label">🖨️ Thermal Receipt Print Engine</div>
-            <div class="card-text">
-              Modal struk belanja bergaya monospace 58mm/80mm siap cetak melalui browser window.print() dengan detail nomor order, rincian item, dan stempel waktu transaksi.
+          <div class="brutal-card amber">
+            <div class="feature-card-title">Modal Cetak Struk Termal</div>
+            <div class="feature-card-text">
+              Tampilan struk belanja terformat yang siap dicetak ke printer kasir melalui fungsi window.print() peramban.
             </div>
           </div>
         </div>
 
         <div class="metrics-row">
           <div class="metric-box">
-            <div class="metric-val">&lt; 3s</div>
-            <div class="metric-desc">Checkout Speed</div>
+            <div class="metric-val">&lt; 3 Detik</div>
+            <div class="metric-lbl">Waktu Checkout</div>
           </div>
           <div class="metric-box">
             <div class="metric-val">100%</div>
-            <div class="metric-desc">Tender Accuracy</div>
+            <div class="metric-lbl">Akurasi Nilai</div>
           </div>
           <div class="metric-box">
             <div class="metric-val">58/80mm</div>
-            <div class="metric-desc">Thermal Layout</div>
+            <div class="metric-lbl">Layout Struk</div>
           </div>
         </div>
       </div>
 
-      <div class="slide-visual">
-        <div class="device-container">
-          <div class="desktop-frame">
-            <div class="frame-bar">
-              <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
-              <div class="url-chip">siapnyafe.widifirmaan.web.id/cashier</div>
-            </div>
-            <img src="${images.cashierPOSDesktop}" class="desktop-img" alt="Cashier POS Desktop">
-          </div>
-          <div class="mobile-frame">
-            <div class="mobile-notch"><div class="notch-speaker"></div></div>
-            <img src="${images.cashierPOSMobile}" class="mobile-img" alt="Cashier POS Mobile">
-          </div>
-        </div>
+      <div class="visual-stage">
+        <img src="${images.cashierPOSDesktop}" class="screenshot-desktop" alt="Cashier POS Desktop">
+        <img src="${images.cashierPOSMobile}" class="screenshot-mobile" alt="Cashier POS Mobile">
       </div>
     </div>
 
     <div class="slide-footer">
-      <div>SIAP NYAFE WEB ARCHITECTURE</div>
-      <div>TRANSACTION DISPATCH & CHANGE ALGORITHM</div>
-      <div>PAGE 03 / 10</div>
+      <div>TERMINAL KASIR POS</div>
+      <div>TRANSAKSI & HITUNG KEMBALIAN</div>
+      <div>03 / 10</div>
     </div>
   </div>
 
-  <!-- ==================== SLIDE 04: KITCHEN DISPLAY SYSTEM ==================== -->
+  <!-- SLIDE 04: KITCHEN KDS -->
   <div class="slide">
     <div class="slide-header">
-      <div class="brand-cluster">
-        <div class="brand-badge" style="background:#F43F5E; color:#fff;">BARISTA & KITCHEN</div>
-        <div class="slide-section-title">REAL-TIME KITCHEN DISPLAY SYSTEM (KDS)</div>
-      </div>
-      <div class="slide-page-badge">SLIDE 04</div>
+      <div class="header-tag">KITCHEN KDS</div>
+      <div class="slide-num">04 / 10</div>
     </div>
 
     <div class="slide-body">
       <div class="slide-info">
         <div class="headline-group">
-          <div class="route-pill">GET /kitchen • WEBSOCKET / POLLING</div>
-          <h2 class="slide-title">Kanban Order Ticket & Preparation Queue</h2>
-          <p class="slide-subtitle">
-            Antarmuka operasional dapur dan stasiun barista untuk memantau tiket pesanan masuk secara berurutan dengan penghitung waktu tunggu (order age counter) otomatis.
+          <h2 class="slide-title">Kitchen Display System (KDS) & Antrian</h2>
+          <p class="slide-desc">
+            Antarmuka operasional dapur dan stasiun barista untuk memantau tiket pesanan masuk secara berurutan dengan penghitung waktu tunggu otomatis.
           </p>
         </div>
 
-        <div class="feature-blocks">
+        <div class="feature-list">
           <div class="brutal-card">
-            <div class="card-label">⏱️ Dynamic Elapsed Time Counter</div>
-            <div class="card-text">
-              Setiap tiket order menghitung durasi tunggu sejak masuk ke sistem (menit:detik). Indikator warna kartu berubah otomatis menjadi merah jika waktu racik melampaui batas SLA.
+            <div class="feature-card-title">Penghitung Durasi Tiket</div>
+            <div class="feature-card-text">
+              Setiap tiket order menampilkan lama waktu tunggu sejak order dibuat untuk menjaga standar waktu penyajian.
             </div>
           </div>
-          <div class="brutal-card amber-tint">
-            <div class="card-label">🔄 State Pipeline: Pending ➔ Cooking ➔ Ready</div>
-            <div class="card-text">
-              Transisi status satu klik bagi barista untuk memindahkan pesanan dari antrian persiapan ke status siap saji, otomatis memicu notifikasi ke antrian pramusaji.
+          <div class="brutal-card amber">
+            <div class="feature-card-title">Perubahan Status Satu Klik</div>
+            <div class="feature-card-text">
+              Tombol cepat bagi barista untuk memperbarui status pesanan dari Sedang Diracik menjadi Siap Disajikan.
             </div>
           </div>
         </div>
 
         <div class="metrics-row">
           <div class="metric-box">
-            <div class="metric-val">3 Stage</div>
-            <div class="metric-desc">Kanban Pipeline</div>
+            <div class="metric-val">3 Tahap</div>
+            <div class="metric-lbl">Alur Tiket</div>
           </div>
           <div class="metric-box">
-            <div class="metric-val">Auto</div>
-            <div class="metric-desc">Aging Timer</div>
+            <div class="metric-val">Timer</div>
+            <div class="metric-lbl">Lama Racik</div>
           </div>
           <div class="metric-box">
             <div class="metric-val">0</div>
-            <div class="metric-desc">Missed Tickets</div>
+            <div class="metric-lbl">Order Terlewat</div>
           </div>
         </div>
       </div>
 
-      <div class="slide-visual">
-        <div class="device-container">
-          <div class="desktop-frame">
-            <div class="frame-bar">
-              <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
-              <div class="url-chip">siapnyafe.widifirmaan.web.id/kitchen</div>
-            </div>
-            <img src="${images.kitchenKDSDesktop}" class="desktop-img" alt="Kitchen KDS Desktop">
-          </div>
-          <div class="mobile-frame">
-            <div class="mobile-notch"><div class="notch-speaker"></div></div>
-            <img src="${images.kitchenKDSMobile}" class="mobile-img" alt="Kitchen KDS Mobile">
-          </div>
-        </div>
+      <div class="visual-stage">
+        <img src="${images.kitchenKDSDesktop}" class="screenshot-desktop" alt="Kitchen KDS Desktop">
+        <img src="${images.kitchenKDSMobile}" class="screenshot-mobile" alt="Kitchen KDS Mobile">
       </div>
     </div>
 
     <div class="slide-footer">
-      <div>SIAP NYAFE WEB ARCHITECTURE</div>
-      <div>KITCHEN QUEUE LIFECYCLE & STATE MACHINE</div>
-      <div>PAGE 04 / 10</div>
+      <div>KITCHEN DISPLAY SYSTEM</div>
+      <div>ALUR PREPARASI MINUMAN</div>
+      <div>04 / 10</div>
     </div>
   </div>
 
-  <!-- ==================== SLIDE 05: WAITER SERVICE QUEUE ==================== -->
+  <!-- SLIDE 05: WAITER QUEUE -->
   <div class="slide">
     <div class="slide-header">
-      <div class="brand-cluster">
-        <div class="brand-badge" style="background:#2563EB; color:#fff;">FLOOR OPS</div>
-        <div class="slide-section-title">WAITER SERVICE QUEUE & TABLE DISPATCH</div>
-      </div>
-      <div class="slide-page-badge">SLIDE 05</div>
+      <div class="header-tag">PELAYANAN MEJA</div>
+      <div class="slide-num">05 / 10</div>
     </div>
 
     <div class="slide-body">
       <div class="slide-info">
         <div class="headline-group">
-          <div class="route-pill">GET /waiter • TABLE DISPATCH MATRIX</div>
-          <h2 class="slide-title">Waiter Floor Queue & Customer Assistance</h2>
-          <p class="slide-subtitle">
-            Pusat koordinasi pramusaji untuk menyajikan pesanan yang telah selesai diracik di dapur dan merespons panggilan meja (call waiter) secara real-time.
+          <h2 class="slide-title">Antrian Pramusaji & Bantuan Meja</h2>
+          <p class="slide-desc">
+            Pusat koordinasi pramusaji untuk menyajikan pesanan yang telah selesai diracik serta merespons panggilan bantuan meja tamu secara real-time.
           </p>
         </div>
 
-        <div class="feature-blocks">
-          <div class="brutal-card blue-tint">
-            <div class="card-label">🔔 Table Assistance Request Hub</div>
-            <div class="card-text">
-              Menerima pemicu panggilan meja dari portal self-order customer (misal: "Meja 04 butuh bantuan / sendok"). Pramusaji mengonfirmasi penyelesaian tugas via tombol aksi cepat.
+        <div class="feature-list">
+          <div class="brutal-card">
+            <div class="feature-card-title">Notifikasi Panggilan Tamu</div>
+            <div class="feature-card-text">
+              Menerima sinyal panggilan meja tamu dari portal self-order lengkap dengan tombol konfirmasi penyelesaian bantuan.
             </div>
           </div>
-          <div class="brutal-card">
-            <div class="card-label">📦 Order Delivery Confirmation</div>
-            <div class="card-text">
-              Daftar tiket minuman siap antar ke meja tamu. Setelah minuman diantar, pramusaji memvalidasi status pesanan menjadi 'Served' untuk merapikan antrian.
+          <div class="brutal-card amber">
+            <div class="feature-card-title">Daftar Antar Pesanan</div>
+            <div class="feature-card-text">
+              Daftar tiket minuman siap antar ke nomor meja bersangkutan dengan validasi status terkirim.
             </div>
           </div>
         </div>
@@ -924,224 +704,179 @@ const htmlContent = `<!DOCTYPE html>
         <div class="metrics-row">
           <div class="metric-box">
             <div class="metric-val">Realtime</div>
-            <div class="metric-desc">Table Calls</div>
+            <div class="metric-lbl">Panggilan</div>
           </div>
           <div class="metric-box">
             <div class="metric-val">100%</div>
-            <div class="metric-desc">Floor Coverage</div>
+            <div class="metric-lbl">Area Meja</div>
           </div>
           <div class="metric-box">
             <div class="metric-val">1-Tap</div>
-            <div class="metric-desc">Status Resolve</div>
+            <div class="metric-lbl">Selesai</div>
           </div>
         </div>
       </div>
 
-      <div class="slide-visual">
-        <div class="device-container">
-          <div class="desktop-frame">
-            <div class="frame-bar">
-              <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
-              <div class="url-chip">siapnyafe.widifirmaan.web.id/waiter</div>
-            </div>
-            <img src="${images.waiterQueueDesktop}" class="desktop-img" alt="Waiter Service Queue Desktop">
-          </div>
-          <div class="mobile-frame">
-            <div class="mobile-notch"><div class="notch-speaker"></div></div>
-            <img src="${images.waiterQueueMobile}" class="mobile-img" alt="Waiter Service Queue Mobile">
-          </div>
-        </div>
+      <div class="visual-stage">
+        <img src="${images.waiterQueueDesktop}" class="screenshot-desktop" alt="Waiter Queue Desktop">
+        <img src="${images.waiterQueueMobile}" class="screenshot-mobile" alt="Waiter Queue Mobile">
       </div>
     </div>
 
     <div class="slide-footer">
-      <div>SIAP NYAFE WEB ARCHITECTURE</div>
-      <div>FLOOR LOGISTICS & TABLE COORDINATION</div>
-      <div>PAGE 05 / 10</div>
+      <div>PELAYANAN PRAMUSAJI</div>
+      <div>DISPATCH & PANGGILAN MEJA</div>
+      <div>05 / 10</div>
     </div>
   </div>
 
-  <!-- ==================== SLIDE 06: INVENTORY STOCK CONTROL ==================== -->
+  <!-- SLIDE 06: INVENTORY -->
   <div class="slide">
     <div class="slide-header">
-      <div class="brand-cluster">
-        <div class="brand-badge" style="background:#D97706; color:#fff;">STOCK ENGINE</div>
-        <div class="slide-section-title">RAW INGREDIENT DEDUCTION & STOCK CONTROL</div>
-      </div>
-      <div class="slide-page-badge">SLIDE 06</div>
+      <div class="header-tag">STOK BAHAN BAKU</div>
+      <div class="slide-num">06 / 10</div>
     </div>
 
     <div class="slide-body">
       <div class="slide-info">
         <div class="headline-group">
-          <div class="route-pill">CRUD /api/inventory • D1 SQLITE LEDGER</div>
-          <h2 class="slide-title">Recipe-Linked Inventory & Restock Ledger</h2>
-          <p class="slide-subtitle">
-            Manajemen stok bahan baku (biji kopi, susu segar, sirup, cup take-away) yang terhubung langsung dengan resep menu untuk pemotongan otomatis per transaksi kasir.
+          <h2 class="slide-title">Inventaris Bahan Baku & Pemotongan Resep</h2>
+          <p class="slide-desc">
+            Pencatatan persediaan bahan baku (biji kopi, susu, sirup) yang terhubung langsung dengan resep menu untuk pemotongan stok otomatis per transaksi.
           </p>
         </div>
 
-        <div class="feature-blocks">
-          <div class="brutal-card amber-tint">
-            <div class="card-label">📊 Automatic Bill of Materials (BOM)</div>
-            <div class="card-text">
-              Setiap cangkir Latte yang terjual otomatis memotong 18 gram biji espresso dan 150ml susu pada basis data Cloudflare D1 secara atomik dalam transaksi SQL.
+        <div class="feature-list">
+          <div class="brutal-card amber">
+            <div class="feature-card-title">Pemotongan Stok Berbasis Resep</div>
+            <div class="feature-card-text">
+              Setiap cangkir kopi yang terjual otomatis memotong kuantitas gram biji kopi dan mililiter susu di database D1 SQLite.
             </div>
           </div>
           <div class="brutal-card">
-            <div class="card-label">🚨 Critical Low-Stock Warning Threshold</div>
-            <div class="card-text">
-              Threshold peringatan otomatis saat kuantitas bahan baku berada di bawah safety stock, dilengkapi modal restock cepat dan histori penyesuaian opname barang.
+            <div class="feature-card-title">Peringatan Stok Minimum</div>
+            <div class="feature-card-text">
+              Highlight otomatis saat stok bahan berada di bawah batas minimum agar pengelola dapat segera melakukan restock.
             </div>
           </div>
         </div>
 
         <div class="metrics-row">
           <div class="metric-box">
-            <div class="metric-val">Atomic</div>
-            <div class="metric-desc">SQL Deductions</div>
+            <div class="metric-val">Otomatis</div>
+            <div class="metric-lbl">Potong Stok</div>
           </div>
           <div class="metric-box">
-            <div class="metric-val">Auto</div>
-            <div class="metric-desc">Low-Stock Alert</div>
+            <div class="metric-val">D1 SQLite</div>
+            <div class="metric-lbl">Database</div>
           </div>
           <div class="metric-box">
             <div class="metric-val">100%</div>
-            <div class="metric-desc">BOM Tracking</div>
+            <div class="metric-lbl">Lacak Resep</div>
           </div>
         </div>
       </div>
 
-      <div class="slide-visual">
-        <div class="device-container">
-          <div class="desktop-frame">
-            <div class="frame-bar">
-              <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
-              <div class="url-chip">siapnyafe.widifirmaan.web.id/inventory</div>
-            </div>
-            <img src="${images.inventoryDesktop}" class="desktop-img" alt="Inventory Stock Desktop">
-          </div>
-          <div class="mobile-frame">
-            <div class="mobile-notch"><div class="notch-speaker"></div></div>
-            <img src="${images.inventoryMobile}" class="mobile-img" alt="Inventory Stock Mobile">
-          </div>
-        </div>
+      <div class="visual-stage">
+        <img src="${images.inventoryDesktop}" class="screenshot-desktop" alt="Inventory Stock Desktop">
+        <img src="${images.inventoryMobile}" class="screenshot-mobile" alt="Inventory Stock Mobile">
       </div>
     </div>
 
     <div class="slide-footer">
-      <div>SIAP NYAFE WEB ARCHITECTURE</div>
-      <div>INVENTORY LEDGER & ATOMIC D1 TRANSACTIONS</div>
-      <div>PAGE 06 / 10</div>
+      <div>INVENTARIS BAHAN BAKU</div>
+      <div>PEMOTONGAN OTOMATIS PER RESEP</div>
+      <div>06 / 10</div>
     </div>
   </div>
 
-  <!-- ==================== SLIDE 07: STAFF ROSTER ==================== -->
+  <!-- SLIDE 07: STAFF ROSTER -->
   <div class="slide">
     <div class="slide-header">
-      <div class="brand-cluster">
-        <div class="brand-badge" style="background:#8B5CF6; color:#fff;">HUMAN RESOURCES</div>
-        <div class="slide-section-title">STAFF ROSTER & ROLE-BASED ACCESS CONTROL</div>
-      </div>
-      <div class="slide-page-badge">SLIDE 07</div>
+      <div class="header-tag">MANAJEMEN STAF</div>
+      <div class="slide-num">07 / 10</div>
     </div>
 
     <div class="slide-body">
       <div class="slide-info">
         <div class="headline-group">
-          <div class="route-pill">GET /staff • RBAC SECURITY MODEL</div>
-          <h2 class="slide-title">Shift Roster & Employee Access Control</h2>
-          <p class="slide-subtitle">
-            Manajemen penjadwalan shift kerja staf kedai kopi, pencatatan histori absensi, pembekuan akun keamanan, dan segmentasi hak akses berbasis peran (RBAC).
+          <h2 class="slide-title">Jadwal Shift & Hak Akses Berbasis Peran</h2>
+          <p class="slide-desc">
+            Pengaturan jadwal shift kerja karyawan kedai kopi dan pembagian izin akses (Role-Based Access Control) untuk menjaga keamanan sistem.
           </p>
         </div>
 
-        <div class="feature-blocks">
-          <div class="brutal-card purple-tint">
-            <div class="card-label">🛡️ Role-Based Routing Matrix</div>
-            <div class="card-text">
-              Guard navigasi ketat untuk 4 peran: Admin (akses penuh), Cashier (akses POS), Barista (akses KDS), dan Waiter (akses Floor Queue), mencegah penyalahgunaan terminal.
+        <div class="feature-list">
+          <div class="brutal-card">
+            <div class="feature-card-title">Pembagian Peran (RBAC)</div>
+            <div class="feature-card-text">
+              Pemisahan rute aplikasi untuk Admin (semua akses), Kasir (terminal POS), Barista (KDS), dan Waiter (pelayanan meja).
             </div>
           </div>
-          <div class="brutal-card">
-            <div class="card-label">📅 Shift Scheduling & Account Lifecycle</div>
-            <div class="card-text">
-              Manajemen rekrutmen staf baru, perubahan status aktif/beku (freeze account), dan monitoring log presensi kerja karyawan secara transparan.
+          <div class="brutal-card amber">
+            <div class="feature-card-title">Riwayat Kehadiran Staf</div>
+            <div class="feature-card-text">
+              Pencatatan waktu presensi kerja karyawan untuk memudahkan audit absensi dan evaluasi jadwal operasional outlet.
             </div>
           </div>
         </div>
 
         <div class="metrics-row">
           <div class="metric-box">
-            <div class="metric-val">4 Roles</div>
-            <div class="metric-desc">RBAC Hierarchy</div>
+            <div class="metric-val">4 Peran</div>
+            <div class="metric-lbl">Hak Akses</div>
           </div>
           <div class="metric-box">
             <div class="metric-val">JWT</div>
-            <div class="metric-desc">Edge Token Auth</div>
+            <div class="metric-lbl">Token Auth</div>
           </div>
           <div class="metric-box">
-            <div class="metric-val">100%</div>
-            <div class="metric-desc">Route Guarding</div>
+            <div class="metric-val">Aman</div>
+            <div class="metric-lbl">Proteksi Rute</div>
           </div>
         </div>
       </div>
 
-      <div class="slide-visual">
-        <div class="device-container">
-          <div class="desktop-frame">
-            <div class="frame-bar">
-              <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
-              <div class="url-chip">siapnyafe.widifirmaan.web.id/staff</div>
-            </div>
-            <img src="${images.staffDesktop}" class="desktop-img" alt="Staff Roster Desktop">
-          </div>
-          <div class="mobile-frame">
-            <div class="mobile-notch"><div class="notch-speaker"></div></div>
-            <img src="${images.staffMobile}" class="mobile-img" alt="Staff Roster Mobile">
-          </div>
-        </div>
+      <div class="visual-stage">
+        <img src="${images.staffDesktop}" class="screenshot-desktop" alt="Staff Roster Desktop">
+        <img src="${images.staffMobile}" class="screenshot-mobile" alt="Staff Roster Mobile">
       </div>
     </div>
 
     <div class="slide-footer">
-      <div>SIAP NYAFE WEB ARCHITECTURE</div>
-      <div>IDENTITY LIFECYCLE & ACCESS POLICIES</div>
-      <div>PAGE 07 / 10</div>
+      <div>MANAJEMEN STAF & AKSES</div>
+      <div>HAK AKSES BERBASIS PERAN</div>
+      <div>07 / 10</div>
     </div>
   </div>
 
-  <!-- ==================== SLIDE 08: ASSET & EQUIPMENT ==================== -->
+  <!-- SLIDE 08: ASSET MAINTENANCE -->
   <div class="slide">
     <div class="slide-header">
-      <div class="brand-cluster">
-        <div class="brand-badge">HARDWARE ASSETS</div>
-        <div class="slide-section-title">ASSET LIFECYCLE & MAINTENANCE LOGS</div>
-      </div>
-      <div class="slide-page-badge">SLIDE 08</div>
+      <div class="header-tag">ASET PERALATAN</div>
+      <div class="slide-num">08 / 10</div>
     </div>
 
     <div class="slide-body">
       <div class="slide-info">
         <div class="headline-group">
-          <div class="route-pill">GET /asset • ASSET REGISTRY & DEPRECIATION</div>
-          <h2 class="slide-title">Asset Registry & Maintenance Tracking</h2>
-          <p class="slide-subtitle">
-            Pencatatan aset mesin komersial (espresso machine, coffee grinder, water filtration system, ice maker) beserta jadwal servis rutin dan riwayat kondisi operasional.
+          <h2 class="slide-title">Pencatatan Aset & Jadwal Perawatan</h2>
+          <p class="slide-desc">
+            Registrasi mesin komersial (mesin espresso, coffee grinder, penyaring air) beserta jadwal servis berkala untuk mencegah kerusakan operasional.
           </p>
         </div>
 
-        <div class="feature-blocks">
-          <div class="brutal-card amber-tint">
-            <div class="card-label">🔧 Preventive Maintenance Scheduling</div>
-            <div class="card-text">
-              Pelacak jadwal descaling rutin, penggantian burr grinder, kalibrasi suhu boiler, dan pencatatan teknisi servis pihak ketiga untuk meminimalisir downtime outlet.
+        <div class="feature-list">
+          <div class="brutal-card amber">
+            <div class="feature-card-title">Jadwal Perawatan Berkala</div>
+            <div class="feature-card-text">
+              Pengingat servis rutin descaling boiler mesin espresso dan penggantian mata pisau grinder tepat waktu.
             </div>
           </div>
           <div class="brutal-card">
-            <div class="card-label">📋 Asset Condition State Matrix</div>
-            <div class="card-text">
-              Badge status kondisi visual (Optimal, Needs Service, Maintenance Active) dengan validasi modal konfirmasi perubahan kondisi fisik mesin operasional.
+            <div class="feature-card-title">Status Kondisi Operasional</div>
+            <div class="feature-card-text">
+              Penanda kondisi fisik peralatan (Optimal, Perlu Servis, Dalam Perbaikan) untuk menjaga mutu seduhan kopi.
             </div>
           </div>
         </div>
@@ -1149,173 +884,126 @@ const htmlContent = `<!DOCTYPE html>
         <div class="metrics-row">
           <div class="metric-box">
             <div class="metric-val">100%</div>
-            <div class="metric-desc">Asset Audit Trail</div>
+            <div class="metric-lbl">Aset Tercatat</div>
           </div>
           <div class="metric-box">
-            <div class="metric-val">Proactive</div>
-            <div class="metric-desc">Service Schedule</div>
+            <div class="metric-val">Rutin</div>
+            <div class="metric-lbl">Servis Mesin</div>
           </div>
           <div class="metric-box">
-            <div class="metric-val">Zero</div>
-            <div class="metric-desc">Unlogged Outage</div>
+            <div class="metric-val">Minimal</div>
+            <div class="metric-lbl">Downtime</div>
           </div>
         </div>
       </div>
 
-      <div class="slide-visual">
-        <div class="device-container">
-          <div class="desktop-frame">
-            <div class="frame-bar">
-              <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
-              <div class="url-chip">siapnyafe.widifirmaan.web.id/asset</div>
-            </div>
-            <img src="${images.assetDesktop}" class="desktop-img" alt="Asset & Equipment Desktop">
-          </div>
-          <div class="mobile-frame">
-            <div class="mobile-notch"><div class="notch-speaker"></div></div>
-            <img src="${images.assetMobile}" class="mobile-img" alt="Asset & Equipment Mobile">
-          </div>
-        </div>
+      <div class="visual-stage">
+        <img src="${images.assetDesktop}" class="screenshot-desktop" alt="Asset Maintenance Desktop">
+        <img src="${images.assetMobile}" class="screenshot-mobile" alt="Asset Maintenance Mobile">
       </div>
     </div>
 
     <div class="slide-footer">
-      <div>SIAP NYAFE WEB ARCHITECTURE</div>
-      <div>EQUIPMENT PREVENTIVE MAINTENANCE LOGGING</div>
-      <div>PAGE 08 / 10</div>
+      <div>ASET MESIN & PERALATAN</div>
+      <div>JADWAL PERAWATAN BERKALA</div>
+      <div>08 / 10</div>
     </div>
   </div>
 
-  <!-- ==================== SLIDE 09: TECH STACK & SYSTEM ARCHITECTURE ==================== -->
+  <!-- SLIDE 09: TECH STACK -->
   <div class="slide">
     <div class="slide-header">
-      <div class="brand-cluster">
-        <div class="brand-badge" style="background:#F59E0B;">TECH STACK MATRIX</div>
-        <div class="slide-section-title">FULLSTACK EDGE SYSTEM ARCHITECTURE</div>
-      </div>
-      <div class="slide-page-badge">SLIDE 09</div>
+      <div class="header-tag">TEKNOLOGI</div>
+      <div class="slide-num">09 / 10</div>
     </div>
 
     <div style="margin-bottom: 8px;">
-      <h2 class="slide-title">Serverless Edge Architecture & Frontend Topology</h2>
-      <p class="slide-subtitle">
-        Kombinasi teknologi React 18 SPA pada edge CDN, didukung Cloudflare Workers serverless runtime dan Cloudflare D1 distributed SQLite database untuk latensi ultra-rendah.
+      <h2 class="slide-title">Susunan Teknologi & Dependensi</h2>
+      <p class="slide-desc">
+        Aplikasi web dibangun menggunakan React 18 SPA dengan backend serverless Cloudflare Workers dan database SQL terdistribusi Cloudflare D1.
       </p>
     </div>
 
-    <div class="arch-grid">
-      <!-- Frontend Tier -->
-      <div class="arch-col">
-        <div class="arch-col-title">
-          <span>01. FRONTEND TIER</span>
-          <span style="color:#F59E0B;">●</span>
+    <div class="tech-grid">
+      <div class="tech-col">
+        <div class="tech-col-title">01. FRONTEND CORE</div>
+        <div class="tech-item">
+          <div class="tech-item-name">React 18.2</div>
+          <div class="tech-item-desc">Framework antarmuka dengan manajemen state terisolasi per modul.</div>
         </div>
-        <div class="arch-item">
-          <div class="arch-item-name">React 18.2 SPA</div>
-          <div class="arch-item-detail">Arsitektur komponen modular dengan client-side state management terisolasi untuk tiap modul operasional.</div>
+        <div class="tech-item">
+          <div class="tech-item-name">Vite 5</div>
+          <div class="tech-item-desc">Build tool modern untuk kompilasi cepat dan output bundel teroptimasi.</div>
         </div>
-        <div class="arch-item">
-          <div class="arch-item-name">Vite 5 Bundler</div>
-          <div class="arch-item-detail">Build tool modern dengan modul HMR instan dan output bundle teroptimasi untuk caching CDN global.</div>
-        </div>
-        <div class="arch-item">
-          <div class="arch-item-name">React Router v6</div>
-          <div class="arch-item-detail">Client-side routing deklaratif dengan guard proteksi rute berbasis peran (Role-Based Guards).</div>
-        </div>
-        <div class="arch-item">
-          <div class="arch-item-name">Neo-Brutalist CSS Tokens</div>
-          <div class="arch-item-detail">Sistem visual presisi tinggi dengan hard borders 3px, offset shadow 4-6px, dan tipografi ekspresif.</div>
+        <div class="tech-item">
+          <div class="tech-item-name">React Router v6</div>
+          <div class="tech-item-desc">Navigasi rute client-side dengan pelindung akses berbasis peran.</div>
         </div>
       </div>
 
-      <!-- Edge Backend Tier -->
-      <div class="arch-col">
-        <div class="arch-col-title">
-          <span>02. SERVERLESS RUNTIME</span>
-          <span style="color:#EA580C;">●</span>
+      <div class="tech-col">
+        <div class="tech-col-title">02. BACKEND SERVERLESS</div>
+        <div class="tech-item">
+          <div class="tech-item-name">Cloudflare Workers</div>
+          <div class="tech-item-desc">Runtime edge serverless V8 untuk endpoint API kasir dan dapur.</div>
         </div>
-        <div class="arch-item">
-          <div class="arch-item-name">Cloudflare Workers</div>
-          <div class="arch-item-detail">V8 serverless isolate running pada 300+ edge locations di seluruh dunia dengan cold-start nol milidetik.</div>
+        <div class="tech-item">
+          <div class="tech-item-name">Cloudflare D1 SQLite</div>
+          <div class="tech-item-desc">Basis data relasional SQL terdistribusi dengan transaksi atomik.</div>
         </div>
-        <div class="arch-item">
-          <div class="arch-item-name">RESTful Edge API</div>
-          <div class="arch-item-detail">Routing endpoint terpadu untuk transaksi POS, tiket kitchen, inventory updates, dan shift management.</div>
-        </div>
-        <div class="arch-item">
-          <div class="arch-item-name">Bcrypt & JWT Auth</div>
-          <div class="arch-item-detail">Hashing kredensial aman di edge dengan validasi token JWT stateless tanpa overhead session server.</div>
-        </div>
-        <div class="arch-item">
-          <div class="arch-item-name">Cloudflare R2 Storage</div>
-          <div class="arch-item-detail">Penyimpanan objek S3-compatible tanpa biaya egress bandwidth untuk aset foto menu dan roastery.</div>
+        <div class="tech-item">
+          <div class="tech-item-name">Bcrypt & JWT</div>
+          <div class="tech-item-desc">Autentikasi kredensial staf dan pengelolaan sesi pengguna.</div>
         </div>
       </div>
 
-      <!-- Database Tier -->
-      <div class="arch-col">
-        <div class="arch-col-title">
-          <span>03. PERSISTENCE & OPS</span>
-          <span style="color:#10B981;">●</span>
+      <div class="tech-col">
+        <div class="tech-col-title">03. DESAIN & PENGUJIAN</div>
+        <div class="tech-item">
+          <div class="tech-item-name">Neo-Brutalism CSS</div>
+          <div class="tech-item-desc">Gaya visual tegas dengan border tebal dan drop shadow solid.</div>
         </div>
-        <div class="arch-item">
-          <div class="arch-item-name">Cloudflare D1 SQLite</div>
-          <div class="arch-item-detail">Basis data SQL relasional terdistribusi dengan transaksi ACID atomik untuk integritas stok dan uang kasir.</div>
+        <div class="tech-item">
+          <div class="tech-item-name">Lucide Icons</div>
+          <div class="tech-item-desc">Ikon SVG monokromatis ringan untuk tombol kasir dan navigasi.</div>
         </div>
-        <div class="arch-item">
-          <div class="arch-item-name">Relational Schema</div>
-          <div class="arch-item-detail">Tabel terindeks mencakup orders, order_items, recipes, inventory_stocks, staff_roster, dan assets.</div>
-        </div>
-        <div class="arch-item">
-          <div class="arch-item-name">Lucide Icon Suite</div>
-          <div class="arch-item-detail">Set ikon SVG monokromatis yang ringan dan konsisten dengan estetika teknis Neo-Brutalism.</div>
-        </div>
-        <div class="arch-item">
-          <div class="arch-item-name">Automated Testing</div>
-          <div class="arch-item-detail">Pengujian integrasi end-to-end menyeluruh memastikan seluruh flow transaksi kasir dan kitchen lulus uji.</div>
+        <div class="tech-item">
+          <div class="tech-item-name">Playwright E2E</div>
+          <div class="tech-item-desc">Pengujian otomatis alur kasir, pesanan, dan dapur.</div>
         </div>
       </div>
     </div>
 
     <div class="slide-footer">
-      <div>SIAP NYAFE WEB ARCHITECTURE</div>
-      <div>ENTERPRISE TECH STACK & SYSTEM TOPOLOGY</div>
-      <div>PAGE 09 / 10</div>
+      <div>SUSUNAN TEKNOLOGI</div>
+      <div>ARSITEKTUR & DEPENDENSI</div>
+      <div>09 / 10</div>
     </div>
   </div>
 
-  <!-- ==================== SLIDE 10: CLOSING ==================== -->
+  <!-- SLIDE 10: CLOSING -->
   <div class="slide closing-slide">
-    <div class="brand-badge" style="background:#F59E0B; font-size:12px; padding:6px 14px;">SIAP NYAFE COFFEE POS PLATFORM</div>
-    <h1 class="closing-title">ENTERPRISE COFFEE SHOP<br>OPERATIONAL EXCELLENCE</h1>
+    <div class="header-tag" style="padding: 5px 16px; font-size: 11px;">SIAP NYAFE COFFEE POS PLATFORM</div>
+    <h1 class="closing-title">COFFEE SHOP POINT-OF-SALE & KITCHEN SYSTEM</h1>
     
-    <p style="font-size: 15px; color: #4B5563; max-width: 680px; font-weight: 600; line-height: 1.5;">
-      Solusi web point-of-sale modern yang mengintegrasikan pengalaman pesan mandiri pelanggan, ketepatan transaksi kasir, efisiensi stasiun dapur barista, hingga kepatuhan inventaris bahan baku dalam satu platform serverless edge terpadu.
+    <p style="font-size: 14.5px; color: var(--text-muted); max-width: 650px; line-height: 1.5;">
+      Solusi sistem kasir dan operasional kedai kopi yang mengintegrasikan pesanan mandiri pelanggan, ketepatan transaksi kasir, antrean dapur barista, dan inventaris bahan baku.
     </p>
 
-    <div class="closing-pills">
-      <div class="brutal-card amber-tint" style="padding: 6px 14px; font-weight: 800; font-size: 11px;">☕ SELF-ORDER PORTAL</div>
-      <div class="brutal-card emerald-tint" style="padding: 6px 14px; font-weight: 800; font-size: 11px;">💵 CASHIER TERMINAL</div>
-      <div class="brutal-card" style="padding: 6px 14px; font-weight: 800; font-size: 11px;">🍳 KITCHEN KDS QUEUE</div>
-      <div class="brutal-card blue-tint" style="padding: 6px 14px; font-weight: 800; font-size: 11px;">🔔 WAITER DISPATCH</div>
-      <div class="brutal-card purple-tint" style="padding: 6px 14px; font-weight: 800; font-size: 11px;">📦 INVENTORY LEDGER</div>
-      <div class="brutal-card" style="background:#FCE7F3; padding: 6px 14px; font-weight: 800; font-size: 11px;">👥 STAFF ROSTER RBAC</div>
-    </div>
-
-    <div class="live-hero-card">
-      <div style="font-family:'Space Grotesk',sans-serif; font-size:11px; font-weight:800; color:#6B7280; letter-spacing:0.08em; text-transform:uppercase;">
-        LIVE PRODUCTION ENVIRONMENT
+    <div class="closing-card">
+      <div style="font-family:'Space Grotesk',sans-serif; font-size:10px; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em;">
+        DEMO PRODUKSI
       </div>
-      <div class="live-url-text">https://siapnyafe.widifirmaan.web.id</div>
-      <div style="font-size:11px; color:#6B7280; font-weight:600;">
-        Powered by React 18 • Cloudflare Workers • Cloudflare D1 Distributed SQLite
+      <div class="closing-url">https://siapnyafe.widifirmaan.web.id</div>
+      <div style="font-size:11px; color:var(--text-muted);">
+        React 18 • Cloudflare Workers • Cloudflare D1 SQLite
       </div>
     </div>
 
     <div class="slide-footer" style="width: 100%; margin-top: 15px;">
-      <div>ENGINEERED BY WIDI FIRMANSYAH</div>
-      <div>PRODUCTION-READY WEB PLATFORM</div>
-      <div>PAGE 10 / 10</div>
+      <div>WIDI FIRMANSYAH</div>
+      <div>PENGEMBANG UTAMA</div>
+      <div>10 / 10</div>
     </div>
   </div>
 
@@ -1325,9 +1013,9 @@ const htmlContent = `<!DOCTYPE html>
 
 const htmlFilePath = path.join(projectRoot, 'presentation.html');
 fs.writeFileSync(htmlFilePath, htmlContent, 'utf-8');
-console.log(`📄 Presentation HTML written to: ${htmlFilePath}`);
+console.log(`Presentation HTML written to: ${htmlFilePath}`);
 
-console.log('🚀 Launching Chromium with Playwright to render Siap Nyafe POS PDF...');
+console.log('Launching Chromium with Playwright to render Siap Nyafe PDF...');
 
 async function renderPDF() {
   const playwrightPath = '/home/widifirmaan/Projects/qa-toolkit/node_modules/playwright/index.mjs';
@@ -1346,7 +1034,7 @@ async function renderPDF() {
   const continuousPdfPath = path.join(downloadsDir, 'CoffeeShop-Continuous.pdf');
 
   // 1. Multi-Page Deck Mode (10 Slides A4 Landscape)
-  console.log('🖨️  Rendering Multi-Page A4 Landscape Presentation PDF (Slide Mode)...');
+  console.log('Rendering Multi-Page A4 Landscape Presentation PDF (Slide Mode)...');
   await page.pdf({
     path: slidePdfPath,
     format: 'A4',
@@ -1356,7 +1044,7 @@ async function renderPDF() {
   });
 
   // 2. Continuous Poster Mode (Single tall scroll)
-  console.log('📜 Rendering Continuous Single-Scroll Showcase PDF (Poster Mode)...');
+  console.log('Rendering Continuous Single-Scroll Showcase PDF (Poster Mode)...');
   await page.addStyleTag({
     content: `
       @page {
@@ -1391,16 +1079,12 @@ async function renderPDF() {
   const slideStat = fs.statSync(slidePdfPath);
   const contStat = fs.statSync(continuousPdfPath);
 
-  console.log('\n================================================================================');
-  console.log('🎉 SIAP NYAFE POS ARCHITECTURE PDFS SUCCESSFULLY GENERATED!');
-  console.log(`📦 Multi-Page Deck (Slides)   : ${(slideStat.size / 1024 / 1024).toFixed(2)} MB (10 Pages A4 Landscape)`);
-  console.log(`   -> Saved: ${slidePdfPath}`);
-  console.log(`📦 Continuous Poster (Scroll) : ${(contStat.size / 1024 / 1024).toFixed(2)} MB (1 Long Showcase Page)`);
-  console.log(`   -> Saved: ${continuousPdfPath}`);
-  console.log('================================================================================\n');
+  console.log('\nSiap Nyafe PDFs successfully generated:');
+  console.log(`- Multi-Page Deck: ${(slideStat.size / 1024 / 1024).toFixed(2)} MB (${slidePdfPath})`);
+  console.log(`- Continuous Poster: ${(contStat.size / 1024 / 1024).toFixed(2)} MB (${continuousPdfPath})\n`);
 }
 
 renderPDF().catch((err) => {
-  console.error('❌ Error during PDF generation:', err);
+  console.error('Error during PDF generation:', err);
   process.exit(1);
 });
